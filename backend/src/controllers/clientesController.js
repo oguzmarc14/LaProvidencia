@@ -33,4 +33,25 @@ const crearCliente = async (req, res) => {
   }
 };
 
-module.exports = { crearCliente };
+const obtenerClientes = async (req, res) => {
+ 
+  try{
+    const clientes = await Cliente.find();
+
+    res.status(200).json({
+      clientes
+    })
+  }
+
+  catch(error){
+    console.error(error);
+
+    res.status(500).json({
+      mensaje: "Error al obtener clientes"
+    });
+  }
+
+
+}
+
+module.exports = { crearCliente, obtenerClientes };
