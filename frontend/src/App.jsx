@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { LayoutDashboard, BriefcaseBusiness, Users, CalendarDays, Boxes, Settings, Search, Bell, Plus, ArrowUpRight, Clock3, CircleCheck, AlertTriangle, ChevronDown, Menu, X, Hammer, Ruler, Truck, ClipboardList, ArrowRight, Filter, LogOut } from 'lucide-react'
+import logoProvidencia from './public/logo-providencia.png'
 
 const initialJobs = [
   { id: 'TR-1048', client: 'María Fernanda López', initials: 'MF', project: 'Cubierta de cocina', material: 'Granito Negro San Gabriel', worker: 'Carlos Ramírez', date: '12 oct 2026', stage: 'Fabricación', progress: 52, urgent: false },
@@ -26,7 +27,7 @@ function Sidebar({ active, setActive, mobileOpen, setMobileOpen }) {
     {mobileOpen && <button aria-label="Cerrar menú" className="fixed inset-0 z-30 bg-slate-950/40 lg:hidden" onClick={() => setMobileOpen(false)} />}
     <aside className={`fixed inset-y-0 left-0 z-40 flex w-[258px] flex-col bg-[#12254A] text-white transition-transform lg:translate-x-0 ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
       <div className="flex h-23 items-center gap-3 border-b border-white/10 px-6 py-5">
-        <img src="/la-providencia.png" alt="Logo de La Providencia" className="size-11 shrink-0 rounded-xl object-contain" />
+        <img src={logoProvidencia} alt="Logo de La Providencia" className="size-11 shrink-0 rounded-xl object-contain" />
         <div><div className="text-[18px] font-extrabold tracking-tight">LA PROVIDENCIA</div><div className="text-[10px] font-semibold tracking-[.19em] text-blue-200/70">SISTEMA DE GESTIÓN</div></div>
         <button className="ml-auto lg:hidden" aria-label="Cerrar" onClick={() => setMobileOpen(false)}><X size={19}/></button>
       </div>

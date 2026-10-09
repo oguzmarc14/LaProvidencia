@@ -63,11 +63,6 @@ const trabajoSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Clientes"
     },
-
-    video:{
-        type: String
-    }
-
 })
 
 const Trabajo = mongoose.model("Trabajo", trabajoSchema)
