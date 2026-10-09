@@ -1,0 +1,10 @@
+@import "tailwindcss";
+@theme {
+  --color-brand-blue: #124B91;
+  --color-brand-purple: #554372;
+  --color-brand-pink: #A33D63;
+  --color-brand-coral: #F5444B;
+}
+:root { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #1e293b; background: #f6f8fc; font-synthesis: none; text-rendering: optimizeLegibility; }
+body { margin: 0; min-width: 320px; }
+button { cursor: pointer; }
