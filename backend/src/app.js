@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const trabajoRoutes = require("./routes/trabajoRoutes");
 const clientesRoutes = require("./routes/clientesRoutes");
+const trabajadoresRoutes = require("./routes/trabajadoresRoutes");
 const app = express();
 
 app.use(express.json());
@@ -17,6 +18,8 @@ app.use("/api/trabajos", trabajoRoutes);
 
 //espacios para apis de clientes
 app.use("/api/clientes", clientesRoutes);
+
+app.use("/api/trabajadores", trabajadoresRoutes);
 
 app.get("/", (req, res) => {
   res.json({
