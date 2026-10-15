@@ -1,12 +1,22 @@
+//importacion de librerias
 const mongoose = require("mongoose");
 const Cliente = require("../models/Clientes");
+
+//declaracion de funciones
+const validarNombre = (nombre) => {
+  return !nombre || typeof nombre !== "string" || nombre.trim() === "";
+};
+
+const validarCampoOpcional = (valor) => {
+  return valor !== undefined && typeof valor !== "string";
+};
 
 const crearClientes = async (req, res) => {
   const nombre = req.body.nombre;
   const whatsapp = req.body.whatsapp;
   const direccion = req.body.direccion;
 
-  if (!nombre || typeof nombre !== "string" || nombre.trim() === "") {
+  if (validarNombre(nombre)) {
     res.status(400).json({
       mensaje: "Verifica el nombre a ingresar",
     });
@@ -18,6 +28,7 @@ const crearClientes = async (req, res) => {
 
     res.status(201).json({
       mensaje: "Cliente creado correctamente",
+      cliente: nuevoCliente,
     });
   } catch (error) {
     if (error.name === "ValidationError") {
@@ -79,39 +90,80 @@ const buscarClientes = async (req, res) => {
   }
 };
 
-const actualizarCliente = async (req, res) => {
+const actualizarClientes = async (req, res) => {
   try {
     const id = req.params.id;
 
+    const nombre = req.body.nombre;
+    const whatsapp = req.body.whatsapp;
+    const direccion = req.body.direccion;
+
     if (!mongoose.isValidObjectId(id)) {
-      return res.status(400).json({ mensaje: "ID inválido" });
+      return res.status(400).json({
+        mensaje: "El id del cliente no es valido",
+      });
     }
 
-    const { nombre, whatsapp, direccion } = req.body;
-    const datos = { nombre, whatsapp, direccion };
-
-    for (const [campo, valor] of Object.entries(datos)) {
-      if (typeof valor !== "string" || !valor.trim()) {
-        return res.status(400).json({
-          mensaje: `El campo ${campo} es obligatorio`
-        });
-      }
-      datos[campo] = valor.trim();
-    }
-
-    const cliente = await Cliente.findByIdAndUpdate(id, datos, {
-      new: true,
-      runValidators: true
-    });
+    const cliente = await Cliente.findById(id);
+    console.log(cliente);
 
     if (!cliente) {
-      return res.status(404).json({ mensaje: "Cliente no encontrado" });
+      return res.status(404).json({
+        mensaje: "El cliente no existe",
+      });
     }
 
-    return res.status(200).json({ cliente });
+    // 1. Validamos los datos recibidos
+
+    if (nombre !== undefined && validarNombre(nombre)) {
+      return res.status(400).json({
+        mensaje: "El nombre ingresado no es válido",
+      });
+    }
+
+    if (validarCampoOpcional(direccion)) {
+      return res.status(400).json({
+        mensaje: "La dirección no es válida",
+      });
+    }
+
+    if (validarCampoOpcional(whatsapp)) {
+      return res.status(400).json({
+        mensaje: "El WhatsApp no es válido",
+      });
+    }
+
+    // 2. Asignamos los nuevos valores
+
+    if (nombre !== undefined) {
+      cliente.nombre = nombre;
+    }
+
+    if (direccion !== undefined) {
+      cliente.direccion = direccion;
+    }
+
+    if (whatsapp !== undefined) {
+      cliente.whatsapp = whatsapp;
+    }
+
+    await cliente.save();
+
+    res.status(200).json({
+      mensaje: "Los datos fueron editados correctamente",
+      cliente: cliente,
+    });
   } catch (error) {
-    return res.status(500).json({ mensaje: "Error al actualizar cliente" });
+    console.error(error);
+    res.status(500).json({
+      mensaje: "Existe un error en el servidor",
+    });
   }
 };
 
-module.exports = { crearClientes, obtenerClientes, buscarClientes };
+module.exports = {
+  crearClientes,
+  obtenerClientes,
+  buscarClientes,
+  actualizarClientes,
+};
