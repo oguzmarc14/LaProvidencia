@@ -12,6 +12,9 @@ async function validarDatos(datos) {
   if (!["granito", "vidrio"].includes(datos.material)) return "Selecciona un material válido";
   if (!datos.fechaInicio || !datos.fechaFinal || Number.isNaN(Date.parse(datos.fechaInicio)) || Number.isNaN(Date.parse(datos.fechaFinal))) return "Las fechas son obligatorias y deben ser válidas";
   if (new Date(datos.fechaFinal) < new Date(datos.fechaInicio)) return "La fecha final no puede ser anterior a la inicial";
+  if (datos.medidas !== undefined && typeof datos.medidas !== "string") return "Las medidas deben ser texto";
+  if (datos.piezasTotales != null && (!Number.isInteger(Number(datos.piezasTotales)) || Number(datos.piezasTotales) < 1)) return "Las piezas totales deben ser un entero mayor que cero";
+  if (datos.precioTotal != null && (datos.precioTotal === "" || !Number.isFinite(Number(datos.precioTotal)) || Number(datos.precioTotal) < 0)) return "El precio total debe ser igual o mayor que cero";
   if (datos.direccionInstalacion !== undefined && typeof datos.direccionInstalacion !== "string") return "La dirección de instalación no es válida";
   if (datos.ubicacionMaps !== undefined) {
     if (typeof datos.ubicacionMaps !== "string") return "La ubicación de Google Maps no es válida";
@@ -73,7 +76,7 @@ const actualizarTrabajo = async (req, res) => {
   try {
     const trabajo = await Trabajo.findById(req.params.id);
     if (!trabajo) return res.status(404).json({ mensaje: "Trabajo no encontrado" });
-    const campos = ["nombre", "material", "especificaciones", "fechaInicio", "fechaFinal", "estado", "trabajador", "responsableTemple", "cliente", "direccionInstalacion", "ubicacionMaps"];
+    const campos = ["nombre", "material", "especificaciones", "fechaInicio", "fechaFinal", "estado", "trabajador", "responsableTemple", "cliente", "direccionInstalacion", "ubicacionMaps", "medidas", "piezasTotales", "precioTotal"];
     const datos = Object.fromEntries(campos.filter(c => Object.prototype.hasOwnProperty.call(req.body || {}, c)).map(c => [c, req.body[c] === "" && ["trabajador", "responsableTemple", "cliente"].includes(c) ? null : req.body[c]]));
     const mensaje = await validarDatos({ ...trabajo.toObject(), ...datos });
     if (mensaje) return res.status(400).json({ mensaje });
