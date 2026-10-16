@@ -3,6 +3,7 @@ const cors = require("cors");
 const trabajoRoutes = require("./routes/trabajoRoutes");
 const clientesRoutes = require("./routes/clientesRoutes");
 const trabajadoresRoutes = require("./routes/trabajadoresRoutes");
+const dashboardRoutes = require("./routes/dashboardRoutes");
 const app = express();
 
 app.use(express.json());
@@ -20,6 +21,7 @@ app.use("/api/trabajos", trabajoRoutes);
 app.use("/api/clientes", clientesRoutes);
 
 app.use("/api/trabajadores", trabajadoresRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 app.get("/", (req, res) => {
   res.json({
