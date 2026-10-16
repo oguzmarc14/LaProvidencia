@@ -1,5 +1,5 @@
 import { LayoutDashboard, Users, UserRoundCheck, X, BriefcaseBusiness } from "lucide-react";
-const opciones = [{id:"dashboard",nombre:"Dashboard",icono:LayoutDashboard},{id:"clientes",nombre:"Clientes",icono:Users},{id:"trabajadores",nombre:"Trabajadores",icono:UserRoundCheck}];
+const opciones = [{id:"dashboard",nombre:"Dashboard",icono:LayoutDashboard},{id:"clientes",nombre:"Clientes",icono:Users},{id:"trabajadores",nombre:"Trabajadores",icono:UserRoundCheck},{id:"trabajos",nombre:"Trabajos",icono:BriefcaseBusiness}];
 export default function Sidebar({actual,navegar,abierto,cerrar}) {
   return <>
     {abierto && <button className="fixed inset-0 z-30 bg-slate-950/60 md:hidden" onClick={cerrar} aria-label="Cerrar menú"/>}
@@ -13,7 +13,6 @@ export default function Sidebar({actual,navegar,abierto,cerrar}) {
       <nav className="flex-1 space-y-1 p-4" aria-label="Navegación principal">
         <p className="px-3 pb-2 pt-3 text-[11px] font-bold uppercase tracking-widest text-white/60">Administración</p>
         {opciones.map(({id,nombre,icono:Icono})=><button key={id} onClick={()=>{navegar(id);cerrar();}} className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold transition ${actual===id?"bg-white text-[#273f7c] shadow-md":"text-white/90 hover:bg-white/15"}`}><Icono size={19}/>{nombre}</button>)}
-        <div className="px-3 pt-4 text-xs text-white/60"><BriefcaseBusiness size={14} className="mr-2 inline"/> Trabajos: módulo en preparación</div>
       </nav>
       <p className="border-t border-white/15 px-5 py-4 text-xs text-white/70">Sistema de organización</p>
     </aside>
