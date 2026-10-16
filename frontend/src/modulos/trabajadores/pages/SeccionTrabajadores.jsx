@@ -50,14 +50,14 @@ export default function SeccionTrabajadores() {
       {cargando ? <p className="py-12 text-center text-slate-500">Cargando trabajadores...</p> : filtrados.length === 0 ?
         <div className="rounded-2xl border bg-white p-12 text-center text-slate-500">No hay trabajadores para mostrar.</div> :
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {filtrados.map((t) => <article key={t._id} className="rounded-[22px] border border-[#cbd4e6] bg-white p-6 shadow-[0_10px_28px_rgba(25,45,90,.09)]">
-            <div className="mb-4 flex items-start justify-between"><div className="rounded-xl bg-blue-50 p-3 text-[#124B91]"><Users size={24}/></div><span className={`rounded-full px-3 py-1 text-xs font-semibold ${t.activo ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-600"}`}>{t.activo ? "Activo" : "Inactivo"}</span></div>
-            <h3 className="text-lg font-bold">{t.nombre}</h3><p className="mt-1 text-sm text-slate-500">{t.whatsapp || "Sin WhatsApp registrado"}</p>
-            <div className="mt-5 flex flex-wrap gap-2 border-t pt-4">
-              <button onClick={() => { setEditando(t); setModalAbierto(true); }} className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm hover:bg-slate-50"><Pencil size={15}/> Editar</button>
+          {filtrados.map((t) => <article key={t._id} className="group overflow-hidden rounded-[24px] border border-[#cbd4e6] bg-white shadow-[0_12px_32px_rgba(25,45,90,.12)] transition duration-200 hover:-translate-y-1 hover:border-[#9f8abf] hover:shadow-xl">
+            <div className="h-1.5 bg-gradient-to-r from-[#124B91] via-[#64417c] to-[#a33d63]"/><div className="p-6"><div className="mb-4 flex items-start justify-between"><div className="rounded-xl bg-gradient-to-br from-blue-100 to-purple-100 p-3 text-[#124B91]"><Users size={24}/></div><span className={`rounded-full px-3 py-1 text-xs font-semibold ${t.activo ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-600"}`}>{t.activo ? "Activo" : "Inactivo"}</span></div>
+            <h3 className="text-xl font-extrabold text-slate-900">{t.nombre}</h3><p className="mt-4 rounded-xl border border-[#e2e7f1] bg-gradient-to-br from-[#f2f6fc] to-[#faf3f8] p-4 text-sm font-medium text-slate-700">{t.whatsapp || "Sin WhatsApp registrado"}</p>
+            <div className="mt-5 flex flex-wrap gap-2 border-t border-slate-100 pt-4">
+              <button onClick={() => { setEditando(t); setModalAbierto(true); }} className="flex items-center gap-2 rounded-xl border-2 border-[#b9c9e3] bg-blue-50 px-3 py-2 text-sm font-bold text-[#124B91] hover:bg-blue-100"><Pencil size={15}/> Editar</button>
               <button onClick={() => setViendoTrabajos(t)} className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm hover:bg-slate-50"><BriefcaseBusiness size={15}/> Ver trabajos</button>
             </div>
-          </article>)}
+            </div></article>)}
         </div>}
       {modalAbierto && <ModalTrabajador trabajador={editando} onClose={() => setModalAbierto(false)} onSave={guardar} saving={guardando}/>}
       {viendoTrabajos && <ModalTrabajos trabajador={viendoTrabajos} onClose={() => setViendoTrabajos(null)}/>}
