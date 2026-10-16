@@ -1,0 +1,73 @@
+@import "tailwindcss";
+@theme {
+  --color-brand-blue: #124B91;
+  --color-brand-purple: #554372;
+  --color-brand-pink: #A33D63;
+  --color-brand-coral: #F5444B;
+}
+:root { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #23334c; background: #f4f6fb; font-synthesis: none; text-rendering: optimizeLegibility; }
+body { margin: 0; min-width: 320px; }
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+:focus-visible { outline: 3px solid #e68ba7; outline-offset: 2px; }
+.app-background {
+  position: relative;
+  isolation: isolate;
+  background-color: #e9edf7;
+  background-image:
+    radial-gradient(ellipse 70% 54% at 96% 5%, rgba(245,68,75,.16), transparent 75%),
+    radial-gradient(ellipse 64% 56% at 13% 88%, rgba(18,75,145,.17), transparent 78%),
+    radial-gradient(ellipse 54% 48% at 74% 74%, rgba(132,69,151,.13), transparent 75%),
+    linear-gradient(145deg,#f5f7fd 0%,#e9eef8 46%,#f6edf5 100%);
+  background-attachment: fixed;
+}
+.app-background::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: .48;
+  background-image: radial-gradient(circle, rgba(69,80,134,.18) .75px, transparent 1px);
+  background-size: 24px 24px;
+  mask-image: linear-gradient(110deg, transparent 6%, #000 54%, transparent 96%);
+}
+.app-background > :last-child { position: relative; z-index: 0; }
+@media (prefers-reduced-motion: no-preference) {
+  .app-background { background-size: auto; }
+}
+.app-panel { background: rgba(255,255,255,.96); border: 1px solid #e4e8f2; border-radius: 1.25rem; box-shadow: 0 12px 35px -25px rgba(20,44,87,.3); }
+.app-primary { background: linear-gradient(105deg,#124B91,#554372); color: white; box-shadow: 0 8px 18px -12px #124B91; transition: filter .15s, transform .15s; }
+.app-primary:hover { filter: brightness(1.12); transform: translateY(-1px); }
+.app-field { width:100%; border:1px solid #dbe2ed; background:white; border-radius:.85rem; padding:.8rem 1rem; color:#24334d; outline:none; transition:border-color .15s,box-shadow .15s; }
+.app-field:focus { border-color:#835b9d; box-shadow:0 0 0 3px rgba(163,61,99,.12); }
+.app-label { display:block; margin-bottom:.45rem; font-size:.84rem; font-weight:650; color:#3c4c65; }
+.app-modal { width:100%; background:white; border-radius:1.5rem; box-shadow:0 25px 80px rgba(15,23,42,.25); overflow:hidden; }
+.app-modal-head { background:linear-gradient(115deg,#fff7f8,#f6f3fa 55%,#eff5fd); border-bottom:1px solid #e8e7f0; }
+
+/* Tarjetas consistentes en todas las pantallas del sistema */
+.brand-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(149,163,194,.68);
+  border-radius: 24px;
+  background: linear-gradient(155deg,#ffffff 0%,#ffffff 76%,#fbf8fd 100%);
+  box-shadow: 0 12px 30px rgba(24,42,87,.15), 0 3px 9px rgba(24,42,87,.07);
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.brand-card::before {
+  content: "";
+  display: block;
+  height: 5px;
+  width: 100%;
+  background: linear-gradient(90deg,#124B91 0%,#65417f 52%,#b53f70 100%);
+}
+.brand-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(113,89,159,.65);
+  box-shadow: 0 20px 42px rgba(24,42,87,.20), 0 5px 12px rgba(24,42,87,.09);
+}
+@media (prefers-reduced-motion: reduce) {
+  .brand-card { transition: none; }
+  .brand-card:hover { transform: none; }
+}

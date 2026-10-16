@@ -9,6 +9,17 @@ const datos = {
   nombre: "Ventana", material: "vidrio",
   fechaInicio: "2026-10-13", fechaFinal: "2026-10-20",
 };
+const documento = (entrada) => ({
+  ...entrada,
+  toObject() { return { ...entrada }; },
+  async save() { await new Trabajo(this.toObject()).validate(); },
+  async populate() { return this; },
+});
+const consulta = (resultado) => ({
+  populate() { return this; },
+  sort() { return this; },
+  then(resolve, reject) { return Promise.resolve(resultado).then(resolve, reject); },
+});
 let servidor;
 let base;
 
@@ -31,7 +42,7 @@ const solicitar = (ruta = "", method = "GET", body) => fetch(base + ruta, {
 test("POST crea un trabajo y devuelve sus datos", async () => {
   mock.method(Trabajo, "create", async (entrada) => {
     assert.deepEqual(entrada.nombre, datos.nombre);
-    return { _id: id, ...entrada };
+    return documento({ _id: id, ...entrada });
   });
   const respuesta = await solicitar("", "POST", datos);
   assert.equal(respuesta.status, 201);
@@ -48,16 +59,16 @@ test("POST rechaza nombres vacíos y errores de validación del modelo", async (
 });
 
 test("GET lista trabajos, incluida una colección vacía", async () => {
-  mock.method(Trabajo, "find", async () => []);
+  mock.method(Trabajo, "find", () => consulta([]));
   const respuesta = await solicitar();
   assert.equal(respuesta.status, 200);
   assert.deepEqual(await respuesta.json(), { trabajos: [] });
 });
 
 test("GET consulta un trabajo por ID", async () => {
-  mock.method(Trabajo, "findById", async (entrada) => {
+  mock.method(Trabajo, "findById", (entrada) => {
     assert.equal(entrada, id);
-    return { _id: id, ...datos };
+    return consulta({ _id: id, ...datos });
   });
   const respuesta = await solicitar(`/${id}`);
   assert.equal(respuesta.status, 200);
@@ -65,7 +76,7 @@ test("GET consulta un trabajo por ID", async () => {
 });
 
 test("GET y HEAD distinguen IDs inválidos de trabajos inexistentes", async () => {
-  mock.method(Trabajo, "findById", async () => null);
+  mock.method(Trabajo, "findById", () => consulta(null));
   for (const method of ["GET", "HEAD"]) {
     assert.equal((await solicitar("/incorrecto", method)).status, 400);
     assert.equal((await solicitar(`/${id}`, method)).status, 404);
@@ -73,8 +84,8 @@ test("GET y HEAD distinguen IDs inválidos de trabajos inexistentes", async () =
 });
 
 test("HEAD responde para colección y detalle sin enviar cuerpo", async () => {
-  mock.method(Trabajo, "find", async () => [{ _id: id }]);
-  mock.method(Trabajo, "findById", async () => ({ _id: id }));
+  mock.method(Trabajo, "find", () => consulta([{ _id: id }]));
+  mock.method(Trabajo, "findById", () => consulta({ _id: id }));
   for (const ruta of ["", `/${id}`]) {
     const respuesta = await solicitar(ruta, "HEAD");
     assert.equal(respuesta.status, 200);
@@ -83,21 +94,29 @@ test("HEAD responde para colección y detalle sin enviar cuerpo", async () => {
   }
 });
 
-test("PUT actualiza campos permitidos y activa las validaciones", async () => {
-  mock.method(Trabajo, "findByIdAndUpdate", async (entrada, actualizacion, opciones) => {
+test("PUT y PATCH actualizan campos permitidos y conservan video", async () => {
+  mock.method(Trabajo, "findById", async (entrada) => {
     assert.equal(entrada, id);
-    assert.deepEqual(actualizacion, { $set: { estado: "finalizado" } });
-    assert.deepEqual(opciones, { new: true, runValidators: true });
-    return { _id: id, ...datos, estado: "finalizado" };
+    const trabajo = documento({ _id: id, ...datos });
+    trabajo.save = async () => {
+      assert.equal(trabajo._id, id);
+      assert.equal(trabajo.$unset, undefined);
+      assert.equal(trabajo.estado, "finalizado");
+      assert.equal(trabajo.video, "video.mp4");
+    };
+    return trabajo;
   });
-  const respuesta = await solicitar(`/${id}`, "PUT", {
-    estado: "finalizado", _id: "otro", $unset: { nombre: 1 },
-  });
-  assert.equal(respuesta.status, 200);
-  assert.equal((await respuesta.json()).trabajo.estado, "finalizado");
+  for (const method of ["PUT", "PATCH"]) {
+    const respuesta = await solicitar(`/${id}`, method, {
+      estado: "finalizado", video: "video.mp4", _id: "otro", $unset: { nombre: 1 },
+    });
+    assert.equal(respuesta.status, 200);
+    assert.equal((await respuesta.json()).trabajo.estado, "finalizado");
+  }
 });
 
 test("PUT rechaza IDs inválidos, cuerpos vacíos y nombres vacíos", async () => {
+  mock.method(Trabajo, "findById", async () => documento({ _id: id, ...datos }));
   assert.equal((await solicitar("/incorrecto", "PUT", datos)).status, 400);
   for (const body of [undefined, {}, { nombre: " " }, { nombre: null }, { _id: id }]) {
     assert.equal((await solicitar(`/${id}`, "PUT", body)).status, 400);
@@ -105,13 +124,13 @@ test("PUT rechaza IDs inválidos, cuerpos vacíos y nombres vacíos", async () =
 });
 
 test("PUT devuelve 404 si el trabajo no existe", async () => {
-  mock.method(Trabajo, "findByIdAndUpdate", async () => null);
+  mock.method(Trabajo, "findById", async () => null);
   assert.equal((await solicitar(`/${id}`, "PUT", { estado: "finalizado" })).status, 404);
 });
 
 test("PUT devuelve 400 ante errores de validación o conversión", async () => {
   for (const name of ["ValidationError", "CastError"]) {
-    mock.method(Trabajo, "findByIdAndUpdate", async () => {
+    mock.method(Trabajo, "findById", async () => {
       const error = new Error("Datos inválidos");
       error.name = name;
       throw error;
@@ -135,8 +154,8 @@ test("DELETE elimina un trabajo y distingue 400 y 404", async () => {
 
 test("Los errores de base de datos devuelven 500", async () => {
   mock.method(console, "error", () => {});
-  for (const metodo of ["find", "findById", "create", "findByIdAndUpdate", "findByIdAndDelete"]) {
-    mock.method(Trabajo, metodo, async () => { throw new Error("BD no disponible"); });
+  for (const metodo of ["find", "findById", "create", "findByIdAndDelete"]) {
+    mock.method(Trabajo, metodo, () => { throw new Error("BD no disponible"); });
   }
   for (const [ruta, method, body] of [
     ["", "GET"], [`/${id}`, "GET"], ["", "POST", datos],

@@ -17,6 +17,14 @@ const trabajoSchema = new mongoose.Schema({
         trim: true
     },
 
+    video: { type: String },
+    medidas: { type: String, default: "", trim: true },
+    piezasTotales: { type: Number, min: 1, validate: { validator: v => v == null || Number.isInteger(v), message: "Las piezas deben ser un número entero" } },
+    precioTotal: { type: Number, min: 0 },
+
+    direccionInstalacion: { type: String, default: "", trim: true },
+    ubicacionMaps: { type: String, default: "", trim: true },
+
     especificaciones:{
         type: String,
         required: false,
@@ -63,11 +71,6 @@ const trabajoSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Clientes"
     },
-
-    video:{
-        type: String
-    }
-
 })
 
 const Trabajo = mongoose.model("Trabajo", trabajoSchema)

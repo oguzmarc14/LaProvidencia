@@ -1,16 +1,32 @@
-const express = require('express')
-const trabajoRoutes = require('./routes/trabajoRoutes')
+const express = require("express");
+const cors = require("cors");
+const trabajoRoutes = require("./routes/trabajoRoutes");
+const clientesRoutes = require("./routes/clientesRoutes");
+const trabajadoresRoutes = require("./routes/trabajadoresRoutes");
+const dashboardRoutes = require("./routes/dashboardRoutes");
+const app = express();
 
-const app = express()
+app.use(express.json());
 
-app.use(express.json())
-app.use('/api/trabajos', trabajoRoutes)
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+  }),
+);
 
-app.get('/', (req, res) => {
-    res.json({
-        message: 'la api esta funcionando :)'
-    })
-})
+//aqui vamos a usar las apis de trabajos
+app.use("/api/trabajos", trabajoRoutes);
 
-module.exports = app
+//espacios para apis de clientes
+app.use("/api/clientes", clientesRoutes);
 
+app.use("/api/trabajadores", trabajadoresRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+
+app.get("/", (req, res) => {
+  res.json({
+    message: "la api esta funcionando :)",
+  });
+});
+
+module.exports = app;
