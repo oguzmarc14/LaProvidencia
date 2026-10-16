@@ -12,6 +12,21 @@ async function validarDatos(datos) {
   if (!["granito", "vidrio"].includes(datos.material)) return "Selecciona un material válido";
   if (!datos.fechaInicio || !datos.fechaFinal || Number.isNaN(Date.parse(datos.fechaInicio)) || Number.isNaN(Date.parse(datos.fechaFinal))) return "Las fechas son obligatorias y deben ser válidas";
   if (new Date(datos.fechaFinal) < new Date(datos.fechaInicio)) return "La fecha final no puede ser anterior a la inicial";
+  if (datos.direccionInstalacion !== undefined && typeof datos.direccionInstalacion !== "string") return "La dirección de instalación no es válida";
+  if (datos.ubicacionMaps !== undefined) {
+    if (typeof datos.ubicacionMaps !== "string") return "La ubicación de Google Maps no es válida";
+    if (datos.ubicacionMaps.trim()) {
+      try {
+        const url = new URL(datos.ubicacionMaps.trim());
+        const host = url.hostname.toLowerCase();
+        if (url.protocol !== "https:" || !(
+          host === "maps.app.goo.gl" || host === "goo.gl" || host === "maps.google.com" ||
+          host === "www.google.com" || host === "google.com" ||
+          /^maps\\.google\\.[a-z.]+$/.test(host) || /^www\\.google\\.[a-z.]+$/.test(host)
+        )) return "Pega un enlace HTTPS válido de Google Maps";
+      } catch { return "Pega un enlace HTTPS válido de Google Maps"; }
+    }
+  }
   if (datos.estado && !["templado", "fabricacion", "detallado", "instalacion", "finalizado"].includes(datos.estado)) return "Estado no válido";
   for (const campo of ["cliente", "trabajador", "responsableTemple"]) {
     if (datos[campo] && !idValido(datos[campo])) return `El ID de ${campo} no es válido`;
@@ -58,7 +73,7 @@ const actualizarTrabajo = async (req, res) => {
   try {
     const trabajo = await Trabajo.findById(req.params.id);
     if (!trabajo) return res.status(404).json({ mensaje: "Trabajo no encontrado" });
-    const campos = ["nombre", "material", "especificaciones", "fechaInicio", "fechaFinal", "estado", "trabajador", "responsableTemple", "cliente"];
+    const campos = ["nombre", "material", "especificaciones", "fechaInicio", "fechaFinal", "estado", "trabajador", "responsableTemple", "cliente", "direccionInstalacion", "ubicacionMaps"];
     const datos = Object.fromEntries(campos.filter(c => Object.prototype.hasOwnProperty.call(req.body || {}, c)).map(c => [c, req.body[c] === "" && ["trabajador", "responsableTemple", "cliente"].includes(c) ? null : req.body[c]]));
     const mensaje = await validarDatos({ ...trabajo.toObject(), ...datos });
     if (mensaje) return res.status(400).json({ mensaje });
