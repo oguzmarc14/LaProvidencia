@@ -9,5 +9,5 @@ export default function EstadosTrabajos({ estados = [], total = 0 }) {
         <div className="mb-2 flex justify-between gap-2 text-sm"><span className="font-bold text-[#344766]">{etapas[item.estado] || item.estado}</span><span className="font-extrabold text-slate-900">{item.total} <span className="font-medium text-slate-400">({total ? Math.round(item.total / total * 100) : 0}%)</span></span></div>
         <div className="h-3 overflow-hidden rounded-full bg-slate-100"><div className={`h-full rounded-full transition-all ${colores[item.estado] || "bg-[#124B91]"}`} style={{width:`${total ? item.total / total * 100 : 0}%`}}/></div>
       </div>)}</div>}
-    </div>\n  </section>;
+    </div>  </section>;
 }
