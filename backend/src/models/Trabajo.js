@@ -17,6 +17,9 @@ const trabajoSchema = new mongoose.Schema({
         trim: true
     },
 
+    direccionInstalacion: { type: String, default: "", trim: true },
+    ubicacionMaps: { type: String, default: "", trim: true },
+
     especificaciones:{
         type: String,
         required: false,
