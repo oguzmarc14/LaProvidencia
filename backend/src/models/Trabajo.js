@@ -17,6 +17,10 @@ const trabajoSchema = new mongoose.Schema({
         trim: true
     },
 
+    medidas: { type: String, default: "", trim: true },
+    piezasTotales: { type: Number, min: 1, validate: { validator: v => v == null || Number.isInteger(v), message: "Las piezas deben ser un número entero" } },
+    precioTotal: { type: Number, min: 0 },
+
     direccionInstalacion: { type: String, default: "", trim: true },
     ubicacionMaps: { type: String, default: "", trim: true },
 
