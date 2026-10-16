@@ -5,7 +5,7 @@ const inicial = { nombre: "", material: "granito", especificaciones: "", fechaIn
 const fechaInput = fecha => fecha ? new Date(fecha).toISOString().slice(0, 10) : "";
 const etapas = [["templado","Templado"],["fabricacion","Fabricación"],["detallado","Detallado"],["instalacion","Instalación"],["finalizado","Finalizado"]];
 const secciones = [{ id: "datos", nombre: "Información", icono: ClipboardList }, { id: "equipo", nombre: "Responsables", icono: UsersRound }, { id: "fechas", nombre: "Programación", icono: CalendarDays }];
-const claseCampo = "w-full min-h-12 rounded-xl border-2 border-slate-200 bg-white px-4 py-3 text-base font-medium text-slate-800 outline-none transition focus:border-[#124B91] focus:ring-4 focus:ring-blue-100";
+const claseCampo = "w-full min-h-12 rounded-xl border-2 border-[#c8d3e7] bg-[#f7f9fd] px-4 py-3 text-base font-medium text-slate-800 outline-none transition focus:border-[#124B91] focus:ring-4 focus:ring-blue-100";
 const claseEtiqueta = "mb-2 block text-sm font-bold text-slate-800";
 
 export default function ModalTrabajo({ trabajo, clientes, trabajadores, onClose, onSave, saving, onNuevoCliente, onNuevoTrabajador }) {
@@ -27,7 +27,7 @@ export default function ModalTrabajo({ trabajo, clientes, trabajadores, onClose,
     onSave({ ...datos, cliente: datos.cliente || null, trabajador: datos.trabajador || null, responsableTemple: datos.responsableTemple || null });
   };
   return <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0b1631]/80 p-0 backdrop-blur-[6px] md:p-5" onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}>
-    <div role="dialog" aria-modal="true" aria-labelledby="titulo-modal-trabajo" className="flex h-full w-full max-w-6xl flex-col overflow-hidden bg-[#f5f7fc] shadow-2xl md:h-[min(94vh,940px)] md:rounded-[28px] md:border md:border-white/70">
+    <div role="dialog" aria-modal="true" aria-labelledby="titulo-modal-trabajo" className="flex h-full w-full max-w-6xl flex-col overflow-hidden bg-[#e9edf7] shadow-2xl md:h-[min(94vh,940px)] md:rounded-[28px] md:border md:border-white/70">
       <header className="flex shrink-0 items-center justify-between gap-4 bg-gradient-to-r from-[#123e83] via-[#513d79] to-[#9d4165] px-5 py-5 text-white sm:px-8">
         <div className="flex items-center gap-4">
           <div className="hidden rounded-2xl bg-white/15 p-3 sm:block"><BriefcaseBusiness size={28}/></div>
@@ -42,9 +42,9 @@ export default function ModalTrabajo({ trabajo, clientes, trabajadores, onClose,
           <div className="mt-auto rounded-2xl bg-gradient-to-br from-blue-50 to-purple-50 p-4"><Layers3 size={24} className="mb-3 text-[#124B91]"/><p className="font-bold text-slate-800">Todo en un lugar</p><p className="mt-1 text-sm leading-relaxed text-slate-500">Puedes crear un cliente o trabajador sin salir de este registro.</p></div>
         </aside>
         <form id="form-trabajo" onSubmit={enviar} className="flex min-h-0 min-w-0 flex-1 flex-col">
-          <div className="flex-1 space-y-6 overflow-y-auto px-4 py-5 sm:px-8 sm:py-7">
+          <div className="flex-1 space-y-6 overflow-y-auto bg-[radial-gradient(ellipse_at_top_right,rgba(163,61,99,.12),transparent_46%),radial-gradient(ellipse_at_bottom_left,rgba(18,75,145,.13),transparent_48%),linear-gradient(145deg,#edf1fa,#f5edf4)] px-4 py-5 sm:px-8 sm:py-7">
             <div className="grid grid-cols-3 gap-2 lg:hidden">{secciones.map((s,i) => <button key={s.id} type="button" onClick={() => ir(s.id)} className={`rounded-xl px-2 py-3 text-xs font-bold sm:text-sm ${seccion===s.id ? "bg-[#124B91] text-white" : "bg-white text-slate-600"}`}>{i+1}. {s.nombre}</button>)}</div>
-            <section id="trabajo-datos" className="scroll-mt-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+            <section id="trabajo-datos" className="scroll-mt-4 rounded-2xl border border-[#cbd4e6] bg-white p-5 shadow-[0_8px_30px_rgba(25,45,90,.10)] sm:p-7">
               <div className="mb-6 flex items-center gap-3 border-b border-slate-100 pb-5"><span className="grid h-11 w-11 place-items-center rounded-xl bg-blue-100 text-[#124B91]"><ClipboardList size={23}/></span><div><h3 className="text-xl font-extrabold text-slate-900">Información del trabajo</h3><p className="text-sm text-slate-500">¿Qué vamos a fabricar o instalar?</p></div></div>
               <div className="grid gap-5 sm:grid-cols-2">
                 <div className="sm:col-span-2"><label className={claseEtiqueta} htmlFor="nombre-trabajo">Nombre del trabajo <span className="text-rose-600">*</span></label><input id="nombre-trabajo" name="nombre" autoFocus required maxLength={150} className={claseCampo} value={datos.nombre} onChange={cambiar} placeholder="Ej. Cubierta de granito para cocina"/></div>
@@ -53,14 +53,14 @@ export default function ModalTrabajo({ trabajo, clientes, trabajadores, onClose,
                 <div className="sm:col-span-2"><label className={claseEtiqueta} htmlFor="especificaciones-trabajo">Especificaciones</label><textarea id="especificaciones-trabajo" name="especificaciones" rows={3} className={claseCampo} value={datos.especificaciones} onChange={cambiar} placeholder="Medidas, color, acabado y detalles del trabajo..."/></div>
               </div>
             </section>
-            <section id="trabajo-equipo" className="scroll-mt-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+            <section id="trabajo-equipo" className="scroll-mt-4 rounded-2xl border border-[#cbd4e6] bg-white p-5 shadow-[0_8px_30px_rgba(25,45,90,.10)] sm:p-7">
               <div className="mb-6 flex items-center gap-3 border-b border-slate-100 pb-5"><span className="grid h-11 w-11 place-items-center rounded-xl bg-purple-100 text-[#6b3d88]"><UsersRound size={23}/></span><div><h3 className="text-xl font-extrabold text-slate-900">Asignación de personal</h3><p className="text-sm text-slate-500">¿Quién se encargará del trabajo?</p></div></div>
               <div className="grid gap-5 sm:grid-cols-2">
                 <div><label className={claseEtiqueta} htmlFor="trabajador-trabajo">Trabajador asignado</label><select id="trabajador-trabajo" name="trabajador" className={claseCampo} value={datos.trabajador} onChange={cambiar}><option value="">Sin asignar</option>{personalDisponible(datos.trabajador).map(t => <option key={t._id} value={t._id}>{t.nombre}{!t.activo ? " (inactivo)" : ""}</option>)}</select><button type="button" onClick={onNuevoTrabajador} className="mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-[#124B91] hover:underline"><Plus size={16}/> Registrar trabajador nuevo</button></div>
                 <div><label className={claseEtiqueta} htmlFor="temple-trabajo">Responsable de templado</label><select id="temple-trabajo" name="responsableTemple" className={claseCampo} value={datos.responsableTemple} onChange={cambiar}><option value="">Sin asignar</option>{personalDisponible(datos.responsableTemple).map(t => <option key={t._id} value={t._id}>{t.nombre}{!t.activo ? " (inactivo)" : ""}</option>)}</select></div>
               </div>
             </section>
-            <section id="trabajo-fechas" className="scroll-mt-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+            <section id="trabajo-fechas" className="scroll-mt-4 rounded-2xl border border-[#cbd4e6] bg-white p-5 shadow-[0_8px_30px_rgba(25,45,90,.10)] sm:p-7">
               <div className="mb-6 flex items-center gap-3 border-b border-slate-100 pb-5"><span className="grid h-11 w-11 place-items-center rounded-xl bg-rose-100 text-[#a33d63]"><CalendarDays size={23}/></span><div><h3 className="text-xl font-extrabold text-slate-900">Fechas y seguimiento</h3><p className="text-sm text-slate-500">Define cuándo comienza y cuándo debe entregarse.</p></div></div>
               <div className="grid gap-5 sm:grid-cols-2">
                 <div><label className={claseEtiqueta} htmlFor="inicio-trabajo">Fecha de inicio <span className="text-rose-600">*</span></label><input id="inicio-trabajo" name="fechaInicio" type="date" required className={claseCampo} value={datos.fechaInicio} onChange={cambiar}/></div>
