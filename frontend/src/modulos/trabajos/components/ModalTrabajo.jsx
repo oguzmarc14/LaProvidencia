@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { enlaceMaps } from "../../clientes/utils/enlacesCliente";
-import { X, Plus, BriefcaseBusiness, CalendarDays, UsersRound, ClipboardList, ArrowRight, Check, Layers3, MapPin, Navigation, ExternalLink } from "lucide-react";
+import { X, Plus, BriefcaseBusiness, CalendarDays, UsersRound, ClipboardList, ArrowRight, Check, Layers3, MapPin, Navigation, ExternalLink, Ruler, Package, Banknote } from "lucide-react";
 
-const inicial = { nombre: "", material: "granito", especificaciones: "", direccionInstalacion: "", ubicacionMaps: "", fechaInicio: "", fechaFinal: "", estado: "templado", cliente: "", trabajador: "", responsableTemple: "" };
+const inicial = { nombre: "", material: "granito", especificaciones: "", medidas: "", piezasTotales: "", precioTotal: "", direccionInstalacion: "", ubicacionMaps: "", fechaInicio: "", fechaFinal: "", estado: "templado", cliente: "", trabajador: "", responsableTemple: "" };
 const fechaInput = fecha => fecha ? new Date(fecha).toISOString().slice(0, 10) : "";
 const etapas = [["templado","Templado"],["fabricacion","Fabricación"],["detallado","Detallado"],["instalacion","Instalación"],["finalizado","Finalizado"]];
 const secciones = [{ id: "datos", nombre: "Información", icono: ClipboardList }, { id: "equipo", nombre: "Responsables", icono: UsersRound }, { id: "fechas", nombre: "Programación", icono: CalendarDays }];
@@ -14,7 +14,7 @@ export default function ModalTrabajo({ trabajo, clientes, trabajadores, onClose,
   const [seccion, setSeccion] = useState("datos");
   useEffect(() => {
     setDatos(trabajo ? {
-      nombre: trabajo.nombre || "", material: trabajo.material || "granito", especificaciones: trabajo.especificaciones || "", direccionInstalacion: trabajo.direccionInstalacion || "", ubicacionMaps: trabajo.ubicacionMaps || "",
+      nombre: trabajo.nombre || "", material: trabajo.material || "granito", especificaciones: trabajo.especificaciones || "", medidas: trabajo.medidas || "", piezasTotales: trabajo.piezasTotales ?? "", precioTotal: trabajo.precioTotal ?? "", direccionInstalacion: trabajo.direccionInstalacion || "", ubicacionMaps: trabajo.ubicacionMaps || "",
       fechaInicio: fechaInput(trabajo.fechaInicio), fechaFinal: fechaInput(trabajo.fechaFinal), estado: trabajo.estado || "templado",
       cliente: trabajo.cliente?._id || trabajo.cliente || "", trabajador: trabajo.trabajador?._id || trabajo.trabajador || "",
       responsableTemple: trabajo.responsableTemple?._id || trabajo.responsableTemple || ""
@@ -28,7 +28,7 @@ export default function ModalTrabajo({ trabajo, clientes, trabajadores, onClose,
   const enviar = e => {
     e.preventDefault();
     if (enlaceInvalido) return;
-    onSave({ ...datos, cliente: datos.cliente || null, trabajador: datos.trabajador || null, responsableTemple: datos.responsableTemple || null });
+    onSave({ ...datos, piezasTotales: datos.piezasTotales === "" ? null : Number(datos.piezasTotales), precioTotal: datos.precioTotal === "" ? null : Number(datos.precioTotal), cliente: datos.cliente || null, trabajador: datos.trabajador || null, responsableTemple: datos.responsableTemple || null });
   };
   return <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0b1631]/80 p-0 backdrop-blur-[6px] md:p-5" onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}>
     <div role="dialog" aria-modal="true" aria-labelledby="titulo-modal-trabajo" className="flex h-full w-full max-w-6xl flex-col overflow-hidden bg-[#e9edf7] shadow-2xl md:h-[min(94vh,940px)] md:rounded-[28px] md:border md:border-white/70">
@@ -54,6 +54,15 @@ export default function ModalTrabajo({ trabajo, clientes, trabajadores, onClose,
                 <div className="sm:col-span-2"><label className={claseEtiqueta} htmlFor="nombre-trabajo">Nombre del trabajo <span className="text-rose-600">*</span></label><input id="nombre-trabajo" name="nombre" autoFocus required maxLength={150} className={claseCampo} value={datos.nombre} onChange={cambiar} placeholder="Ej. Cubierta de granito para cocina"/></div>
                 <div><label className={claseEtiqueta} htmlFor="cliente-trabajo">Cliente</label><select id="cliente-trabajo" name="cliente" className={claseCampo} value={datos.cliente} onChange={cambiar}><option value="">Seleccionar cliente</option>{clientes.map(c => <option key={c._id} value={c._id}>{c.nombre}</option>)}</select><button type="button" onClick={onNuevoCliente} className="mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-[#124B91] hover:underline"><Plus size={16}/> Registrar cliente nuevo</button></div>
                 <div><label className={claseEtiqueta} htmlFor="material-trabajo">Material <span className="text-rose-600">*</span></label><select id="material-trabajo" name="material" className={claseCampo} value={datos.material} onChange={cambiar}><option value="granito">Granito</option><option value="vidrio">Vidrio</option></select></div>
+                <div className="sm:col-span-2 rounded-2xl border border-[#cbd4e6] bg-gradient-to-br from-[#f0f5fc] to-[#f7eef7] p-5 shadow-sm">
+                  <div className="mb-4 flex items-center gap-2 text-[#124B91]"><Ruler size={22}/><h4 className="text-lg font-extrabold">Detalles de fabricación</h4></div>
+                  <p className="mb-5 text-sm text-slate-600">Registra las medidas, la cantidad de piezas y el precio acordado.</p>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="sm:col-span-2"><label className={claseEtiqueta} htmlFor="medidas-trabajo"><Ruler size={16} className="mr-1 inline"/> Medidas <span className="font-medium text-slate-400">(opcional)</span></label><textarea id="medidas-trabajo" name="medidas" rows={2} className={claseCampo} value={datos.medidas} onChange={cambiar} placeholder="Ej. Cubierta 2.40 × 0.60 m; barra 1.20 × 0.50 m"/></div>
+                    <div><label className={claseEtiqueta} htmlFor="piezas-trabajo"><Package size={16} className="mr-1 inline"/> Piezas totales <span className="font-medium text-slate-400">(opcional)</span></label><input id="piezas-trabajo" name="piezasTotales" type="number" min="1" step="1" className={claseCampo} value={datos.piezasTotales} onChange={cambiar} placeholder="Ej. 3"/></div>
+                    <div><label className={claseEtiqueta} htmlFor="precio-trabajo"><Banknote size={16} className="mr-1 inline"/> Precio total (MXN) <span className="font-medium text-slate-400">(opcional)</span></label><input id="precio-trabajo" name="precioTotal" type="number" min="0" step="0.01" className={claseCampo} value={datos.precioTotal} onChange={cambiar} placeholder="Ej. 8500.00"/></div>
+                  </div>
+                </div>
                 <div className="sm:col-span-2 rounded-2xl border border-[#cbd4e6] bg-gradient-to-br from-blue-50 to-purple-50 p-5">
                   <div className="mb-4 flex items-center gap-2 text-[#124B91]"><MapPin size={22}/><h4 className="font-extrabold">Ubicación de instalación</h4></div>
                   <div className="space-y-4">
@@ -61,7 +70,7 @@ export default function ModalTrabajo({ trabajo, clientes, trabajadores, onClose,
                     <div><label className={claseEtiqueta} htmlFor="maps-trabajo"><Navigation size={16} className="mr-1 inline"/> Enlace de Google Maps <span className="font-medium text-slate-400">(opcional)</span></label><input id="maps-trabajo" name="ubicacionMaps" type="url" className={claseCampo} value={datos.ubicacionMaps} onChange={cambiar} aria-invalid={enlaceInvalido} aria-describedby="ayuda-maps-trabajo" placeholder="https://maps.app.goo.gl/..."/><p id="ayuda-maps-trabajo" className={`mt-2 text-xs ${enlaceInvalido ? "font-bold text-red-600" : "text-slate-600"}`}>{enlaceInvalido ? "Pega un enlace HTTPS válido de Google Maps." : "Abre Google Maps, pulsa Compartir y copia el enlace de la ubicación."}</p>{maps && <a href={maps} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-[#124B91] hover:underline"><ExternalLink size={15}/> Comprobar ubicación</a>}</div>
                   </div>
                 </div>
-                <div className="sm:col-span-2"><label className={claseEtiqueta} htmlFor="especificaciones-trabajo">Especificaciones</label><textarea id="especificaciones-trabajo" name="especificaciones" rows={3} className={claseCampo} value={datos.especificaciones} onChange={cambiar} placeholder="Medidas, color, acabado y detalles del trabajo..."/></div>
+                <div className="sm:col-span-2"><label className={claseEtiqueta} htmlFor="especificaciones-trabajo">Especificaciones</label><textarea id="especificaciones-trabajo" name="especificaciones" rows={3} className={claseCampo} value={datos.especificaciones} onChange={cambiar} placeholder="Color, acabado, cortes y otros detalles del trabajo..."/></div>
               </div>
             </section>
             <section id="trabajo-equipo" className="scroll-mt-4 rounded-2xl border border-[#cbd4e6] bg-white p-5 shadow-[0_8px_30px_rgba(25,45,90,.10)] sm:p-7">
