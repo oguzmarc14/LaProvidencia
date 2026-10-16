@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { X, Plus, BriefcaseBusiness, CalendarDays, UsersRound, ClipboardList, ArrowRight, Check, Layers3 } from "lucide-react";
+import { enlaceMaps } from "../../clientes/utils/enlacesCliente";
+import { X, Plus, BriefcaseBusiness, CalendarDays, UsersRound, ClipboardList, ArrowRight, Check, Layers3, MapPin, Navigation, ExternalLink } from "lucide-react";
 
-const inicial = { nombre: "", material: "granito", especificaciones: "", fechaInicio: "", fechaFinal: "", estado: "templado", cliente: "", trabajador: "", responsableTemple: "" };
+const inicial = { nombre: "", material: "granito", especificaciones: "", direccionInstalacion: "", ubicacionMaps: "", fechaInicio: "", fechaFinal: "", estado: "templado", cliente: "", trabajador: "", responsableTemple: "" };
 const fechaInput = fecha => fecha ? new Date(fecha).toISOString().slice(0, 10) : "";
 const etapas = [["templado","Templado"],["fabricacion","Fabricación"],["detallado","Detallado"],["instalacion","Instalación"],["finalizado","Finalizado"]];
 const secciones = [{ id: "datos", nombre: "Información", icono: ClipboardList }, { id: "equipo", nombre: "Responsables", icono: UsersRound }, { id: "fechas", nombre: "Programación", icono: CalendarDays }];
@@ -13,17 +14,20 @@ export default function ModalTrabajo({ trabajo, clientes, trabajadores, onClose,
   const [seccion, setSeccion] = useState("datos");
   useEffect(() => {
     setDatos(trabajo ? {
-      nombre: trabajo.nombre || "", material: trabajo.material || "granito", especificaciones: trabajo.especificaciones || "",
+      nombre: trabajo.nombre || "", material: trabajo.material || "granito", especificaciones: trabajo.especificaciones || "", direccionInstalacion: trabajo.direccionInstalacion || "", ubicacionMaps: trabajo.ubicacionMaps || "",
       fechaInicio: fechaInput(trabajo.fechaInicio), fechaFinal: fechaInput(trabajo.fechaFinal), estado: trabajo.estado || "templado",
       cliente: trabajo.cliente?._id || trabajo.cliente || "", trabajador: trabajo.trabajador?._id || trabajo.trabajador || "",
       responsableTemple: trabajo.responsableTemple?._id || trabajo.responsableTemple || ""
     } : inicial);
   }, [trabajo]);
+  const maps = enlaceMaps(datos.ubicacionMaps);
+  const enlaceInvalido = !!datos.ubicacionMaps.trim() && !maps;
   const cambiar = e => setDatos(actual => ({ ...actual, [e.target.name]: e.target.value }));
   const personalDisponible = id => trabajadores.filter(t => t.activo || t._id === id);
   const ir = id => { setSeccion(id); document.getElementById("trabajo-" + id)?.scrollIntoView({ behavior: "smooth", block: "start" }); };
   const enviar = e => {
     e.preventDefault();
+    if (enlaceInvalido) return;
     onSave({ ...datos, cliente: datos.cliente || null, trabajador: datos.trabajador || null, responsableTemple: datos.responsableTemple || null });
   };
   return <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0b1631]/80 p-0 backdrop-blur-[6px] md:p-5" onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}>
@@ -50,6 +54,13 @@ export default function ModalTrabajo({ trabajo, clientes, trabajadores, onClose,
                 <div className="sm:col-span-2"><label className={claseEtiqueta} htmlFor="nombre-trabajo">Nombre del trabajo <span className="text-rose-600">*</span></label><input id="nombre-trabajo" name="nombre" autoFocus required maxLength={150} className={claseCampo} value={datos.nombre} onChange={cambiar} placeholder="Ej. Cubierta de granito para cocina"/></div>
                 <div><label className={claseEtiqueta} htmlFor="cliente-trabajo">Cliente</label><select id="cliente-trabajo" name="cliente" className={claseCampo} value={datos.cliente} onChange={cambiar}><option value="">Seleccionar cliente</option>{clientes.map(c => <option key={c._id} value={c._id}>{c.nombre}</option>)}</select><button type="button" onClick={onNuevoCliente} className="mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-[#124B91] hover:underline"><Plus size={16}/> Registrar cliente nuevo</button></div>
                 <div><label className={claseEtiqueta} htmlFor="material-trabajo">Material <span className="text-rose-600">*</span></label><select id="material-trabajo" name="material" className={claseCampo} value={datos.material} onChange={cambiar}><option value="granito">Granito</option><option value="vidrio">Vidrio</option></select></div>
+                <div className="sm:col-span-2 rounded-2xl border border-[#cbd4e6] bg-gradient-to-br from-blue-50 to-purple-50 p-5">
+                  <div className="mb-4 flex items-center gap-2 text-[#124B91]"><MapPin size={22}/><h4 className="font-extrabold">Ubicación de instalación</h4></div>
+                  <div className="space-y-4">
+                    <div><label className={claseEtiqueta} htmlFor="direccion-instalacion">Dirección de instalación <span className="font-medium text-slate-400">(opcional)</span></label><input id="direccion-instalacion" name="direccionInstalacion" className={claseCampo} value={datos.direccionInstalacion} onChange={cambiar} placeholder="Ej. Calle Hidalgo 120, Col. Centro"/></div>
+                    <div><label className={claseEtiqueta} htmlFor="maps-trabajo"><Navigation size={16} className="mr-1 inline"/> Enlace de Google Maps <span className="font-medium text-slate-400">(opcional)</span></label><input id="maps-trabajo" name="ubicacionMaps" type="url" className={claseCampo} value={datos.ubicacionMaps} onChange={cambiar} aria-invalid={enlaceInvalido} aria-describedby="ayuda-maps-trabajo" placeholder="https://maps.app.goo.gl/..."/><p id="ayuda-maps-trabajo" className={`mt-2 text-xs ${enlaceInvalido ? "font-bold text-red-600" : "text-slate-600"}`}>{enlaceInvalido ? "Pega un enlace HTTPS válido de Google Maps." : "Abre Google Maps, pulsa Compartir y copia el enlace de la ubicación."}</p>{maps && <a href={maps} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-[#124B91] hover:underline"><ExternalLink size={15}/> Comprobar ubicación</a>}</div>
+                  </div>
+                </div>
                 <div className="sm:col-span-2"><label className={claseEtiqueta} htmlFor="especificaciones-trabajo">Especificaciones</label><textarea id="especificaciones-trabajo" name="especificaciones" rows={3} className={claseCampo} value={datos.especificaciones} onChange={cambiar} placeholder="Medidas, color, acabado y detalles del trabajo..."/></div>
               </div>
             </section>
@@ -71,7 +82,7 @@ export default function ModalTrabajo({ trabajo, clientes, trabajadores, onClose,
           </div>
           <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-slate-200 bg-white px-4 py-4 shadow-[0_-10px_25px_rgba(15,23,42,.06)] sm:px-8">
             <p className="hidden items-center gap-2 text-sm font-medium text-slate-500 sm:flex"><Check size={18} className="text-emerald-600"/> Los campos con * son obligatorios</p>
-            <div className="flex w-full justify-end gap-3 sm:w-auto"><button type="button" onClick={onClose} className="rounded-xl border-2 border-slate-200 px-4 py-3 font-bold text-slate-700 hover:bg-slate-50">Cancelar</button><button type="submit" disabled={saving} className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#124B91] to-[#64417c] px-5 py-3 font-extrabold text-white shadow-lg shadow-blue-900/20 transition hover:brightness-110 disabled:opacity-50">{saving ? "Guardando..." : trabajo ? "Guardar cambios" : "Crear trabajo"}<ArrowRight size={18}/></button></div>
+            <div className="flex w-full justify-end gap-3 sm:w-auto"><button type="button" onClick={onClose} className="rounded-xl border-2 border-slate-200 px-4 py-3 font-bold text-slate-700 hover:bg-slate-50">Cancelar</button><button type="submit" disabled={saving || enlaceInvalido} className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#124B91] to-[#64417c] px-5 py-3 font-extrabold text-white shadow-lg shadow-blue-900/20 transition hover:brightness-110 disabled:opacity-50">{saving ? "Guardando..." : trabajo ? "Guardar cambios" : "Crear trabajo"}<ArrowRight size={18}/></button></div>
           </footer>
         </form>
       </div>
