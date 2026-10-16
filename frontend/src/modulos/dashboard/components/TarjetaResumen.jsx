@@ -12,5 +12,5 @@ export default function TarjetaResumen({ titulo, valor, icono: Icono, detalle, c
     <p className="relative mt-5 text-4xl font-black tracking-tight text-slate-900">{valor ?? "—"}</p>
     <p className="relative mt-2 text-sm font-medium text-slate-500">{detalle}</p>
     <div className={`absolute inset-x-0 bottom-0 h-1 ${barra}`}/>
-    </div>\n  </article>;
+    </div>  </article>;
 }
