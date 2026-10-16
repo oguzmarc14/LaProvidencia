@@ -41,19 +41,16 @@ export default function SeccionTrabajadores() {
 
   const filtrados = trabajadores.filter((t) => t.nombre.toLowerCase().includes(busqueda.toLowerCase()));
   return (
-    <section className="mx-auto max-w-6xl p-5 md:p-10">
-      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-        <div><p className="text-sm font-semibold text-[#124B91]">GESTIÓN DE PERSONAL</p><h1 className="mt-1 text-3xl font-bold text-slate-900">Trabajadores</h1><p className="mt-2 text-slate-500">Registra empleados y consulta sus trabajos asignados.</p></div>
-        <button onClick={() => { setEditando(null); setModalAbierto(true); }} className="flex items-center gap-2 rounded-xl bg-[#124B91] px-4 py-3 font-semibold text-white shadow-sm hover:bg-blue-800"><Plus size={18}/> Nuevo trabajador</button>
-      </div>
-      <div className="mb-5 flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3">
+    <section className="mx-auto max-w-7xl p-4 pb-12 sm:p-6 lg:p-10">
+      <div className="mb-7 flex flex-wrap items-center justify-between gap-5 overflow-hidden rounded-[28px] bg-gradient-to-r from-[#123e83] via-[#513d79] to-[#a13f65] p-6 text-white shadow-[0_18px_40px_rgba(43,46,101,.2)] sm:p-9"><div><p className="text-xs font-extrabold uppercase tracking-[.18em] text-white/75">LA PROVIDENCIA · ADMINISTRACIÓN</p><h1 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">Equipo de trabajo</h1><p className="mt-3 max-w-xl text-base text-white/85">Administra al equipo y consulta sus asignaciones.</p></div><button onClick={() => {setEditando(null);setModalAbierto(true);}} className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 font-extrabold text-[#123e83] shadow-sm hover:bg-blue-50"><Plus size={19}/> Nuevo trabajador</button></div>
+      <div className="mb-5 flex items-center gap-3 rounded-2xl border-2 border-[#cbd4e6] bg-white px-5 py-4 shadow-sm">
         <Search size={20} className="text-slate-400"/><input aria-label="Buscar trabajadores" placeholder="Buscar trabajador por nombre..." value={busqueda} onChange={(e) => setBusqueda(e.target.value)} className="w-full outline-none"/>
       </div>
       {error && <div role="alert" className="mb-5 rounded-xl bg-red-50 p-4 text-red-700">{error}</div>}
       {cargando ? <p className="py-12 text-center text-slate-500">Cargando trabajadores...</p> : filtrados.length === 0 ?
         <div className="rounded-2xl border bg-white p-12 text-center text-slate-500">No hay trabajadores para mostrar.</div> :
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {filtrados.map((t) => <article key={t._id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          {filtrados.map((t) => <article key={t._id} className="rounded-[22px] border border-[#cbd4e6] bg-white p-6 shadow-[0_10px_28px_rgba(25,45,90,.09)]">
             <div className="mb-4 flex items-start justify-between"><div className="rounded-xl bg-blue-50 p-3 text-[#124B91]"><Users size={24}/></div><span className={`rounded-full px-3 py-1 text-xs font-semibold ${t.activo ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-600"}`}>{t.activo ? "Activo" : "Inactivo"}</span></div>
             <h3 className="text-lg font-bold">{t.nombre}</h3><p className="mt-1 text-sm text-slate-500">{t.whatsapp || "Sin WhatsApp registrado"}</p>
             <div className="mt-5 flex flex-wrap gap-2 border-t pt-4">
