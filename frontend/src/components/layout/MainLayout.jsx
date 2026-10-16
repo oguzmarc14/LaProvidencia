@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Menu } from "lucide-react";
 import Sidebar from "./Sidebar";
-const nombres={dashboard:"Panel principal",clientes:"Gestión de clientes",trabajadores:"Gestión de trabajadores"};
+const nombres={dashboard:"Panel principal",clientes:"Gestión de clientes",trabajadores:"Gestión de trabajadores",trabajos:"Gestión de trabajos"};
 export default function MainLayout({actual,navegar,children}) {
   const [menuAbierto,setMenuAbierto]=useState(false);
   return <div className="min-h-screen md:flex">
