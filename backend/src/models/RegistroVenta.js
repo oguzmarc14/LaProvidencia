@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const schema = new mongoose.Schema({
  fechaVenta:{type:Date,required:true}, fechaEntrega:{type:Date,required:true},
  vendedor:{type:String,required:true,trim:true},
+ trabajador:{type:mongoose.Schema.Types.ObjectId,ref:"Trabajador",required:true},
  cliente:{type:mongoose.Schema.Types.ObjectId,ref:"Clientes",default:null},
  nombreCliente:{type:String,required:true,trim:true},
  telefonoCliente:{type:String,default:"",trim:true},
