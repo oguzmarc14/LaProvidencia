@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
-import { BriefcaseBusiness, Pencil, Plus, Search, Users } from "lucide-react";
+import { BriefcaseBusiness, Pencil, Plus, Search, Users, MessageCircle, ArrowUpRight, Phone } from "lucide-react";
 import { actualizarTrabajador, crearTrabajador, obtenerTrabajadores } from "../services/trabajadoresService";
 import ModalTrabajador from "../components/ModalTrabajador";
 import ModalTrabajos from "../components/ModalTrabajos";
+import { enlaceWhatsApp } from "../../clientes/utils/enlacesCliente";
 
 export default function SeccionTrabajadores() {
   const [trabajadores, setTrabajadores] = useState([]);
@@ -50,14 +51,28 @@ export default function SeccionTrabajadores() {
       {cargando ? <p className="py-12 text-center text-slate-500">Cargando trabajadores...</p> : filtrados.length === 0 ?
         <div className="rounded-2xl border bg-white p-12 text-center text-slate-500">No hay trabajadores para mostrar.</div> :
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {filtrados.map((t) => <article key={t._id} className="brand-card group">
-            <div className="p-6"><div className="mb-4 flex items-start justify-between"><div className="rounded-xl bg-gradient-to-br from-blue-100 to-purple-100 p-3 text-[#124B91]"><Users size={24}/></div><span className={`rounded-full px-3 py-1 text-xs font-semibold ${t.activo ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-600"}`}>{t.activo ? "Activo" : "Inactivo"}</span></div>
-            <h3 className="text-xl font-extrabold text-slate-900">{t.nombre}</h3><p className="mt-4 rounded-xl border border-[#e2e7f1] bg-gradient-to-br from-[#f2f6fc] to-[#faf3f8] p-4 text-sm font-medium text-slate-700">{t.whatsapp || "Sin WhatsApp registrado"}</p>
-            <div className="mt-5 flex flex-wrap gap-2 border-t border-slate-100 pt-4">
-              <button onClick={() => { setEditando(t); setModalAbierto(true); }} className="flex items-center gap-2 rounded-xl border-2 border-[#b9c9e3] bg-blue-50 px-3 py-2 text-sm font-bold text-[#124B91] hover:bg-blue-100"><Pencil size={15}/> Editar</button>
-              <button onClick={() => setViendoTrabajos(t)} className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm hover:bg-slate-50"><BriefcaseBusiness size={15}/> Ver trabajos</button>
-            </div>
-            </div></article>)}
+          {filtrados.map((t) => {
+            const whatsapp = enlaceWhatsApp(t.whatsapp);
+            return <article key={t._id} className="brand-card group overflow-hidden transition duration-200 hover:-translate-y-0.5 hover:shadow-xl">
+              <div className="h-1.5 bg-gradient-to-r from-[#123e83] via-[#513d79] to-[#a13f65]"/>
+              <div className="space-y-4 p-5 sm:p-6">
+                <div className="flex items-start gap-3">
+                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-blue-100 to-purple-100 text-[#124B91]"><Users size={24}/></span>
+                  <div className="min-w-0 flex-1"><p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Miembro del equipo</p><button type="button" onClick={() => setViendoTrabajos(t)} className="mt-1 break-words text-left text-lg font-extrabold leading-snug text-slate-900 transition hover:text-[#124B91] hover:underline">{t.nombre} <ArrowUpRight size={15} className="inline align-baseline"/></button></div>
+                  <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${t.activo ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"}`}>{t.activo ? "● Activo" : "Inactivo"}</span>
+                </div>
+                <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-100 bg-slate-50 px-3 py-3">
+                  <Phone size={17} className="shrink-0 text-[#124B91]"/>
+                  <div className="min-w-0 flex-1"><p className="text-[11px] font-semibold text-slate-500">Contacto</p><p className="break-all text-sm font-bold text-slate-800">{t.whatsapp || "Sin número registrado"}</p></div>
+                  {whatsapp && <a href={whatsapp + "?text=" + encodeURIComponent(`Hola, ${t.nombre}. Te contactamos de La Providencia.`)} target="_blank" rel="noopener noreferrer" aria-label={`Enviar WhatsApp a ${t.nombre}`} className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-extrabold text-white transition hover:bg-emerald-700"><MessageCircle size={16}/> WhatsApp</a>}
+                </div>
+                <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4">
+                  <button type="button" onClick={() => setViendoTrabajos(t)} className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#124B91] px-4 py-3 text-sm font-extrabold text-white transition hover:bg-[#0d3770]"><BriefcaseBusiness size={17}/> Ver seguimiento <ArrowUpRight size={15}/></button>
+                  <button type="button" onClick={() => { setEditando(t); setModalAbierto(true); }} className="inline-flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-white px-4 py-3 text-sm font-bold text-[#124B91] transition hover:bg-blue-50"><Pencil size={16}/> Editar</button>
+                </div>
+              </div>
+            </article>;
+          })}
         </div>}
       {modalAbierto && <ModalTrabajador trabajador={editando} onClose={() => setModalAbierto(false)} onSave={guardar} saving={guardando}/>}
       {viendoTrabajos && <ModalTrabajos trabajador={viendoTrabajos} onClose={() => setViendoTrabajos(null)}/>}
