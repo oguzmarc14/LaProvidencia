@@ -1,6 +1,7 @@
 //importacion de librerias
 const mongoose = require("mongoose");
 const Cliente = require("../models/Clientes");
+const Trabajo = require("../models/Trabajo");
 
 //declaracion de funciones
 const validarNombre = (nombre) => {
@@ -161,7 +162,22 @@ const actualizarClientes = async (req, res) => {
   }
 };
 
+const eliminarCliente = async (req, res) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ mensaje: "ID de cliente inválido" });
+    const trabajos = await Trabajo.countDocuments({ cliente: req.params.id });
+    if (trabajos > 0) return res.status(409).json({ mensaje: "No se puede eliminar este cliente porque tiene trabajos asociados. Conserva su historial." });
+    const cliente = await Cliente.findByIdAndDelete(req.params.id);
+    if (!cliente) return res.status(404).json({ mensaje: "Cliente no encontrado" });
+    return res.status(200).json({ mensaje: "Cliente eliminado correctamente" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ mensaje: "Error al eliminar cliente" });
+  }
+};
+
 module.exports = {
+  eliminarCliente,
   crearClientes,
   obtenerClientes,
   buscarClientes,
