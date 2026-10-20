@@ -6,6 +6,7 @@ import { actualizarTrabajo, crearTrabajo, eliminarTrabajo, obtenerTrabajos } fro
 import ModalTrabajo from "../components/ModalTrabajo";
 import { enlaceWhatsApp, enlaceMaps } from "../../clientes/utils/enlacesCliente";
 import ModalCliente from "../../clientes/components/ModalCliente";
+import DetalleCliente from "../../clientes/components/DetalleCliente";
 import ModalTrabajador from "../../trabajadores/components/ModalTrabajador";
 import { crearCliente } from "../../clientes/services/clientesService";
 import { crearTrabajador } from "../../trabajadores/services/trabajadoresService";
@@ -16,6 +17,8 @@ const mostrarFecha = fecha => fecha ? new Date(fecha).toLocaleDateString("es-MX"
 
 export default function SeccionTrabajos() {
   const [trabajos, setTrabajos] = useState([]);
+  const [clienteDetalle, setClienteDetalle] = useState(null);
+  const [clienteNuevoTrabajo, setClienteNuevoTrabajo] = useState(null);
   const [clientes, setClientes] = useState([]);
   const [trabajadores, setTrabajadores] = useState([]);
   const [busqueda, setBusqueda] = useState("");
@@ -79,8 +82,8 @@ export default function SeccionTrabajos() {
     } catch (e) { setError(e.message); }
     finally { setGuardandoAlta(false); }
   };
-  const abrirNuevo = () => { setEditando(null); setModalAbierto(true); };
-  const abrirEdicion = trabajo => { setEditando(trabajo); setModalAbierto(true); };
+  const abrirNuevo = () => { setClienteNuevoTrabajo(null); setEditando(null); setModalAbierto(true); };
+  const abrirEdicion = trabajo => { setClienteNuevoTrabajo(null); setEditando(trabajo); setModalAbierto(true); };
   return <section className="mx-auto max-w-7xl p-4 pb-12 sm:p-6 lg:p-10">
     <div className="mb-7 flex flex-wrap items-center justify-between gap-5 overflow-hidden rounded-[28px] bg-gradient-to-r from-[#123e83] via-[#513d79] to-[#a13f65] p-6 text-white shadow-[0_18px_40px_rgba(43,46,101,.2)] sm:p-9"><div><p className="text-xs font-extrabold uppercase tracking-[.18em] text-white/75">LA PROVIDENCIA · ADMINISTRACIÓN</p><h1 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">Gestión de trabajos</h1><p className="mt-3 max-w-xl text-base text-white/85">Controla pedidos, responsables y etapas de producción.</p></div><button onClick={abrirNuevo} className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 font-extrabold text-[#123e83] shadow-sm hover:bg-blue-50"><Plus size={19}/> Nuevo trabajo</button></div>
     <div className="mb-5 grid gap-3 sm:grid-cols-[1fr_auto]">
@@ -108,7 +111,7 @@ export default function SeccionTrabajos() {
               <div><div className="mb-2 flex items-center justify-between gap-2 text-xs font-semibold text-slate-500"><span>Progreso de producción</span><span>{indice >= 0 ? indice + 1 : 0} de 5 etapas</span></div><div className="flex gap-1.5" aria-label={`Estado: ${etapas[t.estado] || t.estado}`}>{Object.keys(etapas).map((etapa, i) => <span key={etapa} className={`h-2 flex-1 rounded-full ${i <= indice ? "bg-[#124B91]" : "bg-slate-200"}`}/>)}</div></div>
               <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50 to-purple-50 p-3 sm:p-4">
                 <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white text-[#124B91]"><UserRound size={21}/></span>
-                <div className="min-w-0 flex-1"><p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">Cliente</p><p className="break-words font-extrabold text-slate-900">{t.cliente?.nombre || "Sin asignar"}</p></div>
+                <div className="min-w-0 flex-1"><p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">Cliente</p>{t.cliente?._id ? <button type="button" onClick={() => setClienteDetalle(t.cliente)} className="break-words text-left font-extrabold text-slate-900 underline-offset-4 hover:text-[#124B91] hover:underline">{t.cliente.nombre} ↗</button> : <p className="font-extrabold text-slate-900">Sin asignar</p>}</div>
                 {whatsapp ? <a href={whatsapp + "?text=" + mensaje} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-700"><MessageCircle size={17}/> Mensaje</a> : <span className="rounded-lg bg-white px-3 py-2 text-xs text-slate-500">Sin WhatsApp</span>}
               </div>
               <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
@@ -127,7 +130,8 @@ export default function SeccionTrabajos() {
           </article>;
         })}
       </div>}
-    {modalAbierto && <ModalTrabajo trabajo={editando} clientes={clientes} trabajadores={trabajadores} onClose={() => setModalAbierto(false)} onSave={guardar} saving={guardando} onNuevoCliente={() => setAltaRapida("cliente")} onNuevoTrabajador={() => setAltaRapida("trabajador")}/>}
+    {clienteDetalle && <DetalleCliente cliente={clientes.find(c => c._id === clienteDetalle._id) || clienteDetalle} trabajos={trabajos} onClose={() => setClienteDetalle(null)} onNuevoTrabajo={cliente => {setClienteDetalle(null);setClienteNuevoTrabajo(cliente);setEditando(null);setModalAbierto(true);}} onAbrirTrabajo={trabajo => {setClienteDetalle(null);abrirEdicion(trabajo);}}/>}
+    {modalAbierto && <ModalTrabajo trabajo={editando} clienteInicial={clienteNuevoTrabajo} clientes={clientes} trabajadores={trabajadores} onClose={() => setModalAbierto(false)} onSave={guardar} saving={guardando} onNuevoCliente={() => setAltaRapida("cliente")} onNuevoTrabajador={() => setAltaRapida("trabajador")}/>}
     {altaRapida === "cliente" && <ModalCliente cliente={null} guardar={guardarAltaRapida} cerrar={() => setAltaRapida(null)} guardando={guardandoAlta}/>}
     {altaRapida === "trabajador" && <ModalTrabajador trabajador={null} onSave={guardarAltaRapida} onClose={() => setAltaRapida(null)} saving={guardandoAlta}/>} 
   </section>;
