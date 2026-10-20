@@ -9,7 +9,7 @@ const secciones = [{ id: "datos", nombre: "Información", icono: ClipboardList }
 const claseCampo = "w-full min-h-12 rounded-xl border-2 border-[#c8d3e7] bg-[#f7f9fd] px-4 py-3 text-base font-medium text-slate-800 outline-none transition focus:border-[#124B91] focus:ring-4 focus:ring-blue-100";
 const claseEtiqueta = "mb-2 block text-sm font-bold text-slate-800";
 
-export default function ModalTrabajo({ trabajo, clientes, trabajadores, onClose, onSave, saving, onNuevoCliente, onNuevoTrabajador }) {
+export default function ModalTrabajo({ trabajo, clienteInicial, clientes, trabajadores, onClose, onSave, saving, onNuevoCliente, onNuevoTrabajador }) {
   const [datos, setDatos] = useState(inicial);
   const [seccion, setSeccion] = useState("datos");
   useEffect(() => {
@@ -18,8 +18,8 @@ export default function ModalTrabajo({ trabajo, clientes, trabajadores, onClose,
       fechaInicio: fechaInput(trabajo.fechaInicio), fechaFinal: fechaInput(trabajo.fechaFinal), estado: trabajo.estado || "templado",
       cliente: trabajo.cliente?._id || trabajo.cliente || "", trabajador: trabajo.trabajador?._id || trabajo.trabajador || "",
       responsableTemple: trabajo.responsableTemple?._id || trabajo.responsableTemple || ""
-    } : inicial);
-  }, [trabajo]);
+    } : { ...inicial, cliente: clienteInicial?._id || "" });
+  }, [trabajo, clienteInicial]);
   const [errorFoto, setErrorFoto] = useState("");
   const subirFoto = async (event) => {
     const archivo = event.target.files?.[0];
