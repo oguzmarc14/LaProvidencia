@@ -5,6 +5,7 @@ import SeccionTrabajadores from "./modulos/trabajadores/pages/SeccionTrabajadore
 import SeccionClientes from "./modulos/clientes/pages/SeccionClientes";
 import SeccionTrabajos from "./modulos/trabajos/pages/SeccionTrabajos";
 import SeccionVentas from "./modulos/ventas/pages/SeccionVentas";
+import SeccionTareas from "./modulos/tareas/pages/SeccionTareas";
 
 export default function App() {
   const [seccion, setSeccion] = useState("dashboard");
@@ -12,6 +13,7 @@ export default function App() {
     {seccion === "dashboard" ? <SeccionDashboard navegar={setSeccion}/> :
       seccion === "clientes" ? <SeccionClientes/> :
       seccion === "trabajos" ? <SeccionTrabajos/> :
-      seccion === "ventas" ? <SeccionVentas/> : <SeccionTrabajadores/>}
+      seccion === "ventas" ? <SeccionVentas/> :
+      seccion === "tareas" ? <SeccionTareas/> : <SeccionTrabajadores/>}
   </MainLayout>;
 }
