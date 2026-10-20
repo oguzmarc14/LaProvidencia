@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { BriefcaseBusiness, CalendarDays, Pencil, Plus, Search, Trash2, UserRound, Navigation, ExternalLink, Ruler, Package, Banknote, MessageCircle, MapPin, Image as ImageIcon } from "lucide-react";
+import { BriefcaseBusiness, CalendarDays, Pencil, Plus, Search, Trash2, UserRound, Navigation, ExternalLink, Ruler, Package, Banknote, MessageCircle, MapPin, Image as ImageIcon, ChevronDown, LoaderCircle } from "lucide-react";
 import { obtenerClientes } from "../../clientes/services/clientesService";
 import { obtenerTrabajadores } from "../../trabajadores/services/trabajadoresService";
 import { actualizarTrabajo, crearTrabajo, eliminarTrabajo, obtenerTrabajos } from "../services/trabajosService";
@@ -31,6 +31,7 @@ export default function SeccionTrabajos() {
   const [aviso, setAviso] = useState("");
   const [altaRapida, setAltaRapida] = useState(null);
   const [guardandoAlta, setGuardandoAlta] = useState(false);
+  const [cambiandoEstado, setCambiandoEstado] = useState(null);
 
   const cargar = useCallback(async () => {
     setCargando(true);
@@ -57,6 +58,20 @@ export default function SeccionTrabajos() {
       await cargar(); setAviso(editando ? "Trabajo actualizado correctamente." : "Trabajo creado y listo para asignación.");
     } catch (e) { setError(e.message); }
     finally { setGuardando(false); }
+  };
+  const cambiarEstado = async (trabajo, nuevoEstado) => {
+    if (nuevoEstado === trabajo.estado || cambiandoEstado) return;
+    setCambiandoEstado(trabajo._id);
+    setError(""); setAviso("");
+    try {
+      await actualizarTrabajo(trabajo._id, { estado: nuevoEstado });
+      setTrabajos(actuales => actuales.map(t => t._id === trabajo._id ? { ...t, estado: nuevoEstado } : t));
+      setAviso(`Estado de "${trabajo.nombre}" actualizado a ${etapas[nuevoEstado]}.`);
+    } catch (e) {
+      setError(`No se pudo cambiar el estado de "${trabajo.nombre}": ${e.message}`);
+    } finally {
+      setCambiandoEstado(null);
+    }
   };
   const borrar = async trabajo => {
     if (!window.confirm(`¿Eliminar el trabajo "${trabajo.nombre}"? Esta acción no se puede deshacer.`)) return;
@@ -106,7 +121,13 @@ export default function SeccionTrabajos() {
                   <span className="rounded-xl bg-blue-50 p-3 text-[#124B91]"><BriefcaseBusiness size={22}/></span>
                   <div className="min-w-0"><h3 className="break-words text-lg font-extrabold text-slate-900">{t.nombre}</h3><p className="mt-1 text-sm capitalize text-slate-500">{t.material} · Entrega {mostrarFecha(t.fechaFinal)}</p></div>
                 </div>
-                <span className={`rounded-full px-3 py-1 text-xs font-bold ${colores[t.estado] || "bg-slate-100 text-slate-700"}`}>{etapas[t.estado] || t.estado}</span>
+                <div className="relative shrink-0">
+                  <label className="sr-only" htmlFor={`estado-trabajo-${t._id}`}>Cambiar estado de {t.nombre}</label>
+                  <select id={`estado-trabajo-${t._id}`} value={t.estado} disabled={cambiandoEstado !== null} onChange={e => cambiarEstado(t, e.target.value)} title="Cambiar estado del trabajo" className={`max-w-[180px] cursor-pointer appearance-none rounded-full border border-transparent py-2 pl-3 pr-8 text-xs font-extrabold shadow-sm outline-none transition hover:border-slate-300 focus:ring-2 focus:ring-[#124B91] disabled:cursor-wait disabled:opacity-60 sm:max-w-none ${colores[t.estado] || "bg-slate-100 text-slate-700"}`}>
+                    {Object.entries(etapas).map(([id, nombre]) => <option key={id} value={id}>{nombre}</option>)}
+                  </select>
+                  {cambiandoEstado === t._id ? <LoaderCircle size={14} className="pointer-events-none absolute right-2.5 top-2.5 animate-spin"/> : <ChevronDown size={14} className="pointer-events-none absolute right-2.5 top-2.5"/>}
+                </div>
               </div>
               <div><div className="mb-2 flex items-center justify-between gap-2 text-xs font-semibold text-slate-500"><span>Progreso de producción</span><span>{indice >= 0 ? indice + 1 : 0} de 5 etapas</span></div><div className="flex gap-1.5" aria-label={`Estado: ${etapas[t.estado] || t.estado}`}>{Object.keys(etapas).map((etapa, i) => <span key={etapa} className={`h-2 flex-1 rounded-full ${i <= indice ? "bg-[#124B91]" : "bg-slate-200"}`}/>)}</div></div>
               <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50 to-purple-50 p-3 sm:p-4">
