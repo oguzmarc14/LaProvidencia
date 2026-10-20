@@ -1,9 +1,18 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { obtenerTareas } from "../../modulos/tareas/services/tareasService";
 import { Menu, Bell, ShieldCheck, ChevronRight, CalendarClock } from "lucide-react";
 import Sidebar from "./Sidebar";
 const nombres={dashboard:"Panel principal",clientes:"Gestión de clientes",trabajadores:"Gestión de trabajadores",trabajos:"Gestión de trabajos",ventas:"Registro de lápidas",tareas:"Planificación de tareas"};
 export default function MainLayout({actual,navegar,children}) {
   const [menuAbierto,setMenuAbierto]=useState(false);
+  const [avisosAbiertos,setAvisosAbiertos]=useState(false);
+  const [tareas,setTareas]=useState([]);
+  const [errorAvisos,setErrorAvisos]=useState("");
+  const cargarAvisos=async()=>{try{const r=await obtenerTareas();setTareas(r.tareas||[]);setErrorAvisos("");}catch(e){setErrorAvisos(e.message||"No se pudieron consultar las tareas.");}};
+  useEffect(()=>{cargarAvisos();},[actual]);
+  const hoy=new Date();hoy.setHours(12,0,0,0);
+  const avisos=tareas.filter(t=>t.estado!=="finalizada").map(t=>({...t,dias:Math.round((new Date(String(t.fechaLimite).slice(0,10)+"T12:00:00")-hoy)/86400000)})).filter(t=>t.dias<=2).sort((a,b)=>a.dias-b.dias);
+  const vencidas=avisos.filter(t=>t.dias<0).length;
   return <div className="min-h-screen md:flex app-background">
     <Sidebar actual={actual} navegar={navegar} abierto={menuAbierto} cerrar={()=>setMenuAbierto(false)}/>
     <div className="min-w-0 flex-1">
