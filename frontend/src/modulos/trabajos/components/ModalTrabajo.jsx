@@ -1,25 +1,48 @@
 import { useEffect, useState } from "react";
 import { enlaceMaps } from "../../clientes/utils/enlacesCliente";
-import { X, Plus, BriefcaseBusiness, CalendarDays, UsersRound, ClipboardList, ArrowRight, Check, Layers3, MapPin, Navigation, ExternalLink, Ruler, Package, Banknote } from "lucide-react";
+import { X, Plus, BriefcaseBusiness, CalendarDays, UsersRound, ClipboardList, ArrowRight, Check, Layers3, MapPin, Navigation, ExternalLink, Ruler, Package, Banknote, ImagePlus, Trash2 } from "lucide-react";
 
-const inicial = { nombre: "", material: "granito", especificaciones: "", medidas: "", piezasTotales: "", precioTotal: "", direccionInstalacion: "", ubicacionMaps: "", fechaInicio: "", fechaFinal: "", estado: "templado", cliente: "", trabajador: "", responsableTemple: "" };
+const inicial = { nombre: "", material: "granito", especificaciones: "", medidas: "", fotoMedidas: "", piezasTotales: "", precioTotal: "", direccionInstalacion: "", ubicacionMaps: "", fechaInicio: "", fechaFinal: "", estado: "templado", cliente: "", trabajador: "", responsableTemple: "" };
 const fechaInput = fecha => fecha ? new Date(fecha).toISOString().slice(0, 10) : "";
 const etapas = [["templado","Templado"],["fabricacion","Fabricación"],["detallado","Detallado"],["instalacion","Instalación"],["finalizado","Finalizado"]];
 const secciones = [{ id: "datos", nombre: "Información", icono: ClipboardList }, { id: "equipo", nombre: "Responsables", icono: UsersRound }, { id: "fechas", nombre: "Programación", icono: CalendarDays }];
 const claseCampo = "w-full min-h-12 rounded-xl border-2 border-[#c8d3e7] bg-[#f7f9fd] px-4 py-3 text-base font-medium text-slate-800 outline-none transition focus:border-[#124B91] focus:ring-4 focus:ring-blue-100";
 const claseEtiqueta = "mb-2 block text-sm font-bold text-slate-800";
 
-export default function ModalTrabajo({ trabajo, clientes, trabajadores, onClose, onSave, saving, onNuevoCliente, onNuevoTrabajador }) {
+export default function ModalTrabajo({ trabajo, clienteInicial, clientes, trabajadores, onClose, onSave, saving, onNuevoCliente, onNuevoTrabajador }) {
   const [datos, setDatos] = useState(inicial);
   const [seccion, setSeccion] = useState("datos");
   useEffect(() => {
     setDatos(trabajo ? {
-      nombre: trabajo.nombre || "", material: trabajo.material || "granito", especificaciones: trabajo.especificaciones || "", medidas: trabajo.medidas || "", piezasTotales: trabajo.piezasTotales ?? "", precioTotal: trabajo.precioTotal ?? "", direccionInstalacion: trabajo.direccionInstalacion || "", ubicacionMaps: trabajo.ubicacionMaps || "",
+      nombre: trabajo.nombre || "", material: trabajo.material || "granito", especificaciones: trabajo.especificaciones || "", medidas: trabajo.medidas || "", fotoMedidas: trabajo.fotoMedidas || "", piezasTotales: trabajo.piezasTotales ?? "", precioTotal: trabajo.precioTotal ?? "", direccionInstalacion: trabajo.direccionInstalacion || "", ubicacionMaps: trabajo.ubicacionMaps || "",
       fechaInicio: fechaInput(trabajo.fechaInicio), fechaFinal: fechaInput(trabajo.fechaFinal), estado: trabajo.estado || "templado",
       cliente: trabajo.cliente?._id || trabajo.cliente || "", trabajador: trabajo.trabajador?._id || trabajo.trabajador || "",
       responsableTemple: trabajo.responsableTemple?._id || trabajo.responsableTemple || ""
-    } : inicial);
-  }, [trabajo]);
+    } : { ...inicial, cliente: clienteInicial?._id || "" });
+  }, [trabajo, clienteInicial]);
+  const [errorFoto, setErrorFoto] = useState("");
+  const subirFoto = async (event) => {
+    const archivo = event.target.files?.[0];
+    event.target.value = "";
+    if (!archivo) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(archivo.type)) { setErrorFoto("Solo se permiten JPG, PNG o WebP."); return; }
+    if (archivo.size > 10 * 1024 * 1024) { setErrorFoto("La imagen debe pesar menos de 10 MB."); return; }
+    const url = URL.createObjectURL(archivo);
+    try {
+      const imagen = new Image();
+      await new Promise((resolve, reject) => { imagen.onload = resolve; imagen.onerror = reject; imagen.src = url; });
+      const escala = Math.min(1, 1400 / Math.max(imagen.width, imagen.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(imagen.width * escala));
+      canvas.height = Math.max(1, Math.round(imagen.height * escala));
+      canvas.getContext("2d").drawImage(imagen, 0, 0, canvas.width, canvas.height);
+      const foto = canvas.toDataURL("image/jpeg", 0.78);
+      if (foto.length > 1400000) throw new Error("La foto sigue siendo muy grande. Prueba una imagen más pequeña.");
+      setDatos(actual => ({ ...actual, fotoMedidas: foto }));
+      setErrorFoto("");
+    } catch (error) { setErrorFoto(error.message || "No se pudo procesar la fotografía."); }
+    finally { URL.revokeObjectURL(url); }
+  };
   const maps = enlaceMaps(datos.ubicacionMaps);
   const enlaceInvalido = !!datos.ubicacionMaps.trim() && !maps;
   const cambiar = e => setDatos(actual => ({ ...actual, [e.target.name]: e.target.value }));
@@ -59,6 +82,13 @@ export default function ModalTrabajo({ trabajo, clientes, trabajadores, onClose,
                   <p className="mb-5 text-sm text-slate-600">Registra las medidas, la cantidad de piezas y el precio acordado.</p>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="sm:col-span-2"><label className={claseEtiqueta} htmlFor="medidas-trabajo"><Ruler size={16} className="mr-1 inline"/> Medidas <span className="font-medium text-slate-400">(opcional)</span></label><textarea id="medidas-trabajo" name="medidas" rows={2} className={claseCampo} value={datos.medidas} onChange={cambiar} placeholder="Ej. Cubierta 2.40 × 0.60 m; barra 1.20 × 0.50 m"/></div>
+                    <div className="sm:col-span-2">
+                      <label className={claseEtiqueta} htmlFor="foto-medidas"><ImagePlus size={16} className="mr-1 inline"/> Foto del croquis o medidas (opcional)</label>
+                      <p className="mb-3 text-sm text-slate-500">El administrador puede adjuntar una foto de referencia. Se optimiza antes de guardarla.</p>
+                      {datos.fotoMedidas && <div className="mb-3 rounded-xl border border-slate-200 bg-white p-3"><img src={datos.fotoMedidas} alt="Foto de medidas" className="max-h-60 w-full object-contain"/><button type="button" onClick={() => setDatos(actual => ({ ...actual, fotoMedidas: "" }))} className="mt-2 inline-flex items-center gap-2 text-sm font-bold text-red-700"><Trash2 size={16}/> Quitar foto</button></div>}
+                      <input id="foto-medidas" type="file" accept="image/jpeg,image/png,image/webp" onChange={subirFoto} className="block w-full rounded-xl border border-dashed border-blue-300 bg-white p-3 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-blue-100 file:px-3 file:py-2 file:font-bold file:text-[#124B91]"/>
+                      {errorFoto && <p role="alert" className="mt-2 text-sm font-semibold text-red-600">{errorFoto}</p>}
+                    </div>
                     <div><label className={claseEtiqueta} htmlFor="piezas-trabajo"><Package size={16} className="mr-1 inline"/> Piezas totales <span className="font-medium text-slate-400">(opcional)</span></label><input id="piezas-trabajo" name="piezasTotales" type="number" min="1" step="1" className={claseCampo} value={datos.piezasTotales} onChange={cambiar} placeholder="Ej. 3"/></div>
                     <div><label className={claseEtiqueta} htmlFor="precio-trabajo"><Banknote size={16} className="mr-1 inline"/> Precio total (MXN) <span className="font-medium text-slate-400">(opcional)</span></label><input id="precio-trabajo" name="precioTotal" type="number" min="0" step="0.01" className={claseCampo} value={datos.precioTotal} onChange={cambiar} placeholder="Ej. 8500.00"/></div>
                   </div>
