@@ -3,10 +3,13 @@ import { ArrowRight, BriefcaseBusiness, CheckCircle2, RefreshCw, Users, UserRoun
 import { obtenerResumenDashboard } from "../services/dashboardService";
 import TarjetaResumen from "../components/TarjetaResumen";
 import EstadosTrabajos from "../components/EstadosTrabajos";
+import RegistroVentaModal from "../components/RegistroVentaModal";
+import { FileText } from "lucide-react";
 
 const nombres = {templado:"Templado",fabricacion:"Fabricación",detallado:"Detallado",instalacion:"Instalación",finalizado:"Finalizado"};
 export default function SeccionDashboard({ navegar }) {
   const [datos,setDatos] = useState(null);
+  const [registroAbierto,setRegistroAbierto] = useState(false);
   const [cargando,setCargando] = useState(true);
   const [error,setError] = useState("");
   async function cargar() {
@@ -23,7 +26,7 @@ export default function SeccionDashboard({ navegar }) {
         <div><p className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-[.18em] text-white/75"><LayoutDashboard size={16}/> Centro de operaciones</p><h1 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">La Providencia</h1><p className="mt-3 max-w-xl text-base text-white/85">Controla la producción, los clientes y el equipo de La Providencia desde un solo lugar.</p></div>
         <button onClick={cargar} disabled={cargando} className="inline-flex items-center gap-2 rounded-xl border border-white/35 bg-white/15 px-4 py-3 text-sm font-bold text-white hover:bg-white/25 disabled:opacity-50"><RefreshCw size={17} className={cargando ? "animate-spin" : ""}/> Actualizar datos</button>
       </div>
-      <div className="mt-7 flex flex-wrap gap-3"><button onClick={() => navegar("trabajos")} className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 font-extrabold text-[#123e83] shadow-sm hover:bg-blue-50"><Plus size={18}/> Gestionar trabajos <ArrowRight size={16}/></button><button onClick={() => navegar("clientes")} className="inline-flex items-center gap-2 rounded-xl border border-white/40 px-5 py-3 font-bold hover:bg-white/15"><Users size={18}/> Ver clientes</button></div>
+      <div className="mt-7 flex flex-wrap gap-3"><button onClick={() => setRegistroAbierto(true)} className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-3 font-extrabold text-white shadow-sm hover:bg-emerald-600"><FileText size={18}/> Registrar venta de lápida</button><button onClick={() => navegar("trabajos")} className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 font-extrabold text-[#123e83] shadow-sm hover:bg-blue-50"><Plus size={18}/> Gestionar trabajos <ArrowRight size={16}/></button><button onClick={() => navegar("clientes")} className="inline-flex items-center gap-2 rounded-xl border border-white/40 px-5 py-3 font-bold hover:bg-white/15"><Users size={18}/> Ver clientes</button></div>
     </div>
     {error && <div role="alert" className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 font-medium text-red-700">{error}. Comprueba que Express y MongoDB estén funcionando.</div>}
     {cargando ? <div className="rounded-2xl border border-[#cbd4e6] bg-white p-16 text-center font-semibold text-slate-500">Cargando información del sistema...</div> : resumen && <>
@@ -45,5 +48,6 @@ export default function SeccionDashboard({ navegar }) {
       </div>
       <div className="mt-7 flex flex-wrap items-center justify-between gap-4 rounded-[24px] border border-[#cbd4e6] bg-gradient-to-r from-white to-[#f3edf8] p-6 shadow-sm"><div><h2 className="text-lg font-extrabold text-[#233d65]">Administración de personal</h2><p className="mt-1 text-sm text-slate-600">Registra trabajadores, actualiza sus datos y revisa sus asignaciones.</p></div><button onClick={() => navegar("trabajadores")} className="app-primary flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-extrabold">Ir a trabajadores <ArrowRight size={17}/></button></div>
     </>}
+    {registroAbierto && <RegistroVentaModal onClose={() => setRegistroAbierto(false)} onGuardado={cargar}/>}
   </section>;
 }
