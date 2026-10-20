@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { BriefcaseBusiness, CalendarDays, Pencil, Plus, Search, Trash2, UserRound, Navigation, ExternalLink, Ruler, Package, Banknote } from "lucide-react";
+import { BriefcaseBusiness, CalendarDays, Pencil, Plus, Search, Trash2, UserRound, Navigation, ExternalLink, Ruler, Package, Banknote, MessageCircle, MapPin, Image as ImageIcon } from "lucide-react";
 import { obtenerClientes } from "../../clientes/services/clientesService";
 import { obtenerTrabajadores } from "../../trabajadores/services/trabajadoresService";
 import { actualizarTrabajo, crearTrabajo, eliminarTrabajo, obtenerTrabajos } from "../services/trabajosService";
 import ModalTrabajo from "../components/ModalTrabajo";
-import { enlaceMaps } from "../../clientes/utils/enlacesCliente";
+import { enlaceWhatsApp, enlaceMaps } from "../../clientes/utils/enlacesCliente";
 import ModalCliente from "../../clientes/components/ModalCliente";
 import ModalTrabajador from "../../trabajadores/components/ModalTrabajador";
 import { crearCliente } from "../../clientes/services/clientesService";
@@ -91,14 +91,41 @@ export default function SeccionTrabajos() {
     {aviso && <div role="status" className="mb-4 rounded-xl bg-green-50 p-4 text-green-800">{aviso}</div>}
     {cargando ? <p className="py-12 text-center text-slate-500">Cargando trabajos...</p> : filtrados.length === 0 ? <div className="rounded-2xl border bg-white p-12 text-center text-slate-500"><BriefcaseBusiness size={36} className="mx-auto mb-3 text-slate-300"/><p>No hay trabajos para mostrar.</p><button onClick={abrirNuevo} className="mt-4 font-semibold text-[#124B91]">Registrar el primer trabajo</button></div> :
       <div className="grid gap-4 lg:grid-cols-2">
-        {filtrados.map(t => <article key={t._id} className="brand-card group">
-          <div className="p-6"><div className="mb-5 flex flex-wrap items-start justify-between gap-3"><div className="flex items-center gap-3"><div className="rounded-xl bg-blue-50 p-3 text-[#124B91]"><BriefcaseBusiness size={22}/></div><div><h3 className="text-lg font-bold text-slate-900">{t.nombre}</h3><p className="text-sm capitalize text-slate-500">{t.material}</p></div></div><span className={`rounded-full px-3 py-1 text-xs font-bold ${colores[t.estado] || "bg-slate-100"}`}>{etapas[t.estado] || t.estado}</span></div>
-          <div className="space-y-3 rounded-xl border border-[#e2e7f1] bg-gradient-to-br from-[#f2f6fc] to-[#faf3f8] p-4 text-sm font-medium text-slate-700"><p><UserRound size={15} className="mr-2 inline text-slate-400"/><strong>Cliente:</strong> {t.cliente?.nombre || "Sin asignar"}</p><p><strong>Trabajador:</strong> {t.trabajador?.nombre || "Sin asignar"}</p><p><strong>Responsable de templado:</strong> {t.responsableTemple?.nombre || "Sin asignar"}</p><p><CalendarDays size={15} className="mr-2 inline text-slate-400"/>{mostrarFecha(t.fechaInicio)} — {mostrarFecha(t.fechaFinal)}</p></div>
-          {(t.medidas || t.piezasTotales != null || t.precioTotal != null) && <div className="mt-4 rounded-xl border border-[#d7deec] bg-gradient-to-br from-[#f0f5fc] to-[#f7eef7] p-4 text-sm text-slate-700"><p className="mb-3 font-extrabold text-[#233d65]">Detalles de fabricación</p><div className="grid gap-3 sm:grid-cols-2">{t.medidas && <p className="sm:col-span-2 whitespace-pre-wrap"><Ruler size={16} className="mr-2 inline text-[#124B91]"/><strong>Medidas:</strong> {t.medidas}</p>}{t.piezasTotales != null && <p><Package size={16} className="mr-2 inline text-[#124B91]"/><strong>Piezas:</strong> {t.piezasTotales}</p>}{t.precioTotal != null && <p><Banknote size={16} className="mr-2 inline text-[#124B91]"/><strong>Precio:</strong> {Number(t.precioTotal).toLocaleString("es-MX", {style:"currency",currency:"MXN"})}</p>}</div></div>}
-          {(t.direccionInstalacion || enlaceMaps(t.ubicacionMaps)) && <div className="mt-4 rounded-xl border border-[#d7deec] bg-blue-50/70 p-4 text-sm"><p className="font-extrabold text-[#233d65]">Ubicación de instalación</p>{t.direccionInstalacion && <p className="mt-1 break-words text-slate-700">{t.direccionInstalacion}</p>}{enlaceMaps(t.ubicacionMaps) && <a href={enlaceMaps(t.ubicacionMaps)} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#124B91] to-[#64417c] px-4 py-2.5 font-extrabold text-white shadow-md hover:brightness-110"><Navigation size={17}/> Ver ubicación en Maps <ExternalLink size={14}/></a>}</div>}
-          {t.especificaciones && <p className="mt-4 line-clamp-2 rounded-xl border border-[#e2e7f1] bg-white p-3 text-sm text-slate-600">{t.especificaciones}</p>}
-          <div className="mt-5 flex flex-wrap gap-2 border-t border-slate-100 pt-4"><button onClick={() => abrirEdicion(t)} className="flex items-center gap-2 rounded-xl border-2 border-[#b9c9e3] bg-blue-50 px-3 py-2 text-sm font-bold text-[#124B91] hover:bg-blue-100"><Pencil size={15}/> Editar / Asignar</button><button onClick={() => borrar(t)} className="flex items-center gap-2 rounded-xl border-2 border-red-100 px-3 py-2 text-sm font-bold text-red-700 hover:bg-red-50"><Trash2 size={15}/> Eliminar</button></div>
-          </div></article>)}
+        {filtrados.map(t => {
+          const indice = Object.keys(etapas).indexOf(t.estado);
+          const whatsapp = enlaceWhatsApp(t.cliente?.whatsapp);
+          const mensaje = encodeURIComponent(`Hola, ${t.cliente?.nombre || ""}. Te contactamos de La Providencia para dar seguimiento a tu trabajo: ${t.nombre}.`);
+          const maps = enlaceMaps(t.ubicacionMaps);
+          return <article key={t._id} className="brand-card overflow-hidden">
+            <div className="space-y-4 p-4 sm:p-6">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="flex min-w-0 flex-1 items-start gap-3">
+                  <span className="rounded-xl bg-blue-50 p-3 text-[#124B91]"><BriefcaseBusiness size={22}/></span>
+                  <div className="min-w-0"><h3 className="break-words text-lg font-extrabold text-slate-900">{t.nombre}</h3><p className="mt-1 text-sm capitalize text-slate-500">{t.material} · Entrega {mostrarFecha(t.fechaFinal)}</p></div>
+                </div>
+                <span className={`rounded-full px-3 py-1 text-xs font-bold ${colores[t.estado] || "bg-slate-100 text-slate-700"}`}>{etapas[t.estado] || t.estado}</span>
+              </div>
+              <div><div className="mb-2 flex items-center justify-between gap-2 text-xs font-semibold text-slate-500"><span>Progreso de producción</span><span>{indice >= 0 ? indice + 1 : 0} de 5 etapas</span></div><div className="flex gap-1.5" aria-label={`Estado: ${etapas[t.estado] || t.estado}`}>{Object.keys(etapas).map((etapa, i) => <span key={etapa} className={`h-2 flex-1 rounded-full ${i <= indice ? "bg-[#124B91]" : "bg-slate-200"}`}/>)}</div></div>
+              <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50 to-purple-50 p-3 sm:p-4">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white text-[#124B91]"><UserRound size={21}/></span>
+                <div className="min-w-0 flex-1"><p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">Cliente</p><p className="break-words font-extrabold text-slate-900">{t.cliente?.nombre || "Sin asignar"}</p></div>
+                {whatsapp ? <a href={whatsapp + "?text=" + mensaje} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-700"><MessageCircle size={17}/> Mensaje</a> : <span className="rounded-lg bg-white px-3 py-2 text-xs text-slate-500">Sin WhatsApp</span>}
+              </div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                <div><p className="text-xs text-slate-500">Trabajador asignado</p><p className="mt-1 font-semibold text-slate-800">{t.trabajador?.nombre || "Sin asignar"}</p></div>
+                <div><p className="text-xs text-slate-500">Responsable de templado</p><p className="mt-1 font-semibold text-slate-800">{t.responsableTemple?.nombre || "Sin asignar"}</p></div>
+                <div><p className="text-xs text-slate-500">Fecha de inicio</p><p className="mt-1 font-semibold text-slate-800">{mostrarFecha(t.fechaInicio)}</p></div>
+                <div><p className="text-xs text-slate-500">Piezas</p><p className="mt-1 font-semibold text-slate-800">{t.piezasTotales ?? "Sin registrar"}</p></div>
+                {t.precioTotal != null && <div><p className="text-xs text-slate-500">Precio total</p><p className="mt-1 font-semibold text-slate-800">{Number(t.precioTotal).toLocaleString("es-MX", {style:"currency",currency:"MXN"})}</p></div>}
+                {t.medidas && <div className="col-span-2"><p className="text-xs text-slate-500">Medidas</p><p className="mt-1 whitespace-pre-wrap break-words font-medium text-slate-800">{t.medidas}</p></div>}
+              </div>
+              {t.fotoMedidas && <a href={t.fotoMedidas} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-2 text-sm font-bold text-[#124B91] hover:bg-blue-50"><img src={t.fotoMedidas} alt="Croquis o medidas" className="h-16 w-20 rounded-lg object-cover"/><ImageIcon size={17}/> Ver fotografía de medidas <ExternalLink size={14}/></a>}
+              {(t.direccionInstalacion || maps) && <div className="flex flex-wrap items-center gap-3 rounded-xl bg-slate-50 p-3"><MapPin size={18} className="shrink-0 text-[#124B91]"/><div className="min-w-0 flex-1"><p className="text-xs text-slate-500">Ubicación de instalación</p><p className="break-words text-sm font-semibold text-slate-800">{t.direccionInstalacion || "Ver ubicación en el mapa"}</p></div>{maps && <a href={maps} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm font-bold text-[#124B91] hover:bg-blue-50">Maps <ExternalLink size={14}/></a>}</div>}
+              {t.especificaciones && <p className="line-clamp-2 text-sm text-slate-500">{t.especificaciones}</p>}
+              <div className="flex flex-wrap gap-2 border-t border-slate-100 pt-4"><button onClick={() => abrirEdicion(t)} className="inline-flex items-center gap-2 rounded-xl bg-[#124B91] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#0d3770]"><Pencil size={16}/> Editar / Asignar</button><button onClick={() => borrar(t)} className="inline-flex items-center gap-2 rounded-xl border border-red-200 px-3 py-2.5 text-sm font-bold text-red-700 hover:bg-red-50"><Trash2 size={16}/> Eliminar</button></div>
+            </div>
+          </article>;
+        })}
       </div>}
     {modalAbierto && <ModalTrabajo trabajo={editando} clientes={clientes} trabajadores={trabajadores} onClose={() => setModalAbierto(false)} onSave={guardar} saving={guardando} onNuevoCliente={() => setAltaRapida("cliente")} onNuevoTrabajador={() => setAltaRapida("trabajador")}/>}
     {altaRapida === "cliente" && <ModalCliente cliente={null} guardar={guardarAltaRapida} cerrar={() => setAltaRapida(null)} guardando={guardandoAlta}/>}
