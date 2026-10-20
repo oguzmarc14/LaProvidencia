@@ -16,7 +16,7 @@ export default function SeccionClientes() {
   async function ejecutarConfirmacion() {
     if (!alerta?.accion) return;
     setConfirmando(true);
-    try { await alerta.accion(); setAlerta(null); }
+    try { const resultado = await alerta.accion(); setAlerta(resultado || null); }
     finally { setConfirmando(false); }
   }
   async function guardar(datos) {
@@ -29,8 +29,8 @@ export default function SeccionClientes() {
         else await crearCliente(datos);
         setModal(false); setEditando(null);
         await cargar();
-        setAlerta({ tipo:"success", titulo:esEdicion ? "Cliente actualizado" : "Cliente registrado", mensaje:esEdicion ? "Los datos se guardaron correctamente." : "El cliente ya está disponible en el directorio." });
-      } catch (e) { setAlerta({ tipo:"error", titulo:"No se pudo guardar", mensaje:e.message }); }
+        return { tipo:"success", titulo:esEdicion ? "Cliente actualizado" : "Cliente registrado", mensaje:esEdicion ? "Los datos se guardaron correctamente." : "El cliente ya está disponible en el directorio." };
+      } catch (e) { return { tipo:"error", titulo:"No se pudo guardar", mensaje:e.message }; }
       finally { setGuardando(false); }
     });
   }
