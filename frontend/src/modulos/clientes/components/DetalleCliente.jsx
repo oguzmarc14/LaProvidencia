@@ -30,8 +30,8 @@ export default function DetalleCliente({ cliente, onClose, onEditar, onNuevoTrab
   const conPrecio = historial.filter(t => t.precioTotal != null && Number.isFinite(Number(t.precioTotal)));
   const total = conPrecio.reduce((s,t) => s + Number(t.precioTotal), 0);
   const whatsapp = enlaceWhatsApp(cliente.whatsapp);
-  return <div className="fixed inset-0 z-[100] flex justify-end bg-slate-950/50 backdrop-blur-[2px]" role="presentation" onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}>
-    <section role="dialog" aria-modal="true" aria-label={`Detalles de ${cliente.nombre}`} className="flex h-full w-full max-w-xl flex-col overflow-hidden bg-white shadow-2xl">
+  return <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/50 p-0 backdrop-blur-[2px] sm:p-5" role="presentation" onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}>
+    <section role="dialog" aria-modal="true" aria-label={`Detalles de ${cliente.nombre}`} className="flex h-full w-full max-w-xl flex-col overflow-hidden bg-white shadow-2xl sm:h-[min(92vh,850px)] sm:rounded-3xl">
       <header className="shrink-0 bg-gradient-to-r from-[#123e83] via-[#513d79] to-[#a13f65] px-5 py-5 text-white sm:px-7">
         <div className="flex items-start gap-3">
           <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white/20"><UserRound size={26}/></div>
