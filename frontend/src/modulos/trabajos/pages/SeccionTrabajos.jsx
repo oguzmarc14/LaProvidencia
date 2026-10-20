@@ -4,6 +4,7 @@ import { obtenerClientes } from "../../clientes/services/clientesService";
 import { obtenerTrabajadores } from "../../trabajadores/services/trabajadoresService";
 import { actualizarTrabajo, crearTrabajo, eliminarTrabajo, obtenerTrabajos } from "../services/trabajosService";
 import ModalTrabajo from "../components/ModalTrabajo";
+import AlertaModal from "../../../components/ui/AlertaModal";
 import { enlaceWhatsApp, enlaceMaps } from "../../clientes/utils/enlacesCliente";
 import ModalCliente from "../../clientes/components/ModalCliente";
 import DetalleCliente from "../../clientes/components/DetalleCliente";
@@ -32,6 +33,16 @@ export default function SeccionTrabajos() {
   const [altaRapida, setAltaRapida] = useState(null);
   const [guardandoAlta, setGuardandoAlta] = useState(false);
   const [cambiandoEstado, setCambiandoEstado] = useState(null);
+  const [alerta, setAlerta] = useState(null);
+  const [confirmando, setConfirmando] = useState(false);
+  const confirmar = (titulo, mensaje, accion, tipo = "confirm", confirmarTexto) => setAlerta({ titulo, mensaje, accion, tipo, confirmarTexto });
+  const ejecutarConfirmacion = async () => {
+    if (!alerta?.accion) return;
+    setConfirmando(true);
+    try { const resultado = await alerta.accion(); setAlerta(resultado || null); }
+    catch (e) { setAlerta({ tipo:"error", titulo:"Ocurrió un error", mensaje:e.message }); }
+    finally { setConfirmando(false); }
+  };
 
   const cargar = useCallback(async () => {
     setCargando(true);
@@ -49,53 +60,61 @@ export default function SeccionTrabajos() {
     const texto = [t.nombre, t.cliente?.nombre, t.trabajador?.nombre, t.responsableTemple?.nombre].filter(Boolean).join(" ").toLowerCase();
     return (filtro === "todos" || t.estado === filtro) && texto.includes(busqueda.toLowerCase());
   }), [trabajos, busqueda, filtro]);
-  const guardar = async datos => {
-    setGuardando(true); setError(""); setAviso("");
-    try {
-      if (editando) await actualizarTrabajo(editando._id, datos);
-      else await crearTrabajo(datos);
-      setModalAbierto(false); setEditando(null);
-      await cargar(); setAviso(editando ? "Trabajo actualizado correctamente." : "Trabajo creado y listo para asignación.");
-    } catch (e) { setError(e.message); }
-    finally { setGuardando(false); }
+  const guardar = datos => {
+    const esEdicion = !!editando;
+    const id = editando?._id;
+    confirmar(esEdicion ? "¿Guardar cambios del trabajo?" : "¿Crear nuevo trabajo?", esEdicion ? `Se actualizará "${datos.nombre}".` : `Se registrará "${datos.nombre}" en producción.`, async () => {
+      setGuardando(true); setError("");
+      try {
+        if (esEdicion) await actualizarTrabajo(id, datos);
+        else await crearTrabajo(datos);
+        setModalAbierto(false); setEditando(null);
+        await cargar();
+        return { tipo:"success", titulo:esEdicion ? "Trabajo actualizado" : "Trabajo creado", mensaje:esEdicion ? "Los cambios se guardaron correctamente." : "El trabajo quedó registrado correctamente." };
+      } catch (e) { return { tipo:"error", titulo:"No se pudo guardar el trabajo", mensaje:e.message }; }
+      finally { setGuardando(false); }
+    });
   };
-  const cambiarEstado = async (trabajo, nuevoEstado) => {
+  const cambiarEstado = (trabajo, nuevoEstado) => {
     if (nuevoEstado === trabajo.estado || cambiandoEstado) return;
-    setCambiandoEstado(trabajo._id);
-    setError(""); setAviso("");
-    try {
-      await actualizarTrabajo(trabajo._id, { estado: nuevoEstado });
-      setTrabajos(actuales => actuales.map(t => t._id === trabajo._id ? { ...t, estado: nuevoEstado } : t));
-      setAviso(`Estado de "${trabajo.nombre}" actualizado a ${etapas[nuevoEstado]}.`);
-    } catch (e) {
-      setError(`No se pudo cambiar el estado de "${trabajo.nombre}": ${e.message}`);
-    } finally {
-      setCambiandoEstado(null);
-    }
+    confirmar("¿Cambiar el estado del trabajo?", `"${trabajo.nombre}" pasará de ${etapas[trabajo.estado]} a ${etapas[nuevoEstado]}.`, async () => {
+      setCambiandoEstado(trabajo._id);
+      try {
+        await actualizarTrabajo(trabajo._id, { estado: nuevoEstado });
+        setTrabajos(actuales => actuales.map(t => t._id === trabajo._id ? { ...t, estado: nuevoEstado } : t));
+        return { tipo:"success", titulo:"Estado actualizado", mensaje:`"${trabajo.nombre}" ahora está en ${etapas[nuevoEstado]}.` };
+      } catch (e) { return { tipo:"error", titulo:"No se pudo cambiar el estado", mensaje:e.message }; }
+      finally { setCambiandoEstado(null); }
+    });
   };
-  const borrar = async trabajo => {
-    if (!window.confirm(`¿Eliminar el trabajo "${trabajo.nombre}"? Esta acción no se puede deshacer.`)) return;
-    setError(""); setAviso("");
-    try { await eliminarTrabajo(trabajo._id); await cargar(); setAviso("Trabajo eliminado."); }
-    catch (e) { setError(e.message); }
+  const borrar = trabajo => {
+    confirmar("¿Eliminar este trabajo?", `Se eliminará "${trabajo.nombre}" de forma permanente. Esta acción no se puede deshacer.`, async () => {
+      try {
+        await eliminarTrabajo(trabajo._id);
+        await cargar();
+        return { tipo:"success", titulo:"Trabajo eliminado", mensaje:"El trabajo se eliminó correctamente." };
+      } catch (e) { return { tipo:"error", titulo:"No se pudo eliminar", mensaje:e.message }; }
+    }, "danger", "Sí, eliminar");
   };
-  const guardarAltaRapida = async datos => {
-    setGuardandoAlta(true); setError("");
-    try {
-      if (altaRapida === "cliente") {
-        const nuevo = await crearCliente(datos);
-        const lista = await obtenerClientes();
-        setClientes(lista.clientes || []);
-        setAviso("Cliente registrado. Ya puedes seleccionarlo en el trabajo.");
-      } else {
-        await crearTrabajador({ nombre: datos.nombre, whatsapp: datos.whatsapp });
-        const lista = await obtenerTrabajadores();
-        setTrabajadores(lista.trabajadores || []);
-        setAviso("Trabajador registrado. Ya puedes asignarlo.");
-      }
-      setAltaRapida(null);
-    } catch (e) { setError(e.message); }
-    finally { setGuardandoAlta(false); }
+  const guardarAltaRapida = datos => {
+    const tipo = altaRapida;
+    confirmar(tipo === "cliente" ? "¿Registrar cliente?" : "¿Registrar trabajador?", `Se registrará a "${datos.nombre}".`, async () => {
+      setGuardandoAlta(true);
+      try {
+        if (tipo === "cliente") {
+          await crearCliente(datos);
+          const lista = await obtenerClientes();
+          setClientes(lista.clientes || []);
+        } else {
+          await crearTrabajador({ nombre: datos.nombre, whatsapp: datos.whatsapp });
+          const lista = await obtenerTrabajadores();
+          setTrabajadores(lista.trabajadores || []);
+        }
+        setAltaRapida(null);
+        return { tipo:"success", titulo:tipo === "cliente" ? "Cliente registrado" : "Trabajador registrado", mensaje:"El registro se realizó correctamente. Ya puedes seleccionarlo." };
+      } catch (e) { return { tipo:"error", titulo:"No se pudo registrar", mensaje:e.message }; }
+      finally { setGuardandoAlta(false); }
+    });
   };
   const abrirNuevo = () => { setClienteNuevoTrabajo(null); setEditando(null); setModalAbierto(true); };
   const abrirEdicion = trabajo => { setClienteNuevoTrabajo(null); setEditando(trabajo); setModalAbierto(true); };
@@ -105,8 +124,7 @@ export default function SeccionTrabajos() {
       <label className="flex items-center gap-3 rounded-2xl border-2 border-[#cbd4e6] bg-white px-5 py-4 shadow-sm"><Search size={20} className="text-slate-400"/><input aria-label="Buscar trabajos" placeholder="Buscar por trabajo, cliente o trabajador..." value={busqueda} onChange={e => setBusqueda(e.target.value)} className="w-full outline-none"/></label>
       <select aria-label="Filtrar por estado" value={filtro} onChange={e => setFiltro(e.target.value)} className="rounded-2xl border-2 border-[#cbd4e6] bg-white px-5 py-4 shadow-sm"><option value="todos">Todos los estados</option>{Object.entries(etapas).map(([id, nombre]) => <option key={id} value={id}>{nombre}</option>)}</select>
     </div>
-    {error && <div role="alert" className="mb-4 rounded-xl bg-red-50 p-4 text-red-700">{error}</div>}
-    {aviso && <div role="status" className="mb-4 rounded-xl bg-green-50 p-4 text-green-800">{aviso}</div>}
+
     {cargando ? <p className="py-12 text-center text-slate-500">Cargando trabajos...</p> : filtrados.length === 0 ? <div className="rounded-2xl border bg-white p-12 text-center text-slate-500"><BriefcaseBusiness size={36} className="mx-auto mb-3 text-slate-300"/><p>No hay trabajos para mostrar.</p><button onClick={abrirNuevo} className="mt-4 font-semibold text-[#124B91]">Registrar el primer trabajo</button></div> :
       <div className="grid gap-4 lg:grid-cols-2">
         {filtrados.map(t => {
@@ -151,6 +169,7 @@ export default function SeccionTrabajos() {
           </article>;
         })}
       </div>}
+    <AlertaModal alerta={alerta} procesando={confirmando} onCerrar={() => setAlerta(null)} onConfirmar={ejecutarConfirmacion}/>
     {clienteDetalle && <DetalleCliente cliente={clientes.find(c => c._id === clienteDetalle._id) || clienteDetalle} trabajos={trabajos} onClose={() => setClienteDetalle(null)} onNuevoTrabajo={cliente => {setClienteDetalle(null);setClienteNuevoTrabajo(cliente);setEditando(null);setModalAbierto(true);}} onAbrirTrabajo={trabajo => {setClienteDetalle(null);abrirEdicion(trabajo);}}/>}
     {modalAbierto && <ModalTrabajo trabajo={editando} clienteInicial={clienteNuevoTrabajo} clientes={clientes} trabajadores={trabajadores} onClose={() => setModalAbierto(false)} onSave={guardar} saving={guardando} onNuevoCliente={() => setAltaRapida("cliente")} onNuevoTrabajador={() => setAltaRapida("trabajador")}/>}
     {altaRapida === "cliente" && <ModalCliente cliente={null} guardar={guardarAltaRapida} cerrar={() => setAltaRapida(null)} guardando={guardandoAlta}/>}
