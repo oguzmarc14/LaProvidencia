@@ -3,6 +3,7 @@ import { BriefcaseBusiness, Pencil, Plus, Search, Users, MessageCircle, ArrowUpR
 import { actualizarTrabajador, crearTrabajador, obtenerTrabajadores } from "../services/trabajadoresService";
 import ModalTrabajador from "../components/ModalTrabajador";
 import ModalTrabajos from "../components/ModalTrabajos";
+import AlertaModal from "../../../components/ui/AlertaModal";
 import { enlaceWhatsApp } from "../../clientes/utils/enlacesCliente";
 
 export default function SeccionTrabajadores() {
@@ -14,6 +15,8 @@ export default function SeccionTrabajadores() {
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState("");
+  const [alerta, setAlerta] = useState(null);
+  const [confirmando, setConfirmando] = useState(false);
 
   const cargar = useCallback(async () => {
     setCargando(true);
@@ -27,17 +30,27 @@ export default function SeccionTrabajadores() {
 
   useEffect(() => { cargar(); }, [cargar]);
 
-  const guardar = async (datos) => {
-    setGuardando(true);
-    setError("");
-    try {
-      if (editando) await actualizarTrabajador(editando._id, datos);
-      else await crearTrabajador({ nombre: datos.nombre, whatsapp: datos.whatsapp });
-      setModalAbierto(false);
-      setEditando(null);
-      await cargar();
-    } catch (e) { setError(e.message); }
-    finally { setGuardando(false); }
+  const guardar = datos => {
+    const esEdicion = !!editando;
+    const id = editando?._id;
+    setAlerta({ tipo:"confirm", titulo:esEdicion ? "¿Guardar cambios del trabajador?" : "¿Registrar trabajador?", mensaje:`Se ${esEdicion ? "actualizará" : "registrará"} a "${datos.nombre}".`, accion:async () => {
+      setGuardando(true);
+      try {
+        if (esEdicion) await actualizarTrabajador(id, datos);
+        else await crearTrabajador({ nombre:datos.nombre, whatsapp:datos.whatsapp });
+        setModalAbierto(false); setEditando(null);
+        await cargar();
+        return { tipo:"success", titulo:esEdicion ? "Trabajador actualizado" : "Trabajador registrado", mensaje:"Los datos se guardaron correctamente." };
+      } catch (e) { return { tipo:"error", titulo:"No se pudo guardar", mensaje:e.message }; }
+      finally { setGuardando(false); }
+    }});
+  };
+  const ejecutarConfirmacion = async () => {
+    if (!alerta?.accion) return;
+    setConfirmando(true);
+    try { setAlerta(await alerta.accion() || null); }
+    catch (e) { setAlerta({ tipo:"error", titulo:"Ocurrió un error", mensaje:e.message }); }
+    finally { setConfirmando(false); }
   };
 
   const filtrados = trabajadores.filter((t) => t.nombre.toLowerCase().includes(busqueda.toLowerCase()));
@@ -74,6 +87,7 @@ export default function SeccionTrabajadores() {
             </article>;
           })}
         </div>}
+      <AlertaModal alerta={alerta} procesando={confirmando} onCerrar={() => setAlerta(null)} onConfirmar={ejecutarConfirmacion}/>
       {modalAbierto && <ModalTrabajador trabajador={editando} onClose={() => setModalAbierto(false)} onSave={guardar} saving={guardando}/>}
       {viendoTrabajos && <ModalTrabajos trabajador={viendoTrabajos} onClose={() => setViendoTrabajos(null)}/>}
     </section>
