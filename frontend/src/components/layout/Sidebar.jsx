@@ -1,5 +1,5 @@
-import { LayoutDashboard, Users, UserRoundCheck, X, BriefcaseBusiness, FileText } from "lucide-react";
-const opciones = [{id:"dashboard",nombre:"Dashboard",icono:LayoutDashboard},{id:"clientes",nombre:"Clientes",icono:Users},{id:"trabajadores",nombre:"Trabajadores",icono:UserRoundCheck},{id:"trabajos",nombre:"Trabajos",icono:BriefcaseBusiness},{id:"ventas",nombre:"Lápidas",icono:FileText}];
+import { LayoutDashboard, Users, UserRoundCheck, X, BriefcaseBusiness, FileText, ClipboardList } from "lucide-react";
+const opciones = [{id:"dashboard",nombre:"Dashboard",icono:LayoutDashboard},{id:"clientes",nombre:"Clientes",icono:Users},{id:"trabajadores",nombre:"Trabajadores",icono:UserRoundCheck},{id:"trabajos",nombre:"Trabajos",icono:BriefcaseBusiness},{id:"ventas",nombre:"Lápidas",icono:FileText},{id:"tareas",nombre:"Tareas",icono:ClipboardList}];
 export default function Sidebar({actual,navegar,abierto,cerrar}) {
   return <>
     {abierto && <button className="fixed inset-0 z-30 bg-slate-950/60 md:hidden" onClick={cerrar} aria-label="Cerrar menú"/>}
