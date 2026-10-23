@@ -19,6 +19,7 @@ const trabajoSchema = new mongoose.Schema({
 
     video: { type: String },
     medidas: { type: String, default: "", trim: true },
+    fotoMedidas: { type: String, default: "" },
     piezasTotales: { type: Number, min: 1, validate: { validator: v => v == null || Number.isInteger(v), message: "Las piezas deben ser un número entero" } },
     precioTotal: { type: Number, min: 0 },
 

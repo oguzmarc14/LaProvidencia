@@ -13,6 +13,7 @@ async function validarDatos(datos) {
   if (!datos.fechaInicio || !datos.fechaFinal || Number.isNaN(Date.parse(datos.fechaInicio)) || Number.isNaN(Date.parse(datos.fechaFinal))) return "Las fechas son obligatorias y deben ser válidas";
   if (new Date(datos.fechaFinal) < new Date(datos.fechaInicio)) return "La fecha final no puede ser anterior a la inicial";
   if (datos.medidas !== undefined && typeof datos.medidas !== "string") return "Las medidas deben ser texto";
+  if (datos.fotoMedidas !== undefined && (typeof datos.fotoMedidas !== "string" || (datos.fotoMedidas !== "" && (!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(datos.fotoMedidas) || datos.fotoMedidas.length > 1400000)))) return "La fotografía debe ser JPG, PNG o WebP y pesar menos de 1 MB";
   if (datos.piezasTotales != null && (!Number.isInteger(Number(datos.piezasTotales)) || Number(datos.piezasTotales) < 1)) return "Las piezas totales deben ser un entero mayor que cero";
   if (datos.precioTotal != null && (datos.precioTotal === "" || !Number.isFinite(Number(datos.precioTotal)) || Number(datos.precioTotal) < 0)) return "El precio total debe ser igual o mayor que cero";
   if (datos.direccionInstalacion !== undefined && typeof datos.direccionInstalacion !== "string") return "La dirección de instalación no es válida";
@@ -74,7 +75,7 @@ const crearTrabajo = async (req, res) => {
 const actualizarTrabajo = async (req, res) => {
   if (!idValido(req.params.id)) return res.status(400).json({ mensaje: "ID no válido" });
   try {
-    const campos = ["nombre", "material", "especificaciones", "fechaInicio", "fechaFinal", "estado", "trabajador", "responsableTemple", "cliente", "video", "direccionInstalacion", "ubicacionMaps", "medidas", "piezasTotales", "precioTotal"];
+    const campos = ["nombre", "material", "especificaciones", "fechaInicio", "fechaFinal", "estado", "trabajador", "responsableTemple", "cliente", "video", "direccionInstalacion", "ubicacionMaps", "medidas", "fotoMedidas", "piezasTotales", "precioTotal"];
     const datos = Object.fromEntries(campos.filter(c => Object.prototype.hasOwnProperty.call(req.body || {}, c)).map(c => [c, req.body[c] === "" && ["trabajador", "responsableTemple", "cliente"].includes(c) ? null : req.body[c]]));
     if (Object.keys(datos).length === 0) return res.status(400).json({ mensaje: "Envía al menos un campo del trabajo para actualizar" });
     const trabajo = await Trabajo.findById(req.params.id);

@@ -5,6 +5,8 @@ const clientesRoutes = require("./routes/clientesRoutes");
 const trabajadoresRoutes = require("./routes/trabajadoresRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const asistenciasRoutes = require("./routes/asistenciasRoutes");
+const registroVentasRoutes = require("./routes/registroVentasRoutes");
+const tareasRoutes = require("./routes/tareasRoutes");
 const app = express();
 
 app.use(express.json());
@@ -24,6 +26,8 @@ app.use("/api/clientes", clientesRoutes);
 app.use("/api/trabajadores", trabajadoresRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/asistencias", asistenciasRoutes);
+app.use("/api/registro-ventas", registroVentasRoutes);
+app.use("/api/tareas", tareasRoutes);
 
 app.get("/", (req, res) => {
   res.json({
