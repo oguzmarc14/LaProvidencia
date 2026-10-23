@@ -4,13 +4,14 @@ const trabajoRoutes = require("./routes/trabajoRoutes");
 const clientesRoutes = require("./routes/clientesRoutes");
 const trabajadoresRoutes = require("./routes/trabajadoresRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
+const asistenciasRoutes = require("./routes/asistenciasRoutes");
 const app = express();
 
 app.use(express.json());
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: (process.env.FRONTEND_URL || "http://localhost:5173").split(",").map((url) => url.trim()),
   }),
 );
 
@@ -22,6 +23,7 @@ app.use("/api/clientes", clientesRoutes);
 
 app.use("/api/trabajadores", trabajadoresRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/asistencias", asistenciasRoutes);
 
 app.get("/", (req, res) => {
   res.json({
