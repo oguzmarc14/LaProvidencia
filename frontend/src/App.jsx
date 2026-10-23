@@ -8,6 +8,7 @@ import SeccionDashboard from "./modulos/dashboard/pages/SeccionDashboard";
 import SeccionTrabajadores from "./modulos/trabajadores/pages/SeccionTrabajadores";
 import SeccionClientes from "./modulos/clientes/pages/SeccionClientes";
 import SeccionTrabajos from "./modulos/trabajos/pages/SeccionTrabajos";
+import SeccionVentas from "./modulos/ventas/pages/SeccionVentas";
 import SeccionUsuarios from "./modulos/usuarios/pages/SeccionUsuarios";
 
 export default function App() {
@@ -91,6 +92,7 @@ export default function App() {
   const contenido = seccion === "dashboard" ? <SeccionDashboard navegar={setSeccion}/> :
     seccion === "clientes" ? <SeccionClientes/> :
     seccion === "trabajos" ? <SeccionTrabajos/> :
+    seccion === "ventas" ? <SeccionVentas/> :
     seccion === "usuarios" && usuario.rol === "superadmin" ? <SeccionUsuarios/> :
     <SeccionTrabajadores/>;
 

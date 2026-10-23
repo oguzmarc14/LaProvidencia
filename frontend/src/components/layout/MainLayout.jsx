@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { LogOut, Menu } from "lucide-react";
 import Sidebar from "./Sidebar";
-const nombres={dashboard:"Panel principal",clientes:"Gestión de clientes",trabajadores:"Gestión de trabajadores",trabajos:"Gestión de trabajos",usuarios:"Usuarios del sistema"};
+const nombres={dashboard:"Panel principal",clientes:"Gestión de clientes",trabajadores:"Gestión de trabajadores",trabajos:"Gestión de trabajos",ventas:"Lápidas",usuarios:"Usuarios del sistema"};
 export default function MainLayout({actual,navegar,usuario,cerrarSesion,children}) {
   const [menuAbierto,setMenuAbierto]=useState(false);
   return <div className="min-h-screen md:flex app-background">

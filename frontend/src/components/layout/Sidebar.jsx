@@ -1,6 +1,6 @@
-import { LayoutDashboard, Users, UserRoundCheck, X, BriefcaseBusiness, ShieldCheck } from "lucide-react";
+import { LayoutDashboard, Users, UserRoundCheck, X, BriefcaseBusiness, ShieldCheck, FileText } from "lucide-react";
 import BrandMark from "../BrandMark";
-const opciones = [{id:"dashboard",nombre:"Dashboard",icono:LayoutDashboard},{id:"clientes",nombre:"Clientes",icono:Users},{id:"trabajadores",nombre:"Trabajadores",icono:UserRoundCheck},{id:"trabajos",nombre:"Trabajos",icono:BriefcaseBusiness}];
+const opciones = [{id:"dashboard",nombre:"Dashboard",icono:LayoutDashboard},{id:"clientes",nombre:"Clientes",icono:Users},{id:"trabajadores",nombre:"Trabajadores",icono:UserRoundCheck},{id:"trabajos",nombre:"Trabajos",icono:BriefcaseBusiness},{id:"ventas",nombre:"Lápidas",icono:FileText}];
 export default function Sidebar({actual,navegar,usuario,abierto,cerrar}) {
   const opcionesVisibles = usuario?.rol === "superadmin" ? [...opciones, {id:"usuarios",nombre:"Usuarios",icono:ShieldCheck}] : opciones;
   return <>

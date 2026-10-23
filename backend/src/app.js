@@ -6,6 +6,7 @@ const trabajadoresRoutes = require("./routes/trabajadoresRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const authRoutes = require("./routes/authRoutes");
 const { autenticar } = require("./middleware/autenticacion");
+const registroVentasRoutes = require("./routes/registroVentasRoutes");
 const app = express();
 
 app.use(express.json());
@@ -26,6 +27,7 @@ app.use("/api/clientes", autenticar, clientesRoutes);
 
 app.use("/api/trabajadores", autenticar, trabajadoresRoutes);
 app.use("/api/dashboard", autenticar, dashboardRoutes);
+app.use("/api/registro-ventas", autenticar, registroVentasRoutes);
 
 app.get("/", (req, res) => {
   res.json({

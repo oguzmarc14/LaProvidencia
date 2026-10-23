@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { BriefcaseBusiness, CalendarDays, Pencil, Plus, Search, Trash2, UserRound, Navigation, ExternalLink, Ruler, Package, Banknote } from "lucide-react";
+import { BriefcaseBusiness, CalendarDays, Pencil, Plus, Search, Trash2, UserRound, Navigation, ExternalLink, Ruler, Package, Banknote, MessageCircle, MapPin, Image as ImageIcon, ChevronDown, LoaderCircle } from "lucide-react";
 import { obtenerClientes } from "../../clientes/services/clientesService";
 import { obtenerTrabajadores } from "../../trabajadores/services/trabajadoresService";
 import { actualizarTrabajo, crearTrabajo, eliminarTrabajo, obtenerTrabajos } from "../services/trabajosService";
 import ModalTrabajo from "../components/ModalTrabajo";
-import { enlaceMaps } from "../../clientes/utils/enlacesCliente";
+import AlertaModal from "../../../components/ui/AlertaModal";
+import { enlaceWhatsApp, enlaceMaps } from "../../clientes/utils/enlacesCliente";
 import ModalCliente from "../../clientes/components/ModalCliente";
+import DetalleCliente from "../../clientes/components/DetalleCliente";
 import ModalTrabajador from "../../trabajadores/components/ModalTrabajador";
 import { crearCliente } from "../../clientes/services/clientesService";
 import { crearTrabajador } from "../../trabajadores/services/trabajadoresService";
@@ -16,6 +18,8 @@ const mostrarFecha = fecha => fecha ? new Date(fecha).toLocaleDateString("es-MX"
 
 export default function SeccionTrabajos() {
   const [trabajos, setTrabajos] = useState([]);
+  const [clienteDetalle, setClienteDetalle] = useState(null);
+  const [clienteNuevoTrabajo, setClienteNuevoTrabajo] = useState(null);
   const [clientes, setClientes] = useState([]);
   const [trabajadores, setTrabajadores] = useState([]);
   const [busqueda, setBusqueda] = useState("");
@@ -28,6 +32,17 @@ export default function SeccionTrabajos() {
   const [aviso, setAviso] = useState("");
   const [altaRapida, setAltaRapida] = useState(null);
   const [guardandoAlta, setGuardandoAlta] = useState(false);
+  const [cambiandoEstado, setCambiandoEstado] = useState(null);
+  const [alerta, setAlerta] = useState(null);
+  const [confirmando, setConfirmando] = useState(false);
+  const confirmar = (titulo, mensaje, accion, tipo = "confirm", confirmarTexto) => setAlerta({ titulo, mensaje, accion, tipo, confirmarTexto });
+  const ejecutarConfirmacion = async () => {
+    if (!alerta?.accion) return;
+    setConfirmando(true);
+    try { const resultado = await alerta.accion(); setAlerta(resultado || null); }
+    catch (e) { setAlerta({ tipo:"error", titulo:"Ocurrió un error", mensaje:e.message }); }
+    finally { setConfirmando(false); }
+  };
 
   const cargar = useCallback(async () => {
     setCargando(true);
@@ -45,62 +60,118 @@ export default function SeccionTrabajos() {
     const texto = [t.nombre, t.cliente?.nombre, t.trabajador?.nombre, t.responsableTemple?.nombre].filter(Boolean).join(" ").toLowerCase();
     return (filtro === "todos" || t.estado === filtro) && texto.includes(busqueda.toLowerCase());
   }), [trabajos, busqueda, filtro]);
-  const guardar = async datos => {
-    setGuardando(true); setError(""); setAviso("");
-    try {
-      if (editando) await actualizarTrabajo(editando._id, datos);
-      else await crearTrabajo(datos);
-      setModalAbierto(false); setEditando(null);
-      await cargar(); setAviso(editando ? "Trabajo actualizado correctamente." : "Trabajo creado y listo para asignación.");
-    } catch (e) { setError(e.message); }
-    finally { setGuardando(false); }
+  const guardar = datos => {
+    const esEdicion = !!editando;
+    const id = editando?._id;
+    confirmar(esEdicion ? "¿Guardar cambios del trabajo?" : "¿Crear nuevo trabajo?", esEdicion ? `Se actualizará "${datos.nombre}".` : `Se registrará "${datos.nombre}" en producción.`, async () => {
+      setGuardando(true); setError("");
+      try {
+        if (esEdicion) await actualizarTrabajo(id, datos);
+        else await crearTrabajo(datos);
+        setModalAbierto(false); setEditando(null);
+        await cargar();
+        return { tipo:"success", titulo:esEdicion ? "Trabajo actualizado" : "Trabajo creado", mensaje:esEdicion ? "Los cambios se guardaron correctamente." : "El trabajo quedó registrado correctamente." };
+      } catch (e) { return { tipo:"error", titulo:"No se pudo guardar el trabajo", mensaje:e.message }; }
+      finally { setGuardando(false); }
+    });
   };
-  const borrar = async trabajo => {
-    if (!window.confirm(`¿Eliminar el trabajo "${trabajo.nombre}"? Esta acción no se puede deshacer.`)) return;
-    setError(""); setAviso("");
-    try { await eliminarTrabajo(trabajo._id); await cargar(); setAviso("Trabajo eliminado."); }
-    catch (e) { setError(e.message); }
+  const cambiarEstado = (trabajo, nuevoEstado) => {
+    if (nuevoEstado === trabajo.estado || cambiandoEstado) return;
+    confirmar("¿Cambiar el estado del trabajo?", `"${trabajo.nombre}" pasará de ${etapas[trabajo.estado]} a ${etapas[nuevoEstado]}.`, async () => {
+      setCambiandoEstado(trabajo._id);
+      try {
+        await actualizarTrabajo(trabajo._id, { estado: nuevoEstado });
+        setTrabajos(actuales => actuales.map(t => t._id === trabajo._id ? { ...t, estado: nuevoEstado } : t));
+        return { tipo:"success", titulo:"Estado actualizado", mensaje:`"${trabajo.nombre}" ahora está en ${etapas[nuevoEstado]}.` };
+      } catch (e) { return { tipo:"error", titulo:"No se pudo cambiar el estado", mensaje:e.message }; }
+      finally { setCambiandoEstado(null); }
+    });
   };
-  const guardarAltaRapida = async datos => {
-    setGuardandoAlta(true); setError("");
-    try {
-      if (altaRapida === "cliente") {
-        const nuevo = await crearCliente(datos);
-        const lista = await obtenerClientes();
-        setClientes(lista.clientes || []);
-        setAviso("Cliente registrado. Ya puedes seleccionarlo en el trabajo.");
-      } else {
-        await crearTrabajador({ nombre: datos.nombre, whatsapp: datos.whatsapp });
-        const lista = await obtenerTrabajadores();
-        setTrabajadores(lista.trabajadores || []);
-        setAviso("Trabajador registrado. Ya puedes asignarlo.");
-      }
-      setAltaRapida(null);
-    } catch (e) { setError(e.message); }
-    finally { setGuardandoAlta(false); }
+  const borrar = trabajo => {
+    confirmar("¿Eliminar este trabajo?", `Se eliminará "${trabajo.nombre}" de forma permanente. Esta acción no se puede deshacer.`, async () => {
+      try {
+        await eliminarTrabajo(trabajo._id);
+        await cargar();
+        return { tipo:"success", titulo:"Trabajo eliminado", mensaje:"El trabajo se eliminó correctamente." };
+      } catch (e) { return { tipo:"error", titulo:"No se pudo eliminar", mensaje:e.message }; }
+    }, "danger", "Sí, eliminar");
   };
-  const abrirNuevo = () => { setEditando(null); setModalAbierto(true); };
-  const abrirEdicion = trabajo => { setEditando(trabajo); setModalAbierto(true); };
+  const guardarAltaRapida = datos => {
+    const tipo = altaRapida;
+    confirmar(tipo === "cliente" ? "¿Registrar cliente?" : "¿Registrar trabajador?", `Se registrará a "${datos.nombre}".`, async () => {
+      setGuardandoAlta(true);
+      try {
+        if (tipo === "cliente") {
+          await crearCliente(datos);
+          const lista = await obtenerClientes();
+          setClientes(lista.clientes || []);
+        } else {
+          await crearTrabajador({ nombre: datos.nombre, whatsapp: datos.whatsapp });
+          const lista = await obtenerTrabajadores();
+          setTrabajadores(lista.trabajadores || []);
+        }
+        setAltaRapida(null);
+        return { tipo:"success", titulo:tipo === "cliente" ? "Cliente registrado" : "Trabajador registrado", mensaje:"El registro se realizó correctamente. Ya puedes seleccionarlo." };
+      } catch (e) { return { tipo:"error", titulo:"No se pudo registrar", mensaje:e.message }; }
+      finally { setGuardandoAlta(false); }
+    });
+  };
+  const abrirNuevo = () => { setClienteNuevoTrabajo(null); setEditando(null); setModalAbierto(true); };
+  const abrirEdicion = trabajo => { setClienteNuevoTrabajo(null); setEditando(trabajo); setModalAbierto(true); };
   return <section className="mx-auto max-w-7xl p-4 pb-12 sm:p-6 lg:p-10">
     <div className="mb-7 flex flex-wrap items-center justify-between gap-5 overflow-hidden rounded-[28px] bg-gradient-to-r from-[#123e83] via-[#513d79] to-[#a13f65] p-6 text-white shadow-[0_18px_40px_rgba(43,46,101,.2)] sm:p-9"><div><p className="text-xs font-extrabold uppercase tracking-[.18em] text-white/75">LA PROVIDENCIA · ADMINISTRACIÓN</p><h1 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">Gestión de trabajos</h1><p className="mt-3 max-w-xl text-base text-white/85">Controla pedidos, responsables y etapas de producción.</p></div><button onClick={abrirNuevo} className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 font-extrabold text-[#123e83] shadow-sm hover:bg-blue-50"><Plus size={19}/> Nuevo trabajo</button></div>
     <div className="mb-5 grid gap-3 sm:grid-cols-[1fr_auto]">
       <label className="flex items-center gap-3 rounded-2xl border-2 border-[#cbd4e6] bg-white px-5 py-4 shadow-sm"><Search size={20} className="text-slate-400"/><input aria-label="Buscar trabajos" placeholder="Buscar por trabajo, cliente o trabajador..." value={busqueda} onChange={e => setBusqueda(e.target.value)} className="w-full outline-none"/></label>
       <select aria-label="Filtrar por estado" value={filtro} onChange={e => setFiltro(e.target.value)} className="rounded-2xl border-2 border-[#cbd4e6] bg-white px-5 py-4 shadow-sm"><option value="todos">Todos los estados</option>{Object.entries(etapas).map(([id, nombre]) => <option key={id} value={id}>{nombre}</option>)}</select>
     </div>
-    {error && <div role="alert" className="mb-4 rounded-xl bg-red-50 p-4 text-red-700">{error}</div>}
-    {aviso && <div role="status" className="mb-4 rounded-xl bg-green-50 p-4 text-green-800">{aviso}</div>}
+
     {cargando ? <p className="py-12 text-center text-slate-500">Cargando trabajos...</p> : filtrados.length === 0 ? <div className="rounded-2xl border bg-white p-12 text-center text-slate-500"><BriefcaseBusiness size={36} className="mx-auto mb-3 text-slate-300"/><p>No hay trabajos para mostrar.</p><button onClick={abrirNuevo} className="mt-4 font-semibold text-[#124B91]">Registrar el primer trabajo</button></div> :
       <div className="grid gap-4 lg:grid-cols-2">
-        {filtrados.map(t => <article key={t._id} className="brand-card group">
-          <div className="p-6"><div className="mb-5 flex flex-wrap items-start justify-between gap-3"><div className="flex items-center gap-3"><div className="rounded-xl bg-blue-50 p-3 text-[#124B91]"><BriefcaseBusiness size={22}/></div><div><h3 className="text-lg font-bold text-slate-900">{t.nombre}</h3><p className="text-sm capitalize text-slate-500">{t.material}</p></div></div><span className={`rounded-full px-3 py-1 text-xs font-bold ${colores[t.estado] || "bg-slate-100"}`}>{etapas[t.estado] || t.estado}</span></div>
-          <div className="space-y-3 rounded-xl border border-[#e2e7f1] bg-gradient-to-br from-[#f2f6fc] to-[#faf3f8] p-4 text-sm font-medium text-slate-700"><p><UserRound size={15} className="mr-2 inline text-slate-400"/><strong>Cliente:</strong> {t.cliente?.nombre || "Sin asignar"}</p><p><strong>Trabajador:</strong> {t.trabajador?.nombre || "Sin asignar"}</p><p><strong>Responsable de templado:</strong> {t.responsableTemple?.nombre || "Sin asignar"}</p><p><CalendarDays size={15} className="mr-2 inline text-slate-400"/>{mostrarFecha(t.fechaInicio)} — {mostrarFecha(t.fechaFinal)}</p></div>
-          {(t.medidas || t.piezasTotales != null || t.precioTotal != null) && <div className="mt-4 rounded-xl border border-[#d7deec] bg-gradient-to-br from-[#f0f5fc] to-[#f7eef7] p-4 text-sm text-slate-700"><p className="mb-3 font-extrabold text-[#233d65]">Detalles de fabricación</p><div className="grid gap-3 sm:grid-cols-2">{t.medidas && <p className="sm:col-span-2 whitespace-pre-wrap"><Ruler size={16} className="mr-2 inline text-[#124B91]"/><strong>Medidas:</strong> {t.medidas}</p>}{t.piezasTotales != null && <p><Package size={16} className="mr-2 inline text-[#124B91]"/><strong>Piezas:</strong> {t.piezasTotales}</p>}{t.precioTotal != null && <p><Banknote size={16} className="mr-2 inline text-[#124B91]"/><strong>Precio:</strong> {Number(t.precioTotal).toLocaleString("es-MX", {style:"currency",currency:"MXN"})}</p>}</div></div>}
-          {(t.direccionInstalacion || enlaceMaps(t.ubicacionMaps)) && <div className="mt-4 rounded-xl border border-[#d7deec] bg-blue-50/70 p-4 text-sm"><p className="font-extrabold text-[#233d65]">Ubicación de instalación</p>{t.direccionInstalacion && <p className="mt-1 break-words text-slate-700">{t.direccionInstalacion}</p>}{enlaceMaps(t.ubicacionMaps) && <a href={enlaceMaps(t.ubicacionMaps)} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#124B91] to-[#64417c] px-4 py-2.5 font-extrabold text-white shadow-md hover:brightness-110"><Navigation size={17}/> Ver ubicación en Maps <ExternalLink size={14}/></a>}</div>}
-          {t.especificaciones && <p className="mt-4 line-clamp-2 rounded-xl border border-[#e2e7f1] bg-white p-3 text-sm text-slate-600">{t.especificaciones}</p>}
-          <div className="mt-5 flex flex-wrap gap-2 border-t border-slate-100 pt-4"><button onClick={() => abrirEdicion(t)} className="flex items-center gap-2 rounded-xl border-2 border-[#b9c9e3] bg-blue-50 px-3 py-2 text-sm font-bold text-[#124B91] hover:bg-blue-100"><Pencil size={15}/> Editar / Asignar</button><button onClick={() => borrar(t)} className="flex items-center gap-2 rounded-xl border-2 border-red-100 px-3 py-2 text-sm font-bold text-red-700 hover:bg-red-50"><Trash2 size={15}/> Eliminar</button></div>
-          </div></article>)}
+        {filtrados.map(t => {
+          const indice = Object.keys(etapas).indexOf(t.estado);
+          const whatsapp = enlaceWhatsApp(t.cliente?.whatsapp);
+          const mensaje = encodeURIComponent(`Hola, ${t.cliente?.nombre || ""}. Te contactamos de La Providencia para dar seguimiento a tu trabajo: ${t.nombre}.`);
+          const maps = enlaceMaps(t.ubicacionMaps);
+          return <article key={t._id} className="brand-card overflow-hidden">
+            <div className="space-y-4 p-4 sm:p-6">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="flex min-w-0 flex-1 items-start gap-3">
+                  <span className="rounded-xl bg-blue-50 p-3 text-[#124B91]"><BriefcaseBusiness size={22}/></span>
+                  <div className="min-w-0"><h3 className="break-words text-lg font-extrabold text-slate-900">{t.nombre}</h3><p className="mt-1 text-sm capitalize text-slate-500">{t.material} · Entrega {mostrarFecha(t.fechaFinal)}</p></div>
+                </div>
+                <div className="relative shrink-0">
+                  <label className="sr-only" htmlFor={`estado-trabajo-${t._id}`}>Cambiar estado de {t.nombre}</label>
+                  <select id={`estado-trabajo-${t._id}`} value={t.estado} disabled={cambiandoEstado !== null} onChange={e => cambiarEstado(t, e.target.value)} title="Cambiar estado del trabajo" className={`max-w-[180px] cursor-pointer appearance-none rounded-full border border-transparent py-2 pl-3 pr-8 text-xs font-extrabold shadow-sm outline-none transition hover:border-slate-300 focus:ring-2 focus:ring-[#124B91] disabled:cursor-wait disabled:opacity-60 sm:max-w-none ${colores[t.estado] || "bg-slate-100 text-slate-700"}`}>
+                    {Object.entries(etapas).map(([id, nombre]) => <option key={id} value={id}>{nombre}</option>)}
+                  </select>
+                  {cambiandoEstado === t._id ? <LoaderCircle size={14} className="pointer-events-none absolute right-2.5 top-2.5 animate-spin"/> : <ChevronDown size={14} className="pointer-events-none absolute right-2.5 top-2.5"/>}
+                </div>
+              </div>
+              <div><div className="mb-2 flex items-center justify-between gap-2 text-xs font-semibold text-slate-500"><span>Progreso de producción</span><span>{indice >= 0 ? indice + 1 : 0} de 5 etapas</span></div><div className="flex gap-1.5" aria-label={`Estado: ${etapas[t.estado] || t.estado}`}>{Object.keys(etapas).map((etapa, i) => <span key={etapa} className={`h-2 flex-1 rounded-full ${i <= indice ? "bg-[#124B91]" : "bg-slate-200"}`}/>)}</div></div>
+              <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50 to-purple-50 p-3 sm:p-4">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white text-[#124B91]"><UserRound size={21}/></span>
+                <div className="min-w-0 flex-1"><p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">Cliente</p>{t.cliente?._id ? <button type="button" onClick={() => setClienteDetalle(t.cliente)} className="break-words text-left font-extrabold text-slate-900 underline-offset-4 hover:text-[#124B91] hover:underline">{t.cliente.nombre} ↗</button> : <p className="font-extrabold text-slate-900">Sin asignar</p>}</div>
+                {whatsapp ? <a href={whatsapp + "?text=" + mensaje} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-700"><MessageCircle size={17}/> Mensaje</a> : <span className="rounded-lg bg-white px-3 py-2 text-xs text-slate-500">Sin WhatsApp</span>}
+              </div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                <div><p className="text-xs text-slate-500">Trabajador asignado</p><p className="mt-1 font-semibold text-slate-800">{t.trabajador?.nombre || "Sin asignar"}</p></div>
+                <div><p className="text-xs text-slate-500">Responsable de templado</p><p className="mt-1 font-semibold text-slate-800">{t.responsableTemple?.nombre || "Sin asignar"}</p></div>
+                <div><p className="text-xs text-slate-500">Fecha de inicio</p><p className="mt-1 font-semibold text-slate-800">{mostrarFecha(t.fechaInicio)}</p></div>
+                <div><p className="text-xs text-slate-500">Piezas</p><p className="mt-1 font-semibold text-slate-800">{t.piezasTotales ?? "Sin registrar"}</p></div>
+                {t.precioTotal != null && <div><p className="text-xs text-slate-500">Precio total</p><p className="mt-1 font-semibold text-slate-800">{Number(t.precioTotal).toLocaleString("es-MX", {style:"currency",currency:"MXN"})}</p></div>}
+                {t.medidas && <div className="col-span-2"><p className="text-xs text-slate-500">Medidas</p><p className="mt-1 whitespace-pre-wrap break-words font-medium text-slate-800">{t.medidas}</p></div>}
+              </div>
+              {t.fotoMedidas && <a href={t.fotoMedidas} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-2 text-sm font-bold text-[#124B91] hover:bg-blue-50"><img src={t.fotoMedidas} alt="Croquis o medidas" className="h-16 w-20 rounded-lg object-cover"/><ImageIcon size={17}/> Ver fotografía de medidas <ExternalLink size={14}/></a>}
+              {(t.direccionInstalacion || maps) && <div className="flex flex-wrap items-center gap-3 rounded-xl bg-slate-50 p-3"><MapPin size={18} className="shrink-0 text-[#124B91]"/><div className="min-w-0 flex-1"><p className="text-xs text-slate-500">Ubicación de instalación</p><p className="break-words text-sm font-semibold text-slate-800">{t.direccionInstalacion || "Ver ubicación en el mapa"}</p></div>{maps && <a href={maps} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm font-bold text-[#124B91] hover:bg-blue-50">Maps <ExternalLink size={14}/></a>}</div>}
+              {t.especificaciones && <p className="line-clamp-2 text-sm text-slate-500">{t.especificaciones}</p>}
+              <div className="flex flex-wrap gap-2 border-t border-slate-100 pt-4"><button onClick={() => abrirEdicion(t)} className="inline-flex items-center gap-2 rounded-xl bg-[#124B91] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#0d3770]"><Pencil size={16}/> Editar / Asignar</button><button onClick={() => borrar(t)} className="inline-flex items-center gap-2 rounded-xl border border-red-200 px-3 py-2.5 text-sm font-bold text-red-700 hover:bg-red-50"><Trash2 size={16}/> Eliminar</button></div>
+            </div>
+          </article>;
+        })}
       </div>}
-    {modalAbierto && <ModalTrabajo trabajo={editando} clientes={clientes} trabajadores={trabajadores} onClose={() => setModalAbierto(false)} onSave={guardar} saving={guardando} onNuevoCliente={() => setAltaRapida("cliente")} onNuevoTrabajador={() => setAltaRapida("trabajador")}/>}
+    <AlertaModal alerta={alerta} procesando={confirmando} onCerrar={() => setAlerta(null)} onConfirmar={ejecutarConfirmacion}/>
+    {clienteDetalle && <DetalleCliente cliente={clientes.find(c => c._id === clienteDetalle._id) || clienteDetalle} trabajos={trabajos} onClose={() => setClienteDetalle(null)} onNuevoTrabajo={cliente => {setClienteDetalle(null);setClienteNuevoTrabajo(cliente);setEditando(null);setModalAbierto(true);}} onAbrirTrabajo={trabajo => {setClienteDetalle(null);abrirEdicion(trabajo);}}/>}
+    {modalAbierto && <ModalTrabajo trabajo={editando} clienteInicial={clienteNuevoTrabajo} clientes={clientes} trabajadores={trabajadores} onClose={() => setModalAbierto(false)} onSave={guardar} saving={guardando} onNuevoCliente={() => setAltaRapida("cliente")} onNuevoTrabajador={() => setAltaRapida("trabajador")}/>}
     {altaRapida === "cliente" && <ModalCliente cliente={null} guardar={guardarAltaRapida} cerrar={() => setAltaRapida(null)} guardando={guardandoAlta}/>}
     {altaRapida === "trabajador" && <ModalTrabajador trabajador={null} onSave={guardarAltaRapida} onClose={() => setAltaRapida(null)} saving={guardandoAlta}/>}
   </section>;
