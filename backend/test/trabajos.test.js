@@ -1,8 +1,12 @@
-const { test, before, after, afterEach, mock } = require("node:test");
+process.env.JWT_SECRET = process.env.JWT_SECRET || "test-secret-with-at-least-32-characters-long";
+
+const { test, before, beforeEach, after, afterEach, mock } = require("node:test");
 const assert = require("node:assert/strict");
 const { once } = require("node:events");
+const jwt = require("jsonwebtoken");
 const app = require("../src/app");
 const Trabajo = require("../src/models/Trabajo");
+const Usuario = require("../src/models/Usuario");
 
 const id = "507f1f77bcf86cd799439011";
 const datos = {
@@ -11,12 +15,20 @@ const datos = {
 };
 let servidor;
 let base;
+const token = jwt.sign({ sub: id }, process.env.JWT_SECRET);
+
+function configurarAutenticacion() {
+  mock.method(Usuario, "findById", () => ({
+    select: async () => ({ _id: id, email: "admin@gmail.com", rol: "superadmin" }),
+  }));
+}
 
 before(async () => {
   servidor = app.listen(0, "127.0.0.1");
   await once(servidor, "listening");
   base = `http://127.0.0.1:${servidor.address().port}/api/trabajos`;
 });
+beforeEach(configurarAutenticacion);
 after(() => new Promise((resolve, reject) => {
   servidor.close((error) => error ? reject(error) : resolve());
 }));
@@ -24,7 +36,7 @@ afterEach(() => mock.restoreAll());
 
 const solicitar = (ruta = "", method = "GET", body) => fetch(base + ruta, {
   method,
-  headers: { "Content-Type": "application/json" },
+  headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
   ...(body === undefined ? {} : { body: JSON.stringify(body) }),
 });
 
@@ -118,6 +130,7 @@ test("PUT devuelve 400 ante errores de validación o conversión", async () => {
     });
     assert.equal((await solicitar(`/${id}`, "PUT", { material: "metal" })).status, 400);
     mock.restoreAll();
+    configurarAutenticacion();
   }
 });
 
@@ -129,6 +142,7 @@ test("DELETE elimina un trabajo y distingue 400 y 404", async () => {
   assert.equal((await solicitar(`/${id}`, "DELETE")).status, 200);
   assert.equal((await solicitar("/incorrecto", "DELETE")).status, 400);
   mock.restoreAll();
+  configurarAutenticacion();
   mock.method(Trabajo, "findByIdAndDelete", async () => null);
   assert.equal((await solicitar(`/${id}`, "DELETE")).status, 404);
 });

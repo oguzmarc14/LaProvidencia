@@ -1,14 +1,6 @@
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+import { solicitarApi } from "../../../services/api";
 
-async function solicitar(ruta = "", opciones = {}) {
-  const respuesta = await fetch(`${API_URL}/api/trabajadores${ruta}`, {
-    ...opciones,
-    headers: { "Content-Type": "application/json", ...opciones.headers },
-  });
-  const datos = await respuesta.json().catch(() => ({}));
-  if (!respuesta.ok) throw new Error(datos.mensaje || "Error al consultar trabajadores");
-  return datos;
-}
+const solicitar = (ruta = "", opciones = {}) => solicitarApi(`/api/trabajadores${ruta}`, opciones);
 
 export const obtenerTrabajadores = () => solicitar();
 export const crearTrabajador = (datos) =>
