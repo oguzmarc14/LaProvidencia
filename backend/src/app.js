@@ -6,6 +6,8 @@ const trabajadoresRoutes = require("./routes/trabajadoresRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const registroVentasRoutes = require("./routes/registroVentasRoutes");
 const tareasRoutes = require("./routes/tareasRoutes");
+const authRoutes = require("./routes/authRoutes");
+const { autenticar } = require("./middleware/autenticacion");
 const app = express();
 
 app.use(express.json());
@@ -17,15 +19,16 @@ app.use(
 );
 
 //aqui vamos a usar las apis de trabajos
-app.use("/api/trabajos", trabajoRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/trabajos", autenticar, trabajoRoutes);
 
 //espacios para apis de clientes
-app.use("/api/clientes", clientesRoutes);
+app.use("/api/clientes", autenticar, clientesRoutes);
 
-app.use("/api/trabajadores", trabajadoresRoutes);
-app.use("/api/dashboard", dashboardRoutes);
-app.use("/api/registro-ventas", registroVentasRoutes);
-app.use("/api/tareas", tareasRoutes);
+app.use("/api/trabajadores", autenticar, trabajadoresRoutes);
+app.use("/api/dashboard", autenticar, dashboardRoutes);
+app.use("/api/registro-ventas", autenticar, registroVentasRoutes);
+app.use("/api/tareas", autenticar, tareasRoutes);
 
 app.get("/", (req, res) => {
   res.json({
