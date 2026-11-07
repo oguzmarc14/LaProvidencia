@@ -35,11 +35,11 @@ const autenticar = async (req, res, next) => {
   }
 };
 
-const soloSuperadmin = (req, res, next) => {
-  if (req.usuario?.rol !== "superadmin") {
+const soloAdmin = (req, res, next) => {
+  if (!["admin", "superadmin"].includes(req.usuario?.rol)) {
     return res.status(403).json({ mensaje: "No tienes permiso para realizar esta acción" });
   }
   return next();
 };
 
-module.exports = { autenticar, soloSuperadmin };
+module.exports = { autenticar, soloAdmin };

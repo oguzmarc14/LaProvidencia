@@ -160,7 +160,7 @@ export default function App() {
       <SeccionAsistencias />
     ) : seccion === "tareas" ? (
       <SeccionTareas />
-    ) : seccion === "usuarios" && usuario.rol === "superadmin" ? (
+    ) : seccion === "usuarios" && ["admin", "superadmin"].includes(usuario.rol) ? (
       <SeccionUsuarios />
     ) : (
       <SeccionTrabajadores />

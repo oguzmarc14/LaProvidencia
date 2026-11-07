@@ -15,7 +15,7 @@ const datosPublicos = (usuario) => ({
   id: usuario._id,
   email: usuario.email,
   usuario: usuario.usuario,
-  rol: usuario.rol,
+  rol: usuario.rol === "superadmin" ? "admin" : usuario.rol,
   debeCambiarContrasena: Boolean(usuario.debeCambiarContrasena),
 });
 

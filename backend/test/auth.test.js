@@ -8,7 +8,7 @@ const jwt = require("jsonwebtoken");
 const app = require("../src/app");
 const Usuario = require("../src/models/Usuario");
 
-const admin = { _id: "507f1f77bcf86cd799439011", email: "admin@gmail.com", rol: "superadmin" };
+const admin = { _id: "507f1f77bcf86cd799439011", email: "admin@gmail.com", rol: "admin" };
 const usuario = { _id: "507f1f77bcf86cd799439012", email: "persona@empresa.com", rol: "usuario" };
 let servidor;
 let base;
@@ -43,7 +43,7 @@ test("rechaza el acceso a los módulos si falta o es inválido el JWT", async ()
 test("login valida contraseña y responde con JWT y datos públicos", async () => {
   const hash = await bcrypt.hash("una-clave-segura-123", 4);
   mock.method(Usuario, "findOne", () => ({
-    select: async () => ({ ...admin, password: hash }),
+    select: async () => ({ ...admin, rol: "superadmin", password: hash }),
   }));
 
   const respuesta = await solicitar("/auth/login", {
@@ -53,7 +53,7 @@ test("login valida contraseña y responde con JWT y datos públicos", async () =
   const datos = await respuesta.json();
   assert.equal(respuesta.status, 200);
   assert.equal(datos.usuario.email, admin.email);
-  assert.equal(datos.usuario.rol, "superadmin");
+  assert.equal(datos.usuario.rol, "admin");
   assert.equal(jwt.verify(datos.token, process.env.JWT_SECRET).sub, admin._id);
   assert.equal("password" in datos.usuario, false);
 });
@@ -68,7 +68,7 @@ test("login no revela si el correo existe", async () => {
   assert.deepEqual(await respuesta.json(), { mensaje: "Correo o contraseña incorrectos" });
 });
 
-test("solo el superadmin puede crear usuarios y el rol no se acepta del cliente", async () => {
+test("solo el administrador puede crear usuarios y el rol no se acepta del cliente", async () => {
   mock.method(Usuario, "findById", (id) => ({
     select: async () => id === admin._id ? admin : usuario,
   }));
@@ -118,7 +118,7 @@ test("el endpoint para crear usuarios rechaza contraseñas débiles", async () =
   assert.equal(respuesta.status, 400);
 });
 
-test("solo el superadmin puede listar usuarios y no se muestra su cuenta", async () => {
+test("solo el administrador puede listar usuarios y no se muestra su cuenta", async () => {
   mock.method(Usuario, "findById", () => ({
     select: async () => usuario,
   }));
@@ -127,7 +127,7 @@ test("solo el superadmin puede listar usuarios y no se muestra su cuenta", async
 
   mock.restoreAll();
   mock.method(Usuario, "findById", () => ({
-    select: async () => admin,
+    select: async () => ({ ...admin, rol: "superadmin" }),
   }));
   mock.method(Usuario, "find", () => ({
     select() {
@@ -143,7 +143,7 @@ test("solo el superadmin puede listar usuarios y no se muestra su cuenta", async
   ]);
 });
 
-test("solo el superadmin puede cambiar la contraseña de una cuenta de usuario", async () => {
+test("solo el administrador puede cambiar la contraseña de una cuenta de usuario", async () => {
   mock.method(Usuario, "findById", () => ({
     select: async () => admin,
   }));
@@ -211,7 +211,7 @@ test("la contraseña temporal limita el acceso hasta que se actualiza", async ()
   assert.equal((await sesion.json()).usuario.debeCambiarContrasena, true);
 });
 
-test("el superadmin puede reemplazar la contraseña temporal", async () => {
+test("el administrador puede reemplazar la contraseña temporal", async () => {
   const cuenta = {
     ...admin,
     password: "hash-anterior",

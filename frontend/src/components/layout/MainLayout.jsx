@@ -271,8 +271,8 @@ export default function MainLayout({
                   </p>
 
                   <p className="text-[10px] uppercase tracking-wide text-slate-500">
-                    {usuario?.rol === "superadmin"
-                      ? "Superadmin"
+                    {["admin", "superadmin"].includes(usuario?.rol)
+                      ? "Administrador"
                       : "Usuario"}
                   </p>
                 </div>

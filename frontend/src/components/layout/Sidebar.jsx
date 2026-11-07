@@ -58,7 +58,7 @@ export default function Sidebar({
   cerrar,
 }) {
   const opcionesVisibles =
-    usuario?.rol === "superadmin"
+    ["admin", "superadmin"].includes(usuario?.rol)
       ? [
           ...opciones,
           {

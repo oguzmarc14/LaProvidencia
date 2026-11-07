@@ -3,15 +3,15 @@
 Desde esta carpeta, instala las dependencias con `npm.cmd ci`. Copia
 `.env.example` a `.env`, configura `MONGO_URI`, `JWT_SECRET` (un secreto
 aleatorio de al menos 32 caracteres) y las credenciales iniciales del
-superadmin. El superadmin inicial es `admin@gmail.com`. Para el primer acceso
+administrador. El administrador inicial es `admin@gmail.com`. Para el primer acceso
 local puedes configurar `ADMIN_PASSWORD=admin`; esa cuenta quedará obligada a
 cambiar la contraseña por una de al menos 12 caracteres antes de usar cualquier
 módulo. En producción configura desde el inicio una contraseña propia de al
 menos 12 caracteres. Ejecuta `npm.cmd run bootstrap:admin` una sola vez para
 crear esa cuenta y `npm.cmd run dev` para iniciar el servidor.
 
-El bootstrap no reemplaza ni modifica superadmins existentes. No se permite el
-registro público: el superadmin autenticado crea usuarios desde la aplicación.
+El bootstrap no reemplaza ni modifica administradores existentes. No se permite el
+registro público: el administrador autenticado crea usuarios desde la aplicación.
 Las contraseñas se guardan con bcrypt. Los JWT duran 7 días y el frontend
 restaura la sesión guardada en ese navegador.
 
@@ -33,9 +33,9 @@ Todas las rutas bajo `/api/trabajos`, `/api/clientes`, `/api/trabajadores` y
 | --- | --- | --- | --- |
 | POST | `/api/auth/login` | Público | Valida credenciales y devuelve JWT y usuario. |
 | GET | `/api/auth/me` | Sesión válida | Devuelve el usuario de la sesión. |
-| GET | `/api/auth/users` | Solo superadmin | Lista cuentas de usuario, sin incluir superadmins. |
-| POST | `/api/auth/users` | Solo superadmin | Crea una cuenta de usuario. |
-| PATCH | `/api/auth/users/:id/password` | Solo superadmin | Cambia la contraseña de un usuario y obliga a renovarla al iniciar sesión. |
+| GET | `/api/auth/users` | Solo administrador | Lista cuentas de usuario, sin incluir administradores. |
+| POST | `/api/auth/users` | Solo administrador | Crea una cuenta de usuario. |
+| PATCH | `/api/auth/users/:id/password` | Solo administrador | Cambia la contraseña de un usuario y obliga a renovarla al iniciar sesión. |
 | POST | `/api/auth/change-password` | Sesión válida | Cambia la contraseña actual. |
 
 Para crear un usuario, envía `email` y `password` (mínimo 12 caracteres) como
