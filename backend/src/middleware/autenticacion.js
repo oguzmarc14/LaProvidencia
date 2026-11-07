@@ -2,8 +2,7 @@ const jwt = require("jsonwebtoken");
 const Usuario = require("../models/Usuario");
 
 const autenticar = async (req, res, next) => {
-  const encabezado = req.headers.authorization;
-  const token = encabezado?.startsWith("Bearer ") ? encabezado.slice(7) : null;
+  const token = /^Bearer\s+(.+)$/i.exec(req.headers.authorization || "")?.[1];
 
   if (!token) {
     return res.status(401).json({ mensaje: "Inicia sesión para continuar" });
@@ -11,8 +10,12 @@ const autenticar = async (req, res, next) => {
 
   try {
     const contenido = jwt.verify(token, process.env.JWT_SECRET);
-    const usuario = await Usuario.findById(contenido.sub)
-      .select("_id email rol +debeCambiarContrasena");
+    const id = contenido.sub ?? contenido.id;
+    if (typeof id !== "string" || !/^[a-f\d]{24}$/i.test(id)) {
+      return res.status(401).json({ mensaje: "La sesión ya no es válida" });
+    }
+    const usuario = await Usuario.findById(id)
+      .select("_id email usuario rol +debeCambiarContrasena");
 
     if (!usuario) {
       return res.status(401).json({ mensaje: "La sesión ya no es válida" });

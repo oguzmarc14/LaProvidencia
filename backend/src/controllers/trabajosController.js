@@ -75,10 +75,11 @@ const crearTrabajo = async (req, res) => {
 const actualizarTrabajo = async (req, res) => {
   if (!idValido(req.params.id)) return res.status(400).json({ mensaje: "ID no válido" });
   try {
+    const campos = ["nombre", "material", "especificaciones", "fechaInicio", "fechaFinal", "estado", "trabajador", "responsableTemple", "cliente", "video", "direccionInstalacion", "ubicacionMaps", "medidas", "fotoMedidas", "piezasTotales", "precioTotal"];
+    const datos = Object.fromEntries(campos.filter(c => Object.prototype.hasOwnProperty.call(req.body || {}, c)).map(c => [c, req.body[c] === "" && ["trabajador", "responsableTemple", "cliente"].includes(c) ? null : req.body[c]]));
+    if (Object.keys(datos).length === 0) return res.status(400).json({ mensaje: "Envía al menos un campo del trabajo para actualizar" });
     const trabajo = await Trabajo.findById(req.params.id);
     if (!trabajo) return res.status(404).json({ mensaje: "Trabajo no encontrado" });
-    const campos = ["nombre", "material", "especificaciones", "fechaInicio", "fechaFinal", "estado", "trabajador", "responsableTemple", "cliente", "direccionInstalacion", "ubicacionMaps", "medidas", "fotoMedidas", "piezasTotales", "precioTotal"];
-    const datos = Object.fromEntries(campos.filter(c => Object.prototype.hasOwnProperty.call(req.body || {}, c)).map(c => [c, req.body[c] === "" && ["trabajador", "responsableTemple", "cliente"].includes(c) ? null : req.body[c]]));
     const mensaje = await validarDatos({ ...trabajo.toObject(), ...datos });
     if (mensaje) return res.status(400).json({ mensaje });
     Object.assign(trabajo, datos);

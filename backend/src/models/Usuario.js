@@ -10,6 +10,7 @@ const usuarioSchema = new mongoose.Schema(
       trim: true,
       maxlength: 254,
     },
+    usuario: { type: String, trim: true },
     password: {
       type: String,
       required: true,
@@ -17,7 +18,7 @@ const usuarioSchema = new mongoose.Schema(
     },
     rol: {
       type: String,
-      enum: ["superadmin", "usuario"],
+      enum: ["superadmin", "admin", "usuario"],
       default: "usuario",
       required: true,
     },

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 
 import {
@@ -19,6 +18,7 @@ import SeccionTrabajadores from "./modulos/trabajadores/pages/SeccionTrabajadore
 import SeccionClientes from "./modulos/clientes/pages/SeccionClientes";
 import SeccionTrabajos from "./modulos/trabajos/pages/SeccionTrabajos";
 import SeccionVentas from "./modulos/ventas/pages/SeccionVentas";
+import SeccionAsistencias from "./modulos/asistencias/pages/SeccionAsistencias";
 import SeccionTareas from "./modulos/tareas/pages/SeccionTareas";
 import SeccionUsuarios from "./modulos/usuarios/pages/SeccionUsuarios";
 
@@ -71,8 +71,8 @@ export default function App() {
     };
   }, []);
 
-  async function entrar(email, password) {
-    const sesion = await iniciarSesion(email, password);
+  async function entrar(identificador, password) {
+    const sesion = await iniciarSesion(identificador, password);
     setUsuario(sesion);
     setErrorInicio("");
   }
@@ -156,6 +156,8 @@ export default function App() {
       <SeccionTrabajos />
     ) : seccion === "ventas" ? (
       <SeccionVentas />
+    ) : seccion === "asistencias" ? (
+      <SeccionAsistencias />
     ) : seccion === "tareas" ? (
       <SeccionTareas />
     ) : seccion === "usuarios" && usuario.rol === "superadmin" ? (

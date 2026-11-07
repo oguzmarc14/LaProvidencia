@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import {
   Menu,
@@ -20,6 +19,7 @@ const nombres = {
   trabajos: "Gestión de trabajos",
   ventas: "Registro de lápidas",
   tareas: "Planificación de tareas",
+  asistencias: "Asistencia",
   usuarios: "Usuarios del sistema",
 };
 
@@ -267,7 +267,7 @@ export default function MainLayout({
 
                 <div className="hidden max-w-[180px] md:block">
                   <p className="truncate text-xs font-black text-[#203d6b]">
-                    {usuario?.email || "Usuario"}
+                    {usuario?.usuario || usuario?.email || "Usuario"}
                   </p>
 
                   <p className="text-[10px] uppercase tracking-wide text-slate-500">

@@ -1,10 +1,11 @@
-import { eliminarToken, guardarToken, solicitarApi } from "./api";
+import { cerrarSesionLocal, guardarToken, solicitarApi } from "./api";
 
-export async function iniciarSesion(email, password) {
+export async function iniciarSesion(identificador, password) {
   const datos = await solicitarApi("/api/auth/login", {
     method: "POST",
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ identificador, password }),
   });
+  if (!datos.token || !datos.usuario) throw new Error("Respuesta de autenticación no válida.");
   guardarToken(datos.token);
   return datos.usuario;
 }
@@ -15,7 +16,7 @@ export async function obtenerSesion() {
 }
 
 export async function cerrarSesion() {
-  eliminarToken();
+  cerrarSesionLocal();
 }
 
 export async function crearUsuario(email, password) {

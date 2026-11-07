@@ -2,7 +2,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const Usuario = require("../models/Usuario");
 
-const DURACION_TOKEN = "7d";
+const DURACION_TOKEN = "12h";
 const MINIMO_PASSWORD = 12;
 const correoValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -14,20 +14,24 @@ const crearToken = (usuario) =>
 const datosPublicos = (usuario) => ({
   id: usuario._id,
   email: usuario.email,
+  usuario: usuario.usuario,
   rol: usuario.rol,
   debeCambiarContrasena: Boolean(usuario.debeCambiarContrasena),
 });
 
 const iniciarSesion = async (req, res, next) => {
   try {
-    const email = typeof req.body.email === "string" ? req.body.email.trim().toLowerCase() : "";
-    const password = typeof req.body.password === "string" ? req.body.password : "";
+    const entrada = req.body?.identificador ?? req.body?.email ?? req.body?.usuario;
+    const identificador = typeof entrada === "string" ? entrada.trim() : "";
+    const password = typeof req.body?.password === "string" ? req.body.password : "";
 
-    if (!correoValido.test(email) || email.length > 254 || !password || password.length > 128) {
-      return res.status(400).json({ mensaje: "Ingresa un correo y una contraseña válidos" });
+    if (!identificador || identificador.length > 254 || !password || password.length > 128) {
+      return res.status(400).json({ mensaje: "Ingresa tu usuario o correo y una contraseña válida" });
     }
 
-    const usuario = await Usuario.findOne({ email }).select("+password +debeCambiarContrasena");
+    const usuario = await Usuario.findOne({
+      $or: [{ email: identificador.toLowerCase() }, { usuario: identificador }],
+    }).select("+password +debeCambiarContrasena");
     if (!usuario || !(await bcrypt.compare(password, usuario.password))) {
       return res.status(401).json({ mensaje: "Correo o contraseña incorrectos" });
     }

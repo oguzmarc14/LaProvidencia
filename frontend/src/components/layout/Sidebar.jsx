@@ -1,4 +1,3 @@
-
 import {
   LayoutDashboard,
   Users,
@@ -8,6 +7,7 @@ import {
   ShieldCheck,
   FileText,
   ClipboardList,
+  Clock,
 } from "lucide-react";
 
 import BrandMark from "../BrandMark";
@@ -42,6 +42,11 @@ const opciones = [
     id: "tareas",
     nombre: "Tareas",
     icono: ClipboardList,
+  },
+  {
+    id: "asistencias",
+    nombre: "Asistencia",
+    icono: Clock,
   },
 ];
 

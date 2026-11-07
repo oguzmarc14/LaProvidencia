@@ -3,7 +3,7 @@ import { LockKeyhole, Mail } from "lucide-react";
 import BrandMark from "../BrandMark";
 
 export default function Login({ alIniciarSesion, errorSesion }) {
-  const [email, setEmail] = useState("");
+  const [identificador, setIdentificador] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [cargando, setCargando] = useState(false);
@@ -13,7 +13,7 @@ export default function Login({ alIniciarSesion, errorSesion }) {
     setError("");
     setCargando(true);
     try {
-      await alIniciarSesion(email, password);
+      await alIniciarSesion(identificador, password);
     } catch (errorInicio) {
       setError(errorInicio.message);
     } finally {
@@ -50,12 +50,12 @@ export default function Login({ alIniciarSesion, errorSesion }) {
           {/* Campos de formulario */}
           <div className="space-y-4">
             <label className="block">
-              <span className="mb-1.5 block text-[11px] font-bold text-slate-700">Correo electrónico</span>
+              <span className="mb-1.5 block text-[11px] font-bold text-slate-700">Usuario o correo electrónico</span>
               <span className="relative block">
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} aria-hidden="true"/>
                 <input
                   className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-800 outline-none transition focus:border-[#554372] focus:ring-1 focus:ring-[#554372]"
-                  type="email" autoComplete="username" required maxLength={254} value={email} onChange={(evento) => setEmail(evento.target.value)} placeholder="nombre@empresa.com"
+                  type="text" autoComplete="username" required maxLength={254} value={identificador} onChange={(evento) => setIdentificador(evento.target.value)} placeholder="Usuario o correo"
                 />
               </span>
             </label>
