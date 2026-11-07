@@ -27,7 +27,7 @@ afterEach(() => mock.restoreAll());
 const token = jwt.sign({ sub: id }, process.env.JWT_SECRET);
 const solicitar = (url, opciones = {}) => {
   mock.method(Usuario, "findById", () => ({
-    select: async () => ({ _id: id, rol: "usuario" }),
+    select: async () => ({ _id: id, rol: "admin" }),
   }));
   return fetch(url, {
     ...opciones, headers: { ...opciones.headers, Authorization: `Bearer ${token}` },

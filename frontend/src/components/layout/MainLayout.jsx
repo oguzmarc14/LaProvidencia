@@ -20,7 +20,6 @@ const nombres = {
   ventas: "Registro de lápidas",
   tareas: "Planificación de tareas",
   asistencias: "Asistencia",
-  usuarios: "Usuarios del sistema",
 };
 
 export default function MainLayout({
@@ -86,7 +85,6 @@ export default function MainLayout({
       <Sidebar
         actual={actual}
         navegar={navegar}
-        usuario={usuario}
         abierto={menuAbierto}
         cerrar={() => setMenuAbierto(false)}
       />

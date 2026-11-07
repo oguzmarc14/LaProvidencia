@@ -4,7 +4,6 @@ import {
   UserRoundCheck,
   X,
   BriefcaseBusiness,
-  ShieldCheck,
   FileText,
   ClipboardList,
   Clock,
@@ -53,22 +52,9 @@ const opciones = [
 export default function Sidebar({
   actual,
   navegar,
-  usuario,
   abierto,
   cerrar,
 }) {
-  const opcionesVisibles =
-    ["admin", "superadmin"].includes(usuario?.rol)
-      ? [
-          ...opciones,
-          {
-            id: "usuarios",
-            nombre: "Usuarios",
-            icono: ShieldCheck,
-          },
-        ]
-      : opciones;
-
   return (
     <>
       {abierto && (
@@ -112,7 +98,7 @@ export default function Sidebar({
             Administración
           </p>
 
-          {opcionesVisibles.map(
+          {opciones.map(
             ({ id, nombre, icono: Icono }) => (
               <button
                 key={id}

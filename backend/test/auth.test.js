@@ -6,10 +6,12 @@ const { once } = require("node:events");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const app = require("../src/app");
+const Trabajador = require("../src/models/Trabajador");
 const Usuario = require("../src/models/Usuario");
 
 const admin = { _id: "507f1f77bcf86cd799439011", email: "admin@gmail.com", rol: "admin" };
 const usuario = { _id: "507f1f77bcf86cd799439012", email: "persona@empresa.com", rol: "usuario" };
+const ficha = "507f1f77bcf86cd799439013";
 let servidor;
 let base;
 
@@ -77,33 +79,38 @@ test("solo el administrador puede crear usuarios y el rol no se acepta del clien
     assert.equal(saltos, 12);
     return "hash-seguro";
   });
-  mock.method(Usuario, "create", async (datos) => {
-    assert.deepEqual(datos, {
-      email: usuario.email,
-      password: "hash-seguro",
-      rol: "usuario",
-      debeCambiarContrasena: true,
+  mock.method(Trabajador, "exists", async (filtro) => {
+    assert.deepEqual(filtro, { _id: ficha, activo: true });
+    return { _id: ficha };
+  });
+  mock.method(Usuario, "findOneAndUpdate", async (filtro, cambio, opciones) => {
+    assert.deepEqual(filtro, { email: usuario.email, rol: "usuario", trabajador: null });
+    assert.deepEqual(cambio, {
+      $set: { trabajador: ficha, password: "hash-seguro", debeCambiarContrasena: true },
+      $inc: { versionSesion: 1 },
     });
-    return { ...usuario, ...datos };
+    assert.equal(opciones.upsert, true);
+    return { ...usuario, ...cambio.$set };
   });
 
   const noAdmin = await solicitar("/auth/users", {
     method: "POST",
     persona: usuario,
-    body: JSON.stringify({ email: usuario.email, password: "contraseña-de-prueba", rol: "superadmin" }),
+    body: JSON.stringify({ email: usuario.email, password: "contraseña-de-prueba", trabajador: ficha, rol: "superadmin" }),
   });
   assert.equal(noAdmin.status, 403);
 
   const creado = await solicitar("/auth/users", {
     method: "POST",
     persona: admin,
-    body: JSON.stringify({ email: usuario.email, password: "contraseña-de-prueba", rol: "superadmin" }),
+    body: JSON.stringify({ email: usuario.email, password: "contraseña-de-prueba", trabajador: ficha, rol: "superadmin" }),
   });
   assert.equal(creado.status, 201);
   assert.deepEqual((await creado.json()).usuario, {
     id: usuario._id,
     email: usuario.email,
     rol: "usuario",
+    trabajador: ficha,
     debeCambiarContrasena: true,
   });
 });
@@ -147,15 +154,13 @@ test("solo el administrador puede cambiar la contraseña de una cuenta de usuari
   mock.method(Usuario, "findById", () => ({
     select: async () => admin,
   }));
-  const cuenta = {
-    ...usuario,
-    password: "hash-anterior",
-    debeCambiarContrasena: false,
-    save: mock.fn(async () => {}),
-  };
-  mock.method(Usuario, "findOne", async (filtro) => {
-    assert.deepEqual(filtro, { _id: usuario._id, rol: "usuario" });
-    return cuenta;
+  mock.method(Usuario, "findOneAndUpdate", async (filtro, cambio) => {
+    assert.deepEqual(filtro, { _id: usuario._id, rol: "usuario", trabajador: { $ne: null } });
+    assert.deepEqual(cambio, {
+      $set: { password: "hash-nuevo", debeCambiarContrasena: true },
+      $inc: { versionSesion: 1 },
+    });
+    return { ...usuario, ...cambio.$set };
   });
   mock.method(bcrypt, "hash", async (password, saltos) => {
     assert.equal(password, "nueva-clave-temporal");
@@ -169,9 +174,6 @@ test("solo el administrador puede cambiar la contraseña de una cuenta de usuari
     body: JSON.stringify({ password: "nueva-clave-temporal" }),
   });
   assert.equal(respuesta.status, 200);
-  assert.equal(cuenta.password, "hash-nuevo");
-  assert.equal(cuenta.debeCambiarContrasena, true);
-  assert.equal(cuenta.save.mock.callCount(), 1);
   assert.equal((await respuesta.json()).usuario.debeCambiarContrasena, true);
 });
 
@@ -216,7 +218,6 @@ test("el administrador puede reemplazar la contraseña temporal", async () => {
     ...admin,
     password: "hash-anterior",
     debeCambiarContrasena: true,
-    save: mock.fn(async () => {}),
   };
   mock.method(Usuario, "findById", () => ({
     select: async (campos) => campos === "+password"
@@ -234,6 +235,15 @@ test("el administrador puede reemplazar la contraseña temporal", async () => {
     return "hash-nuevo";
   });
 
+  mock.method(Usuario, "findOneAndUpdate", async (filtro, cambio) => {
+    assert.deepEqual(filtro, { _id: admin._id, password: "hash-anterior" });
+    assert.deepEqual(cambio, {
+      $set: { password: "hash-nuevo", debeCambiarContrasena: false },
+      $inc: { versionSesion: 1 },
+    });
+    return { ...cuenta, ...cambio.$set, versionSesion: 1 };
+  });
+
   const respuesta = await solicitar("/auth/change-password", {
     method: "POST",
     persona: admin,
@@ -243,8 +253,7 @@ test("el administrador puede reemplazar la contraseña temporal", async () => {
     }),
   });
   assert.equal(respuesta.status, 200);
-  assert.equal(cuenta.password, "hash-nuevo");
-  assert.equal(cuenta.debeCambiarContrasena, false);
-  assert.equal(cuenta.save.mock.callCount(), 1);
-  assert.equal((await respuesta.json()).usuario.debeCambiarContrasena, false);
+  const datos = await respuesta.json();
+  assert.equal(datos.usuario.debeCambiarContrasena, false);
+  assert.equal(jwt.verify(datos.token, process.env.JWT_SECRET).version, 1);
 });

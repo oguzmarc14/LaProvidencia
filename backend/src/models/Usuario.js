@@ -22,6 +22,8 @@ const usuarioSchema = new mongoose.Schema(
       default: "usuario",
       required: true,
     },
+    trabajador: { type: mongoose.Schema.Types.ObjectId, ref: "Trabajador" },
+    versionSesion: { type: Number, default: 0 },
     debeCambiarContrasena: {
       type: Boolean,
       default: false,
@@ -30,5 +32,10 @@ const usuarioSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
+
+usuarioSchema.index({ trabajador: 1 }, {
+  unique: true,
+  partialFilterExpression: { trabajador: { $type: "objectId" } },
+});
 
 module.exports = mongoose.model("Usuario", usuarioSchema);

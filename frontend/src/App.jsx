@@ -20,10 +20,11 @@ import SeccionTrabajos from "./modulos/trabajos/pages/SeccionTrabajos";
 import SeccionVentas from "./modulos/ventas/pages/SeccionVentas";
 import SeccionAsistencias from "./modulos/asistencias/pages/SeccionAsistencias";
 import SeccionTareas from "./modulos/tareas/pages/SeccionTareas";
-import SeccionUsuarios from "./modulos/usuarios/pages/SeccionUsuarios";
+import PortalTrabajador from "./modulos/trabajadores/pages/PortalTrabajador";
 
 export default function App() {
   const [seccion, setSeccion] = useState("dashboard");
+  const [editandoContrasena, setEditandoContrasena] = useState(false);
   const [usuario, setUsuario] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [errorSesion, setErrorSesion] = useState("");
@@ -57,6 +58,7 @@ export default function App() {
     };
 
     const expirarSesion = () => {
+      setEditandoContrasena(false);
       setUsuario(null);
       setSeccion("dashboard");
       setErrorInicio("Tu sesión venció. Inicia sesión nuevamente.");
@@ -82,6 +84,7 @@ export default function App() {
     setUsuario(null);
     setSeccion("dashboard");
     setErrorInicio("");
+    setEditandoContrasena(false);
   }
 
   async function actualizarContrasena(
@@ -94,6 +97,7 @@ export default function App() {
     );
 
     setUsuario(sesion);
+    setEditandoContrasena(false);
   }
 
   if (cargando) {
@@ -139,12 +143,22 @@ export default function App() {
     );
   }
 
-  if (usuario.debeCambiarContrasena) {
+  if (usuario.debeCambiarContrasena || editandoContrasena) {
     return (
       <CambiarContrasena
         alCambiar={actualizarContrasena}
+        temporal={usuario.debeCambiarContrasena}
+        alCancelar={usuario.debeCambiarContrasena ? salir : () => setEditandoContrasena(false)}
       />
     );
+  }
+
+  if (usuario.rol === "usuario") {
+    return <PortalTrabajador
+      usuario={usuario}
+      alSalir={salir}
+      alCambiarContrasena={() => setEditandoContrasena(true)}
+    />;
   }
 
   const contenido =
@@ -160,8 +174,6 @@ export default function App() {
       <SeccionAsistencias />
     ) : seccion === "tareas" ? (
       <SeccionTareas />
-    ) : seccion === "usuarios" && ["admin", "superadmin"].includes(usuario.rol) ? (
-      <SeccionUsuarios />
     ) : (
       <SeccionTrabajadores />
     );

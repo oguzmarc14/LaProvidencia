@@ -19,10 +19,10 @@ export async function cerrarSesion() {
   cerrarSesionLocal();
 }
 
-export async function crearUsuario(email, password) {
+export async function crearUsuario(email, password, trabajador) {
   const datos = await solicitarApi("/api/auth/users", {
     method: "POST",
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email, password, trabajador }),
   });
   return datos.usuario;
 }
@@ -45,5 +45,6 @@ export async function cambiarContrasena(contrasenaActual, contrasenaNueva) {
     method: "POST",
     body: JSON.stringify({ contrasenaActual, contrasenaNueva }),
   });
+  if (datos.token) guardarToken(datos.token);
   return datos.usuario;
 }

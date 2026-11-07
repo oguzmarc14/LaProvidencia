@@ -21,9 +21,9 @@ function distancia(posicion, zona) {
   return 6371000 * 2 * Math.asin(Math.sqrt(Math.min(1, a)));
 }
 
-export default function SeccionAsistencias() {
+export default function SeccionAsistencias({ miTrabajador } = {}) {
   const [trabajadores, setTrabajadores] = useState([]);
-  const [trabajador, setTrabajador] = useState("");
+  const [trabajador, setTrabajador] = useState(miTrabajador || "");
   const [zona, setZona] = useState(null);
   const [registros, setRegistros] = useState({ fecha: "", asistencias: [] });
   const [posicion, setPosicion] = useState(null);
@@ -39,10 +39,10 @@ export default function SeccionAsistencias() {
 
   useEffect(() => {
     montado.current = true;
-    Promise.all([obtenerTrabajadores(), obtenerZona(), obtenerLlegadasHoy()])
+    Promise.all([miTrabajador ? null : obtenerTrabajadores(), obtenerZona(), obtenerLlegadasHoy()])
       .then(([equipo, configuracion, llegadas]) => {
         if (!montado.current) return;
-        setTrabajadores(equipo.trabajadores.filter((persona) => persona.activo));
+        if (equipo) setTrabajadores(equipo.trabajadores.filter((persona) => persona.activo));
         setZona(configuracion.zona);
         setRegistros(llegadas);
       }).catch((e) => { if (montado.current) setError(e.message); })
@@ -54,7 +54,7 @@ export default function SeccionAsistencias() {
       detenerConsulta.current?.();
       detenerConsulta.current = null;
     };
-  }, []);
+  }, [miTrabajador]);
 
   const verificar = () => {
     setErrorGPS("");
@@ -139,10 +139,11 @@ export default function SeccionAsistencias() {
     <div className="mb-6 rounded-[28px] bg-gradient-to-r from-[#123e83] to-[#a13f65] p-6 text-white sm:p-9">
       <Clock size={30} aria-hidden="true"/>
       <h1 className="mt-3 text-3xl font-black">Registrar llegada</h1>
-      <p className="mt-3 text-white/90">Selecciona tu nombre y verifica tu ubicación para checar tu entrada.</p>
+      <p className="mt-3 text-white/90">{miTrabajador ? "Verifica tu ubicación para registrar tu llegada." : "Selecciona un trabajador y verifica la ubicación para registrar su llegada."}</p>
     </div>
     <div className="app-panel p-5 sm:p-8">
       {cargando ? <p role="status">Cargando trabajadores y zona de asistencia...</p> : <>
+        {!miTrabajador && <>
         <label htmlFor="trabajador-asistencia" className="app-label">Trabajador</label>
         <select id="trabajador-asistencia" className="app-field" value={trabajador} disabled={guardando} onChange={(e) => {
           setTrabajador(e.target.value); setError(""); setExito("");
@@ -151,6 +152,7 @@ export default function SeccionAsistencias() {
           {trabajadores.map((persona) => <option key={persona._id} value={persona._id}>{persona.nombre}</option>)}
         </select>
         {!trabajadores.length && <p className="mt-3 text-sm text-slate-600">No hay trabajadores activos disponibles.</p>}
+        </>}
         {zona && <div className="my-5 rounded-xl bg-blue-50 p-4 text-sm text-[#123e83]">
           <p className="flex items-center gap-2 font-bold"><MapPin size={18} aria-hidden="true"/>Zona de asistencia · {zona.radioMetros} metros</p>
           <p className="mt-2">{zona.direccion}</p>
@@ -171,7 +173,7 @@ export default function SeccionAsistencias() {
         <button type="button" disabled={!puedeRegistrar} onClick={checar} className="app-primary w-full rounded-xl px-5 py-4 font-bold disabled:opacity-50">
           {guardando ? "Registrando llegada..." : "Registrar llegada"}
         </button>
-        <p className="mt-4 text-sm text-slate-500">Una llegada por día. Horario de México. Por ahora, el nombre se selecciona sin inicio de sesión.</p>
+        <p className="mt-4 text-sm text-slate-500">Una llegada por día. Horario de México.</p>
       </>}
       {error && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-4 text-red-700">{error}</p>}
       {exito && <p role="status" className="mt-4 rounded-xl bg-green-50 p-4 font-semibold text-green-800">{exito}</p>}
@@ -186,7 +188,7 @@ export default function SeccionAsistencias() {
       </div>
       {!cargando && (llegadas.length ? <ul className="mt-4 divide-y divide-slate-100">
         {llegadas.map((registro) => <li key={registro._id} className="flex items-center justify-between gap-3 py-3">
-          <span>{registro.trabajador?.nombre || "Trabajador eliminado"}</span>
+          <span>{miTrabajador ? "Mi llegada" : registro.trabajador?.nombre || "Trabajador eliminado"}</span>
           <time dateTime={registro.llegada} className="font-semibold text-[#124B91]">{hora(registro.llegada, zona?.zonaHoraria)}</time>
         </li>)}
       </ul> : <p className="mt-4 text-slate-500">Todavía no hay llegadas registradas hoy.</p>)}

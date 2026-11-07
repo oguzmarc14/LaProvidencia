@@ -1,5 +1,6 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const Trabajador = require("../models/Trabajador");
 const Usuario = require("../models/Usuario");
 
 const DURACION_TOKEN = "12h";
@@ -7,7 +8,7 @@ const MINIMO_PASSWORD = 12;
 const correoValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const crearToken = (usuario) =>
-  jwt.sign({ sub: usuario._id.toString() }, process.env.JWT_SECRET, {
+  jwt.sign({ sub: usuario._id.toString(), version: usuario.versionSesion ?? 0 }, process.env.JWT_SECRET, {
     expiresIn: DURACION_TOKEN,
   });
 
@@ -16,6 +17,7 @@ const datosPublicos = (usuario) => ({
   email: usuario.email,
   usuario: usuario.usuario,
   rol: usuario.rol === "superadmin" ? "admin" : usuario.rol,
+  trabajador: usuario.trabajador,
   debeCambiarContrasena: Boolean(usuario.debeCambiarContrasena),
 });
 
@@ -47,7 +49,7 @@ const obtenerSesion = (req, res) => res.json({ usuario: datosPublicos(req.usuari
 const listarUsuarios = async (_req, res, next) => {
   try {
     const usuarios = await Usuario.find({ rol: "usuario" })
-      .select("_id email rol debeCambiarContrasena createdAt")
+      .select("_id email rol trabajador +debeCambiarContrasena createdAt")
       .sort({ createdAt: -1 });
     return res.json({ usuarios: usuarios.map(datosPublicos) });
   } catch (error) {
@@ -57,8 +59,8 @@ const listarUsuarios = async (_req, res, next) => {
 
 const crearUsuario = async (req, res, next) => {
   try {
-    const email = typeof req.body.email === "string" ? req.body.email.trim().toLowerCase() : "";
-    const password = typeof req.body.password === "string" ? req.body.password : "";
+    const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
+    const password = typeof req.body?.password === "string" ? req.body.password : "";
 
     if (!correoValido.test(email) || email.length > 254 || password.length < MINIMO_PASSWORD || password.length > 128) {
       return res.status(400).json({
@@ -66,17 +68,27 @@ const crearUsuario = async (req, res, next) => {
       });
     }
 
-    const hash = await bcrypt.hash(password, 12);
-    const usuario = await Usuario.create({
-      email,
-      password: hash,
-      rol: "usuario",
-      debeCambiarContrasena: true,
-    });
+    const trabajador = req.body?.trabajador;
+    if (typeof trabajador !== "string" || !/^[a-f\d]{24}$/i.test(trabajador)) {
+      return res.status(400).json({ mensaje: "Selecciona una ficha de trabajador válida" });
+    }
+    if (!(await Trabajador.exists({ _id: trabajador, activo: true }))) {
+      return res.status(404).json({ mensaje: "No se encontró un trabajador activo con esa ficha" });
+    }
+
+    // Un correo heredado sin ficha puede vincularse una sola vez.
+    const usuario = await Usuario.findOneAndUpdate(
+      { email, rol: "usuario", trabajador: null },
+      {
+        $set: { trabajador, password: await bcrypt.hash(password, 12), debeCambiarContrasena: true },
+        $inc: { versionSesion: 1 },
+      },
+      { upsert: true, returnDocument: "after", runValidators: true },
+    );
     return res.status(201).json({ usuario: datosPublicos(usuario) });
   } catch (error) {
     if (error.code === 11000) {
-      return res.status(409).json({ mensaje: "Ya existe una cuenta con ese correo" });
+      return res.status(409).json({ mensaje: "El correo o la ficha del trabajador ya tiene una cuenta vinculada" });
     }
     return next(error);
   }
@@ -84,7 +96,7 @@ const crearUsuario = async (req, res, next) => {
 
 const cambiarContrasenaUsuario = async (req, res, next) => {
   try {
-    const password = typeof req.body.password === "string" ? req.body.password : "";
+    const password = typeof req.body?.password === "string" ? req.body.password : "";
     if (password.length < MINIMO_PASSWORD || password.length > 128) {
       return res.status(400).json({
         mensaje: `La nueva contraseña debe tener entre ${MINIMO_PASSWORD} y 128 caracteres`,
@@ -95,12 +107,15 @@ const cambiarContrasenaUsuario = async (req, res, next) => {
       return res.status(400).json({ mensaje: "ID de usuario no válido" });
     }
 
-    const usuario = await Usuario.findOne({ _id: req.params.id, rol: "usuario" });
-    if (!usuario) return res.status(404).json({ mensaje: "Usuario no encontrado" });
-
-    usuario.password = await bcrypt.hash(password, 12);
-    usuario.debeCambiarContrasena = true;
-    await usuario.save();
+    const usuario = await Usuario.findOneAndUpdate(
+      { _id: req.params.id, rol: "usuario", trabajador: { $ne: null } },
+      {
+        $set: { password: await bcrypt.hash(password, 12), debeCambiarContrasena: true },
+        $inc: { versionSesion: 1 },
+      },
+      { returnDocument: "after" },
+    );
+    if (!usuario) return res.status(404).json({ mensaje: "Acceso de trabajador no encontrado" });
     return res.json({ usuario: datosPublicos(usuario) });
   } catch (error) {
     return next(error);
@@ -109,8 +124,8 @@ const cambiarContrasenaUsuario = async (req, res, next) => {
 
 const cambiarContrasena = async (req, res, next) => {
   try {
-    const actual = typeof req.body.contrasenaActual === "string" ? req.body.contrasenaActual : "";
-    const nueva = typeof req.body.contrasenaNueva === "string" ? req.body.contrasenaNueva : "";
+    const actual = typeof req.body?.contrasenaActual === "string" ? req.body.contrasenaActual : "";
+    const nueva = typeof req.body?.contrasenaNueva === "string" ? req.body.contrasenaNueva : "";
     if (nueva.length < MINIMO_PASSWORD || nueva.length > 128) {
       return res.status(400).json({
         mensaje: `La nueva contraseña debe tener entre ${MINIMO_PASSWORD} y 128 caracteres`,
@@ -121,10 +136,16 @@ const cambiarContrasena = async (req, res, next) => {
     if (!usuario || !(await bcrypt.compare(actual, usuario.password))) {
       return res.status(401).json({ mensaje: "La contraseña actual es incorrecta" });
     }
-    usuario.password = await bcrypt.hash(nueva, 12);
-    usuario.debeCambiarContrasena = false;
-    await usuario.save();
-    return res.json({ usuario: datosPublicos(usuario) });
+    const actualizado = await Usuario.findOneAndUpdate(
+      { _id: usuario._id, password: usuario.password },
+      {
+        $set: { password: await bcrypt.hash(nueva, 12), debeCambiarContrasena: false },
+        $inc: { versionSesion: 1 },
+      },
+      { returnDocument: "after" },
+    );
+    if (!actualizado) return res.status(409).json({ mensaje: "La contraseña cambió. Vuelve a iniciar sesión." });
+    return res.json({ token: crearToken(actualizado), usuario: datosPublicos(actualizado) });
   } catch (error) {
     return next(error);
   }

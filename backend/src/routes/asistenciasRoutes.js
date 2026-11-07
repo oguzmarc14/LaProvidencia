@@ -15,7 +15,10 @@ router.get("/zona", (req, res) => res.json({ zona }));
 router.get("/hoy", async (req, res) => {
   try {
     const fecha = fechaLocal();
-    const asistencias = await Asistencia.find({ fecha })
+    const filtro = req.usuario.rol === "usuario"
+      ? { fecha, trabajador: req.usuario.trabajador }
+      : { fecha };
+    const asistencias = await Asistencia.find(filtro)
       .select("trabajador fecha llegada")
       .populate("trabajador", "nombre").sort({ llegada: -1 });
     res.json({ fecha, asistencias });
@@ -26,7 +29,10 @@ router.get("/hoy", async (req, res) => {
 });
 
 router.post("/", async (req, res) => {
-  const { trabajador, latitud, longitud, precision, tomadaEn } = req.body || {};
+  const { latitud, longitud, precision, tomadaEn } = req.body || {};
+  const trabajador = req.usuario.rol === "usuario"
+    ? String(req.usuario.trabajador)
+    : req.body?.trabajador;
   const numero = (valor) => typeof valor === "number" && Number.isFinite(valor);
   if (typeof trabajador !== "string" || !mongoose.isValidObjectId(trabajador) ||
       !numero(latitud) || Math.abs(latitud) > 90 ||

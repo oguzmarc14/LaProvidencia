@@ -11,9 +11,13 @@ menos 12 caracteres. Ejecuta `npm.cmd run bootstrap:admin` una sola vez para
 crear esa cuenta y `npm.cmd run dev` para iniciar el servidor.
 
 El bootstrap no reemplaza ni modifica administradores existentes. No se permite el
-registro público: el administrador autenticado crea usuarios desde la aplicación.
-Las contraseñas se guardan con bcrypt. Los JWT duran 7 días y el frontend
-restaura la sesión guardada en ese navegador.
+registro público. Desde **Trabajadores → Acceso**, un administrador habilita una
+cuenta para una ficha activa o restablece su contraseña temporal. Las cuentas
+heredadas sin ficha pueden vincularse desde ese mismo formulario usando su correo
+original y una contraseña temporal nueva.
+
+Las contraseñas se guardan con bcrypt. Los JWT duran 12 horas y quedan
+invalidados cuando se cambia o restablece la contraseña.
 
 ## Rutas
 
@@ -27,21 +31,26 @@ restaura la sesión guardada en ese navegador.
 | HEAD | `/api/trabajos` o `/api/trabajos/:id` | Mismo estado y encabezados de GET, sin cuerpo. |
 
 Todas las rutas bajo `/api/trabajos`, `/api/clientes`, `/api/trabajadores` y
-`/api/dashboard` requieren `Authorization: Bearer <token>`.
+`/api/dashboard`, `/api/registro-ventas` y `/api/tareas` requieren un token de administrador.
 
 | Método | Ruta | Acceso | Resultado |
 | --- | --- | --- | --- |
 | POST | `/api/auth/login` | Público | Valida credenciales y devuelve JWT y usuario. |
 | GET | `/api/auth/me` | Sesión válida | Devuelve el usuario de la sesión. |
 | GET | `/api/auth/users` | Solo administrador | Lista cuentas de usuario, sin incluir administradores. |
-| POST | `/api/auth/users` | Solo administrador | Crea una cuenta de usuario. |
+| POST | `/api/auth/users` | Solo administrador | Crea o vincula una cuenta a una ficha de trabajador activa. |
 | PATCH | `/api/auth/users/:id/password` | Solo administrador | Cambia la contraseña de un usuario y obliga a renovarla al iniciar sesión. |
 | POST | `/api/auth/change-password` | Sesión válida | Cambia la contraseña actual. |
 
-Para crear un usuario, envía `email` y `password` (mínimo 12 caracteres) como
-JSON a `/api/auth/users`. No es posible asignar privilegios desde esta ruta.
-Las cuentas nuevas y las contraseñas restablecidas deben renovarse en el primer
-inicio de sesión.
+Para crear o vincular un acceso, envía `email`, `password` (mínimo 12 caracteres)
+y `trabajador` (ID de su ficha) como JSON a `/api/auth/users`. Cada ficha admite
+una sola cuenta. Las cuentas nuevas y las contraseñas restablecidas deben
+renovarse en el primer inicio de sesión.
+
+Una cuenta de trabajador activa consulta `GET /api/mi-trabajo` para ver trabajos,
+tareas y gavetas asignadas. La respuesta omite precios y datos de cobro.
+`GET /api/asistencias/hoy` y `POST /api/asistencias` usan su ficha autenticada.
+Las cuentas sin ficha activa carecen de acceso a esos módulos.
 
 Envía JSON con el encabezado `Content-Type: application/json`.
 
