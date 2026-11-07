@@ -1,4 +1,4 @@
-const BASE = (import.meta.env.VITE_API_URL || "http://localhost:3000").replace(/\/$/, "");
+const BASE = (import.meta.env.VITE_API_URL || "http://localhost:3000").trim().replace(/\/+$/, "");
 const TOKEN_KEY = "laprovidencia_token";
 export const obtenerToken = () => localStorage.getItem(TOKEN_KEY);
 export const guardarToken = token => localStorage.setItem(TOKEN_KEY, token);
