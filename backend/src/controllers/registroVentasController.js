@@ -4,7 +4,7 @@ const Cliente=require("../models/Clientes");
 const Trabajador=require("../models/Trabajador");
 const crear=async(req,res)=>{
  try{
-  const d=req.body;
+  const d=req.body || {};
   const requeridos=["fechaVenta","fechaEntrega","vendedor","nombreCliente","modeloLapida","materialLapida","nombreDifunto"];
   if(requeridos.some(k=>!String(d[k]||"").trim())) return res.status(400).json({mensaje:"Completa los campos obligatorios."});
   const precio=Number(d.precioTotal),anticipo=Number(d.anticipo);
@@ -13,9 +13,14 @@ const crear=async(req,res)=>{
   if(!await Trabajador.exists({_id:d.trabajador,activo:true}))return res.status(400).json({mensaje:"El trabajador asignado no existe o está inactivo."});
   if(d.cliente && !mongoose.isValidObjectId(d.cliente))return res.status(400).json({mensaje:"Cliente inválido."});
   if(d.cliente && !await Cliente.exists({_id:d.cliente}))return res.status(404).json({mensaje:"El cliente seleccionado no existe."});
+  const fechas=["fechaVenta","fechaEntrega","fechaNacimiento","fechaDefuncion"];
+  for(const campo of fechas){
+   if(d[campo] && Number.isNaN(new Date(d[campo]).getTime()))
+    return res.status(400).json({mensaje:`La fecha de ${campo} no es válida.`});
+  }
   const venta=await RegistroVenta.create({...d,precioTotal:precio,anticipo,cliente:d.cliente||null,fechaNacimiento:d.fechaNacimiento||null,fechaDefuncion:d.fechaDefuncion||null});
   res.status(201).json({mensaje:"Venta registrada correctamente.",venta});
- }catch(e){console.error(e);res.status(e.name==="ValidationError"?400:500).json({mensaje:e.name==="ValidationError"?e.message:"No se pudo registrar la venta."});}
+ }catch(e){console.error(e);res.status(e.name==="ValidationError"||e.name==="CastError"?400:500).json({mensaje:e.name==="ValidationError"?Object.values(e.errors).map(x=>x.message).join(" | "):e.name==="CastError"?`El campo ${e.path} tiene un valor inválido.`:"No se pudo registrar la venta."});}
 };
 const listar=async(req,res)=>{
  try{const ventas=await RegistroVenta.find().populate("trabajador","nombre activo").sort({createdAt:-1}).limit(100);res.json({ventas});}
