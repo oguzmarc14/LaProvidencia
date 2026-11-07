@@ -5,7 +5,8 @@
   "scripts": {
     "test": "node --test",
     "dev": "nodemon server.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "bootstrap:admin": "node scripts/crearSuperadmin.js"
   },
   "keywords": [],
   "author": "",

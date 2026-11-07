@@ -1,17 +1,45 @@
 const jwt = require("jsonwebtoken");
+const Usuario = require("../models/Usuario");
 
-const autenticar = (req, res, next) => {
-  const header = req.headers.authorization || "";
-  const match = /^Bearer\s+(.+)$/i.exec(header);
-  if (!match) return res.status(401).json({ mensaje: "Inicia sesión para continuar." });
+const autenticar = async (req, res, next) => {
+  const token = /^Bearer\s+(.+)$/i.exec(req.headers.authorization || "")?.[1];
+
+  if (!token) {
+    return res.status(401).json({ mensaje: "Inicia sesión para continuar" });
+  }
+
   try {
-    const datos = jwt.verify(match[1], process.env.JWT_SECRET);
-    if (!datos?.id) return res.status(401).json({ mensaje: "Sesión no válida." });
-    req.usuario = { id: datos.id, rol: datos.rol };
+    const contenido = jwt.verify(token, process.env.JWT_SECRET);
+    const id = contenido.sub ?? contenido.id;
+    if (typeof id !== "string" || !/^[a-f\d]{24}$/i.test(id)) {
+      return res.status(401).json({ mensaje: "La sesión ya no es válida" });
+    }
+    const usuario = await Usuario.findById(id)
+      .select("_id email usuario rol +debeCambiarContrasena");
+
+    if (!usuario) {
+      return res.status(401).json({ mensaje: "La sesión ya no es válida" });
+    }
+
+    req.usuario = usuario;
+    const ruta = req.originalUrl.split("?")[0];
+    if (usuario.debeCambiarContrasena && !["/api/auth/me", "/api/auth/change-password"].includes(ruta)) {
+      return res.status(403).json({ mensaje: "Cambia tu contraseña para continuar" });
+    }
     return next();
-  } catch {
-    return res.status(401).json({ mensaje: "La sesión ha expirado. Inicia sesión nuevamente." });
+  } catch (error) {
+    if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") {
+      return res.status(401).json({ mensaje: "La sesión ya no es válida" });
+    }
+    return next(error);
   }
 };
 
-module.exports = { autenticar };
+const soloSuperadmin = (req, res, next) => {
+  if (req.usuario?.rol !== "superadmin") {
+    return res.status(403).json({ mensaje: "No tienes permiso para realizar esta acción" });
+  }
+  return next();
+};
+
+module.exports = { autenticar, soloSuperadmin };

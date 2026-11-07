@@ -2,38 +2,139 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const Usuario = require("../models/Usuario");
 
-const iniciarSesion = async (req, res) => {
+const DURACION_TOKEN = "12h";
+const MINIMO_PASSWORD = 12;
+const correoValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const crearToken = (usuario) =>
+  jwt.sign({ sub: usuario._id.toString() }, process.env.JWT_SECRET, {
+    expiresIn: DURACION_TOKEN,
+  });
+
+const datosPublicos = (usuario) => ({
+  id: usuario._id,
+  email: usuario.email,
+  usuario: usuario.usuario,
+  rol: usuario.rol,
+  debeCambiarContrasena: Boolean(usuario.debeCambiarContrasena),
+});
+
+const iniciarSesion = async (req, res, next) => {
   try {
-    const identificador = String(req.body?.identificador ?? req.body?.email ?? req.body?.usuario ?? "").trim();
-    const password = req.body?.password;
-    if (!identificador || typeof password !== "string" || !password) {
-      return res.status(400).json({ mensaje: "Ingresa tu usuario o correo y contraseña." });
+    const entrada = req.body?.identificador ?? req.body?.email ?? req.body?.usuario;
+    const identificador = typeof entrada === "string" ? entrada.trim() : "";
+    const password = typeof req.body?.password === "string" ? req.body.password : "";
+
+    if (!identificador || identificador.length > 254 || !password || password.length > 128) {
+      return res.status(400).json({ mensaje: "Ingresa tu usuario o correo y una contraseña válida" });
     }
-    const cuenta = await Usuario.findOne({
-      $or: [{ email: identificador.toLowerCase() }, { usuario: identificador }]
-    }).select("+password");
-    const correcto = cuenta && await bcrypt.compare(password, cuenta.password);
-    if (!correcto) return res.status(401).json({ mensaje: "Usuario o contraseña incorrectos." });
-    if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
-      console.error("Configura JWT_SECRET de al menos 32 caracteres.");
-      return res.status(500).json({ mensaje: "La autenticación no está configurada." });
+
+    const usuario = await Usuario.findOne({
+      $or: [{ email: identificador.toLowerCase() }, { usuario: identificador }],
+    }).select("+password +debeCambiarContrasena");
+    if (!usuario || !(await bcrypt.compare(password, usuario.password))) {
+      return res.status(401).json({ mensaje: "Correo o contraseña incorrectos" });
     }
-    const token = jwt.sign({ id: cuenta._id.toString(), rol: cuenta.rol }, process.env.JWT_SECRET, { expiresIn: "12h" });
-    return res.json({ token, usuario: { id: cuenta._id, email: cuenta.email, usuario: cuenta.usuario, rol: cuenta.rol } });
+
+    return res.json({ token: crearToken(usuario), usuario: datosPublicos(usuario) });
   } catch (error) {
-    console.error("Error de autenticación:", error);
-    return res.status(500).json({ mensaje: "No se pudo iniciar sesión." });
+    return next(error);
   }
 };
 
-const sesionActual = async (req, res) => {
+const obtenerSesion = (req, res) => res.json({ usuario: datosPublicos(req.usuario) });
+
+const listarUsuarios = async (_req, res, next) => {
   try {
-    const cuenta = await Usuario.findById(req.usuario.id).select("email usuario rol");
-    if (!cuenta) return res.status(401).json({ mensaje: "Sesión no válida." });
-    return res.json({ usuario: { id: cuenta._id, email: cuenta.email, usuario: cuenta.usuario, rol: cuenta.rol } });
+    const usuarios = await Usuario.find({ rol: "usuario" })
+      .select("_id email rol debeCambiarContrasena createdAt")
+      .sort({ createdAt: -1 });
+    return res.json({ usuarios: usuarios.map(datosPublicos) });
   } catch (error) {
-    return res.status(500).json({ mensaje: "No se pudo consultar la sesión." });
+    return next(error);
   }
 };
 
-module.exports = { iniciarSesion, sesionActual };
+const crearUsuario = async (req, res, next) => {
+  try {
+    const email = typeof req.body.email === "string" ? req.body.email.trim().toLowerCase() : "";
+    const password = typeof req.body.password === "string" ? req.body.password : "";
+
+    if (!correoValido.test(email) || email.length > 254 || password.length < MINIMO_PASSWORD || password.length > 128) {
+      return res.status(400).json({
+        mensaje: `Ingresa un correo válido y una contraseña de entre ${MINIMO_PASSWORD} y 128 caracteres`,
+      });
+    }
+
+    const hash = await bcrypt.hash(password, 12);
+    const usuario = await Usuario.create({
+      email,
+      password: hash,
+      rol: "usuario",
+      debeCambiarContrasena: true,
+    });
+    return res.status(201).json({ usuario: datosPublicos(usuario) });
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(409).json({ mensaje: "Ya existe una cuenta con ese correo" });
+    }
+    return next(error);
+  }
+};
+
+const cambiarContrasenaUsuario = async (req, res, next) => {
+  try {
+    const password = typeof req.body.password === "string" ? req.body.password : "";
+    if (password.length < MINIMO_PASSWORD || password.length > 128) {
+      return res.status(400).json({
+        mensaje: `La nueva contraseña debe tener entre ${MINIMO_PASSWORD} y 128 caracteres`,
+      });
+    }
+
+    if (!/^[a-f\d]{24}$/i.test(req.params.id)) {
+      return res.status(400).json({ mensaje: "ID de usuario no válido" });
+    }
+
+    const usuario = await Usuario.findOne({ _id: req.params.id, rol: "usuario" });
+    if (!usuario) return res.status(404).json({ mensaje: "Usuario no encontrado" });
+
+    usuario.password = await bcrypt.hash(password, 12);
+    usuario.debeCambiarContrasena = true;
+    await usuario.save();
+    return res.json({ usuario: datosPublicos(usuario) });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+const cambiarContrasena = async (req, res, next) => {
+  try {
+    const actual = typeof req.body.contrasenaActual === "string" ? req.body.contrasenaActual : "";
+    const nueva = typeof req.body.contrasenaNueva === "string" ? req.body.contrasenaNueva : "";
+    if (nueva.length < MINIMO_PASSWORD || nueva.length > 128) {
+      return res.status(400).json({
+        mensaje: `La nueva contraseña debe tener entre ${MINIMO_PASSWORD} y 128 caracteres`,
+      });
+    }
+
+    const usuario = await Usuario.findById(req.usuario._id).select("+password");
+    if (!usuario || !(await bcrypt.compare(actual, usuario.password))) {
+      return res.status(401).json({ mensaje: "La contraseña actual es incorrecta" });
+    }
+    usuario.password = await bcrypt.hash(nueva, 12);
+    usuario.debeCambiarContrasena = false;
+    await usuario.save();
+    return res.json({ usuario: datosPublicos(usuario) });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+module.exports = {
+  iniciarSesion,
+  obtenerSesion,
+  listarUsuarios,
+  crearUsuario,
+  cambiarContrasenaUsuario,
+  cambiarContrasena,
+};

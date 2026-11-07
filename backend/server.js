@@ -7,6 +7,9 @@ const Asistencia = require("./src/models/Asistencia");
 const PORT = process.env.PORT || 3000;
 
 const iniciarServidor = async () => {
+  if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+    throw new Error("JWT_SECRET debe configurarse con al menos 32 caracteres");
+  }
   await conectarBD();
   await Asistencia.init();
 

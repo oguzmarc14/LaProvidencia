@@ -13,10 +13,14 @@ export async function solicitarApi(ruta, opciones = {}) {
   try { respuesta = await fetch(`${BASE}${ruta}`, { ...opciones, headers }); }
   catch { throw new Error("No se pudo conectar con el servidor."); }
   const datos = await respuesta.json().catch(() => ({}));
-  if (respuesta.status === 401 && token && ruta !== "/api/auth/login") {
+  if (respuesta.status === 401 && token && !["/api/auth/login", "/api/auth/change-password"].includes(ruta)) {
     cerrarSesionLocal();
     window.dispatchEvent(new Event("auth:expired"));
   }
-  if (!respuesta.ok) throw new Error(datos.mensaje || datos.message || "No se pudo completar la solicitud.");
+  if (!respuesta.ok) {
+    const error = new Error(datos.mensaje || datos.message || "No se pudo completar la solicitud.");
+    error.status = respuesta.status;
+    throw error;
+  }
   return datos;
 }
