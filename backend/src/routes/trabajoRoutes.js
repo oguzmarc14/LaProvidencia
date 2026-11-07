@@ -4,6 +4,7 @@ const router = express.Router();
 router.get("/", obtenerTrabajos);
 router.get("/:id", obtenerTrabajo);
 router.post("/", crearTrabajo);
+router.put("/:id", actualizarTrabajo);
 router.patch("/:id", actualizarTrabajo);
 router.delete("/:id", eliminarTrabajo);
 module.exports = router;
