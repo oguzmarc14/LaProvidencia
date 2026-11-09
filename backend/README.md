@@ -54,6 +54,16 @@ las operaciones de base de datos; no necesitan una conexión a MongoDB.
 
 ## Registro de llegada
 
+Después de registrar la entrada, el botón cambia a **Checar salida**. La salida
+requiere verificar nuevamente la ubicación si ha caducado y cumplir el mismo
+radio y precisión que la entrada. `POST /api/asistencias/salida` recibe los mismos
+campos que el registro de entrada y guarda `salida` con la hora del servidor en
+la asistencia del día local. Solo permite una salida y exige una entrada ese día;
+los intentos sin entrada o con salida ya registrada devuelven 409. La actualización
+es atómica para evitar sobrescribir la hora ante solicitudes simultáneas.
+`GET /api/asistencias/hoy` incluye `salida`, que también aparece en la lista de
+asistencias. Los registros anteriores sin ese campo se consideran sin salida.
+
 La sección **Asistencia** permite seleccionar un trabajador activo, consultar su
 ubicación y registrar una entrada diaria. El centro está en `21.5224892,
 -102.246005` (Cuenca Lerma Santiago 26) con radio de 100 metros. La configuración

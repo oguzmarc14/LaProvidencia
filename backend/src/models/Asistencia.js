@@ -4,6 +4,7 @@ const asistenciaSchema = new mongoose.Schema({
   trabajador: { type: mongoose.Schema.Types.ObjectId, ref: "Trabajador", required: true },
   fecha: { type: String, required: true },
   llegada: { type: Date, required: true },
+  salida: { type: Date, default: null },
   latitud: { type: Number, required: true, min: -90, max: 90 },
   longitud: { type: Number, required: true, min: -180, max: 180 },
   precision: { type: Number, required: true, min: 0 },
