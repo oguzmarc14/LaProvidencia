@@ -7,27 +7,32 @@ const dashboardRoutes = require("./routes/dashboardRoutes");
 const asistenciasRoutes = require("./routes/asistenciasRoutes");
 const registroVentasRoutes = require("./routes/registroVentasRoutes");
 const tareasRoutes = require("./routes/tareasRoutes");
+const authRoutes = require("./routes/authRoutes");
+const miTrabajoRoutes = require("./routes/miTrabajoRoutes");
+const { autenticar, soloAdmin, soloTrabajadorActivo, adminOTrabajadorActivo } = require("./middleware/autenticacion");
 const app = express();
 
 app.use(express.json());
 
 app.use(
   cors({
-    origin: (process.env.FRONTEND_URL || "http://localhost:5173").split(",").map((url) => url.trim()),
+    origin: (process.env.FRONTEND_URL || "http://localhost:5173,https://laprovidencia-marco.vercel.app").split(",").map((url) => url.trim()),
   }),
 );
 
 //aqui vamos a usar las apis de trabajos
-app.use("/api/trabajos", trabajoRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/trabajos", autenticar, soloAdmin, trabajoRoutes);
 
 //espacios para apis de clientes
-app.use("/api/clientes", clientesRoutes);
+app.use("/api/clientes", autenticar, soloAdmin, clientesRoutes);
 
-app.use("/api/trabajadores", trabajadoresRoutes);
-app.use("/api/dashboard", dashboardRoutes);
-app.use("/api/asistencias", asistenciasRoutes);
-app.use("/api/registro-ventas", registroVentasRoutes);
-app.use("/api/tareas", tareasRoutes);
+app.use("/api/trabajadores", autenticar, soloAdmin, trabajadoresRoutes);
+app.use("/api/dashboard", autenticar, soloAdmin, dashboardRoutes);
+app.use("/api/asistencias", autenticar, adminOTrabajadorActivo, asistenciasRoutes);
+app.use("/api/registro-ventas", autenticar, soloAdmin, registroVentasRoutes);
+app.use("/api/tareas", autenticar, soloAdmin, tareasRoutes);
+app.use("/api/mi-trabajo", autenticar, soloTrabajadorActivo, miTrabajoRoutes);
 
 app.get("/", (req, res) => {
   res.json({

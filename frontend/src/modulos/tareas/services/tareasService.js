@@ -1,1 +1,6 @@
-const API=(import.meta.env.VITE_API_URL||"http://localhost:3000")+"/api/tareas";async function pedir(path="",opts={}){const r=await fetch(API+path,{...opts,headers:{"Content-Type":"application/json",...opts.headers}});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.mensaje||"No se pudo completar la solicitud");return d;}export const obtenerTareas=()=>pedir();export const crearTarea=d=>pedir("",{method:"POST",body:JSON.stringify(d)});export const actualizarTarea=(id,d)=>pedir("/"+id,{method:"PATCH",body:JSON.stringify(d)});export const eliminarTarea=id=>pedir("/"+id,{method:"DELETE"});
+import { solicitarApi } from "../../../services/api";
+const base="/api/tareas";
+export const obtenerTareas=()=>solicitarApi(base);
+export const crearTarea=datos=>solicitarApi(base,{method:"POST",body:JSON.stringify(datos)});
+export const actualizarTarea=(id,datos)=>solicitarApi(`${base}/${id}`,{method:"PATCH",body:JSON.stringify(datos)});
+export const eliminarTarea=id=>solicitarApi(`${base}/${id}`,{method:"DELETE"});

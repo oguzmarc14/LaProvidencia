@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import { BriefcaseBusiness, Pencil, Plus, Search, Users, MessageCircle, ArrowUpRight, Phone } from "lucide-react";
+import { BriefcaseBusiness, Pencil, Plus, Search, Users, KeyRound, MessageCircle, ArrowUpRight, Phone } from "lucide-react";
 import { actualizarTrabajador, crearTrabajador, obtenerTrabajadores } from "../services/trabajadoresService";
 import ModalTrabajador from "../components/ModalTrabajador";
+import ModalAccesoTrabajador from "../components/ModalAccesoTrabajador";
 import ModalTrabajos from "../components/ModalTrabajos";
 import AlertaModal from "../../../components/ui/AlertaModal";
 import { enlaceWhatsApp } from "../../clientes/utils/enlacesCliente";
@@ -11,6 +12,7 @@ export default function SeccionTrabajadores() {
   const [busqueda, setBusqueda] = useState("");
   const [editando, setEditando] = useState(null);
   const [modalAbierto, setModalAbierto] = useState(false);
+  const [acceso, setAcceso] = useState(null);
   const [viendoTrabajos, setViendoTrabajos] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
@@ -82,6 +84,7 @@ export default function SeccionTrabajadores() {
                 <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4">
                   <button type="button" onClick={() => setViendoTrabajos(t)} className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#124B91] px-4 py-3 text-sm font-extrabold text-white transition hover:bg-[#0d3770]"><BriefcaseBusiness size={17}/> Ver seguimiento <ArrowUpRight size={15}/></button>
                   <button type="button" onClick={() => { setEditando(t); setModalAbierto(true); }} className="inline-flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-white px-4 py-3 text-sm font-bold text-[#124B91] transition hover:bg-blue-50"><Pencil size={16}/> Editar</button>
+                  {t.activo && <button type="button" onClick={() => setAcceso(t)} className="inline-flex items-center gap-2 rounded-xl border border-blue-200 px-4 py-3 text-sm font-bold text-[#124B91] hover:bg-blue-50"><KeyRound size={16}/> Acceso</button>}
                 </div>
               </div>
             </article>;
@@ -89,6 +92,7 @@ export default function SeccionTrabajadores() {
         </div>}
       <AlertaModal alerta={alerta} procesando={confirmando} onCerrar={() => setAlerta(null)} onConfirmar={ejecutarConfirmacion}/>
       {modalAbierto && <ModalTrabajador trabajador={editando} onClose={() => setModalAbierto(false)} onSave={guardar} saving={guardando}/>}
+      {acceso && <ModalAccesoTrabajador trabajador={acceso} alCerrar={() => setAcceso(null)}/> }
       {viendoTrabajos && <ModalTrabajos trabajador={viendoTrabajos} onClose={() => setViendoTrabajos(null)}/>}
     </section>
   );

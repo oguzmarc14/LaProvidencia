@@ -1,8 +1,23 @@
 # API de trabajos
 
-Desde esta carpeta, instala las dependencias con `npm.cmd ci`. Crea un archivo
-`.env` con `MONGO_URI` apuntando a tu base de datos y, opcionalmente, `PORT`
-(por defecto es `3000`). Ejecuta `npm.cmd run dev` para iniciar el servidor.
+Desde esta carpeta, instala las dependencias con `npm.cmd ci`. Copia
+`.env.example` a `.env`, configura `MONGO_URI`, `JWT_SECRET` (un secreto
+aleatorio de al menos 32 caracteres) y las credenciales iniciales del
+administrador. El administrador inicial es `admin@gmail.com`. Para el primer acceso
+local puedes configurar `ADMIN_PASSWORD=admin`; esa cuenta quedará obligada a
+cambiar la contraseña por una de al menos 12 caracteres antes de usar cualquier
+módulo. En producción configura desde el inicio una contraseña propia de al
+menos 12 caracteres. Ejecuta `npm.cmd run bootstrap:admin` una sola vez para
+crear esa cuenta y `npm.cmd run dev` para iniciar el servidor.
+
+El bootstrap no reemplaza ni modifica administradores existentes. No se permite el
+registro público. Desde **Trabajadores → Acceso**, un administrador habilita una
+cuenta para una ficha activa o restablece su contraseña temporal. Las cuentas
+heredadas sin ficha pueden vincularse desde ese mismo formulario usando su correo
+original y una contraseña temporal nueva.
+
+Las contraseñas se guardan con bcrypt. Los JWT duran 12 horas y quedan
+invalidados cuando se cambia o restablece la contraseña.
 
 ## Rutas
 
@@ -14,6 +29,29 @@ Desde esta carpeta, instala las dependencias con `npm.cmd ci`. Crea un archivo
 | PUT | `/api/trabajos/:id` | Actualiza los campos enviados y devuelve el trabajo (200). |
 | DELETE | `/api/trabajos/:id` | Elimina el trabajo (200). |
 | HEAD | `/api/trabajos` o `/api/trabajos/:id` | Mismo estado y encabezados de GET, sin cuerpo. |
+
+Todas las rutas bajo `/api/trabajos`, `/api/clientes`, `/api/trabajadores` y
+`/api/dashboard`, `/api/registro-ventas` y `/api/tareas` requieren un token de administrador.
+
+| Método | Ruta | Acceso | Resultado |
+| --- | --- | --- | --- |
+| POST | `/api/auth/login` | Público | Valida credenciales y devuelve JWT y usuario. |
+| GET | `/api/auth/me` | Sesión válida | Devuelve el usuario de la sesión. |
+| GET | `/api/auth/users` | Solo administrador | Lista cuentas de usuario, sin incluir administradores. |
+| POST | `/api/auth/users` | Solo administrador | Crea o vincula una cuenta a una ficha de trabajador activa. |
+| PATCH | `/api/auth/users/:id/password` | Solo administrador | Cambia la contraseña de un usuario y obliga a renovarla al iniciar sesión. |
+| POST | `/api/auth/change-password` | Sesión válida | Cambia la contraseña actual. |
+
+Para crear o vincular un acceso, envía `email`, `password` (mínimo 12 caracteres)
+y `trabajador` (ID de su ficha) como JSON a `/api/auth/users`. Cada ficha admite
+una sola cuenta. Las cuentas nuevas y las contraseñas restablecidas deben
+renovarse en el primer inicio de sesión.
+
+Una cuenta de trabajador activa consulta `GET /api/mi-trabajo` para ver trabajos,
+tareas y gavetas asignadas. La respuesta omite precios y datos de cobro.
+`GET /api/asistencias/hoy`, `POST /api/asistencias` y `POST /api/asistencias/salida`
+usan su ficha autenticada.
+Las cuentas sin ficha activa carecen de acceso a esos módulos.
 
 Envía JSON con el encabezado `Content-Type: application/json`.
 
@@ -52,7 +90,7 @@ y aplica las validaciones del modelo.
 Ejecuta `npm.cmd test`. Las pruebas realizan peticiones HTTP a Express y simulan
 las operaciones de base de datos; no necesitan una conexión a MongoDB.
 
-## Registro de llegada
+## Registro de asistencia
 
 Después de registrar la entrada, el botón cambia a **Checar salida**. La salida
 requiere verificar nuevamente la ubicación si ha caducado y cumplir el mismo
@@ -64,8 +102,9 @@ es atómica para evitar sobrescribir la hora ante solicitudes simultáneas.
 `GET /api/asistencias/hoy` incluye `salida`, que también aparece en la lista de
 asistencias. Los registros anteriores sin ese campo se consideran sin salida.
 
-La sección **Asistencia** permite seleccionar un trabajador activo, consultar su
-ubicación y registrar una entrada diaria. El centro está en `21.5224892,
+En **Asistencia**, los administradores pueden seleccionar un trabajador activo.
+Los trabajadores registran su propia asistencia con la ficha vinculada a su sesión.
+El centro está en `21.5224892,
 -102.246005` (Cuenca Lerma Santiago 26) con radio de 100 metros. La configuración
 está en `src/utils/asistencia.js` y se consulta en `GET /api/asistencias/zona`.
 

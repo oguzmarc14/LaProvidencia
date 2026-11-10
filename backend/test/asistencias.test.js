@@ -1,6 +1,10 @@
+process.env.JWT_SECRET ||= "test-secret-with-at-least-32-characters-long";
+
 const { test, before, after, afterEach, mock } = require("node:test");
 const assert = require("node:assert/strict");
 const { once } = require("node:events");
+const jwt = require("jsonwebtoken");
+const Usuario = require("../src/models/Usuario");
 const app = require("../src/app");
 const Trabajador = require("../src/models/Trabajador");
 const Asistencia = require("../src/models/Asistencia");
@@ -20,12 +24,21 @@ before(async () => {
 });
 after(() => new Promise((resolve, reject) => servidor.close((error) => error ? reject(error) : resolve())));
 afterEach(() => mock.restoreAll());
-const post = (datos) => fetch(base, {
+const token = jwt.sign({ sub: id }, process.env.JWT_SECRET);
+const solicitar = (url, opciones = {}) => {
+  mock.method(Usuario, "findById", () => ({
+    select: async () => ({ _id: id, rol: "admin" }),
+  }));
+  return fetch(url, {
+    ...opciones, headers: { ...opciones.headers, Authorization: `Bearer ${token}` },
+  });
+};
+const post = (datos) => solicitar(base, {
   method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(datos),
 });
 
-test("zona pública fija de 100 metros y respuestas sin caché", async () => {
-  const respuesta = await fetch(`${base}/zona`);
+test("zona fija de 100 metros y respuestas sin caché", async () => {
+  const respuesta = await solicitar(`${base}/zona`);
   assert.equal(respuesta.status, 200);
   assert.equal(respuesta.headers.get("cache-control"), "no-store");
   assert.deepEqual((await respuesta.json()).zona, zona);
@@ -109,12 +122,12 @@ test("hoy consulta únicamente el día local y excluye coordenadas de la lista",
       sort(orden) { assert.deepEqual(orden, { llegada: -1 }); return Promise.resolve([]); },
     };
   });
-  const respuesta = await fetch(`${base}/hoy`);
+  const respuesta = await solicitar(`${base}/hoy`);
   assert.equal(respuesta.status, 200);
   assert.deepEqual(await respuesta.json(), { fecha: fechaLocal(), asistencias: [] });
 });
 
-const postSalida = (datos) => fetch(`${base}/salida`, {
+const postSalida = (datos) => solicitar(`${base}/salida`, {
   method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(datos),
 });
 
@@ -182,5 +195,5 @@ test("fallos de BD devuelven 500 con mensaje controlado", async () => {
   mock.method(Trabajador, "findById", async () => { throw new Error("BD desconectada"); });
   assert.equal((await post(entrada())).status, 500);
   mock.method(Asistencia, "find", () => { throw new Error("BD desconectada"); });
-  assert.equal((await fetch(`${base}/hoy`)).status, 500);
+  assert.equal((await solicitar(`${base}/hoy`)).status, 500);
 });

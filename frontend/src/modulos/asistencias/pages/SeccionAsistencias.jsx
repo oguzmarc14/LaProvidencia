@@ -5,7 +5,7 @@ import { obtenerZona, obtenerLlegadasHoy, registrarLlegada, registrarSalida } fr
 import { consultarUbicacion, opcionesGPS } from "../services/ubicacion";
 
 const mensajesGPS = {
-  1: "Permite el acceso a tu ubicación en el navegador para registrar tu llegada.",
+  1: "Permite el acceso a tu ubicación en el navegador para registrar tu asistencia.",
   2: "No se pudo obtener tu ubicación. Activa la ubicación del celular e inténtalo de nuevo.",
   3: "La consulta de ubicación tardó demasiado. Inténtalo de nuevo al aire libre.",
 };
@@ -21,9 +21,9 @@ function distancia(posicion, zona) {
   return 6371000 * 2 * Math.asin(Math.sqrt(Math.min(1, a)));
 }
 
-export default function SeccionAsistencias() {
+export default function SeccionAsistencias({ miTrabajador } = {}) {
   const [trabajadores, setTrabajadores] = useState([]);
-  const [trabajador, setTrabajador] = useState("");
+  const [trabajador, setTrabajador] = useState(miTrabajador || "");
   const [zona, setZona] = useState(null);
   const [registros, setRegistros] = useState({ fecha: "", asistencias: [] });
   const [posicion, setPosicion] = useState(null);
@@ -39,10 +39,10 @@ export default function SeccionAsistencias() {
 
   useEffect(() => {
     montado.current = true;
-    Promise.all([obtenerTrabajadores(), obtenerZona(), obtenerLlegadasHoy()])
+    Promise.all([miTrabajador ? null : obtenerTrabajadores(), obtenerZona(), obtenerLlegadasHoy()])
       .then(([equipo, configuracion, llegadas]) => {
         if (!montado.current) return;
-        setTrabajadores(equipo.trabajadores.filter((persona) => persona.activo));
+        if (equipo) setTrabajadores(equipo.trabajadores.filter((persona) => persona.activo));
         setZona(configuracion.zona);
         setRegistros(llegadas);
       }).catch((e) => { if (montado.current) setError(e.message); })
@@ -54,7 +54,7 @@ export default function SeccionAsistencias() {
       detenerConsulta.current?.();
       detenerConsulta.current = null;
     };
-  }, []);
+  }, [miTrabajador]);
 
   const verificar = () => {
     setErrorGPS("");
@@ -115,7 +115,8 @@ export default function SeccionAsistencias() {
       });
       if (!montado.current) return;
       registrado = true;
-      const asistencia = { ...datos.asistencia, trabajador: trabajadores.find((persona) => persona._id === trabajador) };
+      const persona = trabajadores.find((persona) => persona._id === trabajador);
+      const asistencia = { ...datos.asistencia, trabajador: persona ?? datos.asistencia.trabajador };
       setRegistros((previo) => ({
         fecha: asistencia.fecha,
         asistencias: [asistencia, ...(previo.fecha === asistencia.fecha ? previo.asistencias.filter(
@@ -129,7 +130,7 @@ export default function SeccionAsistencias() {
       if (e.code) setPosicion(null);
       if (e.status === 409) {
         try { const datos = await obtenerLlegadasHoy(); if (montado.current) setRegistros(datos); }
-        catch { /* Se conserva el mensaje de entrada duplicada. */ }
+        catch { /* Se conserva el mensaje del servidor. */ }
       }
     } finally {
       if (montado.current) setGuardando(false);
@@ -144,10 +145,11 @@ export default function SeccionAsistencias() {
     <div className="mb-6 rounded-[28px] bg-gradient-to-r from-[#123e83] to-[#a13f65] p-6 text-white sm:p-9">
       <Clock size={30} aria-hidden="true"/>
       <h1 className="mt-3 text-3xl font-black">Registrar asistencia</h1>
-      <p className="mt-3 text-white/90">Selecciona tu nombre y verifica tu ubicación para checar tu entrada o salida.</p>
+      <p className="mt-3 text-white/90">{miTrabajador ? "Verifica tu ubicación para registrar tu entrada o salida." : "Selecciona un trabajador y verifica la ubicación para registrar su entrada o salida."}</p>
     </div>
     <div className="app-panel p-5 sm:p-8">
       {cargando ? <p role="status">Cargando trabajadores y zona de asistencia...</p> : <>
+        {!miTrabajador && <>
         <label htmlFor="trabajador-asistencia" className="app-label">Trabajador</label>
         <select id="trabajador-asistencia" className="app-field" value={trabajador} disabled={guardando} onChange={(e) => {
           setTrabajador(e.target.value); setError(""); setExito("");
@@ -156,6 +158,7 @@ export default function SeccionAsistencias() {
           {trabajadores.map((persona) => <option key={persona._id} value={persona._id}>{persona.nombre}</option>)}
         </select>
         {!trabajadores.length && <p className="mt-3 text-sm text-slate-600">No hay trabajadores activos disponibles.</p>}
+        </>}
         {zona && <div className="my-5 rounded-xl bg-blue-50 p-4 text-sm text-[#123e83]">
           <p className="flex items-center gap-2 font-bold"><MapPin size={18} aria-hidden="true"/>Zona de asistencia · {zona.radioMetros} metros</p>
           <p className="mt-2">{zona.direccion}</p>
@@ -176,7 +179,7 @@ export default function SeccionAsistencias() {
         <button type="button" disabled={!puedeRegistrar} onClick={checar} className="app-primary w-full rounded-xl px-5 py-4 font-bold disabled:opacity-50">
           {guardando ? "Registrando..." : yaSalio ? "Salida registrada" : yaRegistro ? "Checar salida" : "Registrar llegada"}
         </button>
-        <p className="mt-4 text-sm text-slate-500">Una entrada y una salida por día. Horario de México. Por ahora, el nombre se selecciona sin inicio de sesión.</p>
+        <p className="mt-4 text-sm text-slate-500">Una entrada y una salida por día. Horario de México.</p>
       </>}
       {error && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-4 text-red-700">{error}</p>}
       {exito && <p role="status" className="mt-4 rounded-xl bg-green-50 p-4 font-semibold text-green-800">{exito}</p>}
@@ -191,7 +194,7 @@ export default function SeccionAsistencias() {
       </div>
       {!cargando && (llegadas.length ? <ul className="mt-4 divide-y divide-slate-100">
         {llegadas.map((registro) => <li key={registro._id} className="flex items-center justify-between gap-3 py-3">
-          <span>{registro.trabajador?.nombre || "Trabajador eliminado"}</span>
+          <span>{miTrabajador ? "Mi asistencia" : registro.trabajador?.nombre || "Trabajador eliminado"}</span>
           <div className="text-right text-sm font-semibold text-[#124B91]">
             <p>Entrada: <time dateTime={registro.llegada}>{hora(registro.llegada, zona?.zonaHoraria)}</time></p>
             <p>{registro.salida ? <>Salida: <time dateTime={registro.salida}>{hora(registro.salida, zona?.zonaHoraria)}</time></> : "Salida pendiente"}</p>

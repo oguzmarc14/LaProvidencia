@@ -15,7 +15,10 @@ router.get("/zona", (req, res) => res.json({ zona }));
 router.get("/hoy", async (req, res) => {
   try {
     const fecha = fechaLocal();
-    const asistencias = await Asistencia.find({ fecha })
+    const filtro = req.usuario.rol === "usuario"
+      ? { fecha, trabajador: req.usuario.trabajador }
+      : { fecha };
+    const asistencias = await Asistencia.find(filtro)
       .select("trabajador fecha llegada salida")
       .populate("trabajador", "nombre").sort({ llegada: -1 });
     res.json({ fecha, asistencias });
@@ -25,9 +28,11 @@ router.get("/hoy", async (req, res) => {
   }
 });
 
-router.post(["/", "/salida"], async (req, res) => {
-  const esSalida = req.path === "/salida";
-  const { trabajador, latitud, longitud, precision, tomadaEn } = req.body || {};
+async function registrar(req, res, esSalida) {
+  const { latitud, longitud, precision, tomadaEn } = req.body || {};
+  const trabajador = req.usuario.rol === "usuario"
+    ? String(req.usuario.trabajador)
+    : req.body?.trabajador;
   const numero = (valor) => typeof valor === "number" && Number.isFinite(valor);
   if (typeof trabajador !== "string" || !mongoose.isValidObjectId(trabajador) ||
       !numero(latitud) || Math.abs(latitud) > 90 ||
@@ -78,6 +83,9 @@ router.post(["/", "/salida"], async (req, res) => {
     console.error(error);
     return res.status(500).json({ mensaje: esSalida ? "No se pudo registrar la salida" : "No se pudo registrar la llegada" });
   }
-});
+}
+
+router.post("/", (req, res) => registrar(req, res, false));
+router.post("/salida", (req, res) => registrar(req, res, true));
 
 module.exports = router;
