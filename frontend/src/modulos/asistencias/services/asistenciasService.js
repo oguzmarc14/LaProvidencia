@@ -8,3 +8,6 @@ export const obtenerLlegadasHoy = () => solicitar("/hoy");
 export const registrarLlegada = (datos) => solicitar("/", {
   method: "POST", body: JSON.stringify(datos),
 });
+export const registrarSalida = (datos) => solicitar("/salida", {
+  method: "POST", body: JSON.stringify(datos),
+});

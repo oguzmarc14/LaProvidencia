@@ -49,7 +49,8 @@ renovarse en el primer inicio de sesión.
 
 Una cuenta de trabajador activa consulta `GET /api/mi-trabajo` para ver trabajos,
 tareas y gavetas asignadas. La respuesta omite precios y datos de cobro.
-`GET /api/asistencias/hoy` y `POST /api/asistencias` usan su ficha autenticada.
+`GET /api/asistencias/hoy`, `POST /api/asistencias` y `POST /api/asistencias/salida`
+usan su ficha autenticada.
 Las cuentas sin ficha activa carecen de acceso a esos módulos.
 
 Envía JSON con el encabezado `Content-Type: application/json`.
@@ -89,10 +90,21 @@ y aplica las validaciones del modelo.
 Ejecuta `npm.cmd test`. Las pruebas realizan peticiones HTTP a Express y simulan
 las operaciones de base de datos; no necesitan una conexión a MongoDB.
 
-## Registro de llegada
+## Registro de asistencia
 
-La sección **Asistencia** permite seleccionar un trabajador activo, consultar su
-ubicación y registrar una entrada diaria. El centro está en `21.5224892,
+Después de registrar la entrada, el botón cambia a **Checar salida**. La salida
+requiere verificar nuevamente la ubicación si ha caducado y cumplir el mismo
+radio y precisión que la entrada. `POST /api/asistencias/salida` recibe los mismos
+campos que el registro de entrada y guarda `salida` con la hora del servidor en
+la asistencia del día local. Solo permite una salida y exige una entrada ese día;
+los intentos sin entrada o con salida ya registrada devuelven 409. La actualización
+es atómica para evitar sobrescribir la hora ante solicitudes simultáneas.
+`GET /api/asistencias/hoy` incluye `salida`, que también aparece en la lista de
+asistencias. Los registros anteriores sin ese campo se consideran sin salida.
+
+En **Asistencia**, los administradores pueden seleccionar un trabajador activo.
+Los trabajadores registran su propia asistencia con la ficha vinculada a su sesión.
+El centro está en `21.5224892,
 -102.246005` (Cuenca Lerma Santiago 26) con radio de 100 metros. La configuración
 está en `src/utils/asistencia.js` y se consulta en `GET /api/asistencias/zona`.
 

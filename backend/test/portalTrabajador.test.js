@@ -95,6 +95,7 @@ test("una ficha sin vincular o inactiva no accede al portal ni a asistencia", as
   mock.method(Trabajador, "exists", async () => null);
   assert.equal((await solicitar("/mi-trabajo")).status, 403);
   assert.equal((await solicitar("/asistencias/zona")).status, 403);
+  assert.equal((await solicitar("/asistencias/salida", { method: "POST" })).status, 403);
 });
 
 test("la asistencia usa la ficha autenticada aunque el cuerpo incluya otro trabajador", async () => {
@@ -118,6 +119,18 @@ test("la asistencia usa la ficha autenticada aunque el cuerpo incluya otro traba
     }),
   });
   assert.equal(registro.status, 201);
+  mock.method(Asistencia, "findOneAndUpdate", async (filtro, cambios) => {
+    assert.equal(filtro.trabajador, trabajador);
+    return { trabajador, salida: cambios.$set.salida };
+  });
+  const salida = await solicitar("/asistencias/salida/", {
+    method: "POST",
+    body: JSON.stringify({
+      trabajador: otraFicha, latitud: zona.latitud, longitud: zona.longitud, precision: 10, tomadaEn: Date.now(),
+    }),
+  });
+  assert.equal(salida.status, 200);
+  assert.equal((await salida.json()).asistencia.trabajador, trabajador);
   assert.equal((await solicitar("/asistencias/hoy?trabajador=" + otraFicha)).status, 200);
 });
 

@@ -19,7 +19,7 @@ router.get("/hoy", async (req, res) => {
       ? { fecha, trabajador: req.usuario.trabajador }
       : { fecha };
     const asistencias = await Asistencia.find(filtro)
-      .select("trabajador fecha llegada")
+      .select("trabajador fecha llegada salida")
       .populate("trabajador", "nombre").sort({ llegada: -1 });
     res.json({ fecha, asistencias });
   } catch (error) {
@@ -28,7 +28,7 @@ router.get("/hoy", async (req, res) => {
   }
 });
 
-router.post("/", async (req, res) => {
+async function registrar(req, res, esSalida) {
   const { latitud, longitud, precision, tomadaEn } = req.body || {};
   const trabajador = req.usuario.rol === "usuario"
     ? String(req.usuario.trabajador)
@@ -55,6 +55,22 @@ router.post("/", async (req, res) => {
     const persona = await Trabajador.findById(trabajador);
     if (!persona) return res.status(404).json({ mensaje: "Trabajador no encontrado" });
     if (!persona.activo) return res.status(403).json({ mensaje: "El trabajador está inactivo" });
+    if (esSalida) {
+      const filtro = { trabajador, fecha: fechaLocal(ahora) };
+      // La condición evita sobrescribir la salida incluso con solicitudes simultáneas.
+      const asistencia = await Asistencia.findOneAndUpdate(
+        { ...filtro, salida: null, llegada: { $lte: ahora } },
+        { $set: { salida: ahora } },
+        { new: true, runValidators: true },
+      );
+      if (!asistencia) {
+        const existe = await Asistencia.exists(filtro);
+        return res.status(409).json({ mensaje: existe
+          ? "La salida ya está registrada o la llegada es posterior a la hora actual"
+          : "Primero registra tu llegada de hoy" });
+      }
+      return res.json({ mensaje: "Salida registrada", asistencia });
+    }
     const asistencia = await Asistencia.create({
       trabajador, fecha: fechaLocal(ahora), llegada: ahora,
       latitud, longitud, precision, distanciaMetros: distancia,
@@ -65,8 +81,11 @@ router.post("/", async (req, res) => {
       return res.status(409).json({ mensaje: "Este trabajador ya registró su llegada hoy" });
     }
     console.error(error);
-    return res.status(500).json({ mensaje: "No se pudo registrar la llegada" });
+    return res.status(500).json({ mensaje: esSalida ? "No se pudo registrar la salida" : "No se pudo registrar la llegada" });
   }
-});
+}
+
+router.post("/", (req, res) => registrar(req, res, false));
+router.post("/salida", (req, res) => registrar(req, res, true));
 
 module.exports = router;

@@ -117,7 +117,7 @@ test("hoy consulta únicamente el día local y excluye coordenadas de la lista",
   mock.method(Asistencia, "find", (filtro) => {
     assert.deepEqual(filtro, { fecha: fechaLocal() });
     return {
-      select(campos) { assert.equal(campos, "trabajador fecha llegada"); return this; },
+      select(campos) { assert.equal(campos, "trabajador fecha llegada salida"); return this; },
       populate(modelo, campos) { assert.equal(modelo, "trabajador"); assert.equal(campos, "nombre"); return this; },
       sort(orden) { assert.deepEqual(orden, { llegada: -1 }); return Promise.resolve([]); },
     };
@@ -125,6 +125,69 @@ test("hoy consulta únicamente el día local y excluye coordenadas de la lista",
   const respuesta = await solicitar(`${base}/hoy`);
   assert.equal(respuesta.status, 200);
   assert.deepEqual(await respuesta.json(), { fecha: fechaLocal(), asistencias: [] });
+});
+
+const postSalida = (datos) => solicitar(`${base}/salida`, {
+  method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(datos),
+});
+
+test("salida guarda la hora del servidor sin sobrescribir la entrada ni una salida existente", async () => {
+  const llegada = new Date(Date.now() - 3600000);
+  mock.method(Trabajador, "findById", async () => ({ activo: true }));
+  mock.method(Asistencia, "findOneAndUpdate", async (filtro, cambios, opciones) => {
+    assert.equal(filtro.trabajador, id);
+    assert.equal(filtro.fecha, fechaLocal());
+    assert.equal(filtro.salida, null);
+    assert.ok(filtro.llegada.$lte instanceof Date);
+    assert.deepEqual(Object.keys(cambios.$set), ["salida"]);
+    assert.ok(Math.abs(cambios.$set.salida.getTime() - Date.now()) < 2000);
+    assert.equal(opciones.new, true);
+    return { trabajador: id, llegada, salida: cambios.$set.salida };
+  });
+  const respuesta = await postSalida({ ...entrada(), salida: "2000-01-01" });
+  assert.equal(respuesta.status, 200);
+  const { asistencia } = await respuesta.json();
+  assert.equal(asistencia.llegada, llegada.toISOString());
+  assert.ok(new Date(asistencia.salida) > llegada);
+});
+
+test("salida rechaza ausencia de entrada y salida duplicada", async () => {
+  mock.method(Trabajador, "findById", async () => ({ activo: true }));
+  mock.method(Asistencia, "findOneAndUpdate", async () => null);
+  mock.method(Asistencia, "exists", async () => null);
+  const sinEntrada = await postSalida(entrada());
+  assert.equal(sinEntrada.status, 409);
+  assert.match((await sinEntrada.json()).mensaje, /Primero registra/);
+  mock.restoreAll();
+  mock.method(Trabajador, "findById", async () => ({ activo: true }));
+  mock.method(Asistencia, "findOneAndUpdate", async () => null);
+  mock.method(Asistencia, "exists", async () => ({ _id: id }));
+  const duplicada = await postSalida(entrada());
+  assert.equal(duplicada.status, 409);
+  assert.match((await duplicada.json()).mensaje, /ya está registrada/);
+});
+
+test("salida exige ubicación reciente, precisa y dentro del radio", async () => {
+  mock.method(Asistencia, "findOneAndUpdate", () => assert.fail("No debe actualizar"));
+  assert.equal((await postSalida({})).status, 400);
+  assert.equal((await postSalida({ ...entrada(), tomadaEn: Date.now() - 60000 })).status, 400);
+  assert.equal((await postSalida({ ...entrada(), precision: 101 })).status, 400);
+  assert.equal((await postSalida({ ...entrada(), latitud: zona.latitud + 1 })).status, 403);
+});
+
+test("salida rechaza trabajadores inexistentes e inactivos y controla fallos de BD", async () => {
+  mock.method(Trabajador, "findById", async () => null);
+  assert.equal((await postSalida(entrada())).status, 404);
+  mock.restoreAll();
+  mock.method(Trabajador, "findById", async () => ({ activo: false }));
+  assert.equal((await postSalida(entrada())).status, 403);
+  mock.restoreAll();
+  mock.method(console, "error", () => {});
+  mock.method(Trabajador, "findById", async () => ({ activo: true }));
+  mock.method(Asistencia, "findOneAndUpdate", async () => { throw new Error("BD desconectada"); });
+  const respuesta = await postSalida(entrada());
+  assert.equal(respuesta.status, 500);
+  assert.equal((await respuesta.json()).mensaje, "No se pudo registrar la salida");
 });
 
 test("fallos de BD devuelven 500 con mensaje controlado", async () => {
