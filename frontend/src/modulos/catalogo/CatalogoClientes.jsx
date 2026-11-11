@@ -3,6 +3,7 @@ import { ArrowDownRight, ArrowUpRight } from "lucide-react";
 import { catalogoClientes, categorias, apartadosCatalogo, nombreCategoria, moneda } from "./catalogoService";
 import PortadaProvidencia from "./PortadaProvidencia";
 import { telefono } from "./datosSitio";
+import fotosEjemplos from "./fotos/ejemplos-catalogo.png";
 
 const ejemplos = {
   cubiertas: [
@@ -31,6 +32,11 @@ const ejemplos = {
     ["Lápida de granito", "Ejemplo de pieza con acabado pulido y grabado personalizado."],
   ],
 };
+
+// Las fotos de la lámina siguen el orden de los ejemplos, en tres columnas.
+const posicionesFotos = new Map(Object.values(ejemplos).flat().map(([titulo], indice) => [
+  titulo, `${(indice % 3) * 50}% ${Math.floor(indice / 3) * 25}%`,
+]));
 
 const botonOscuro = "inline-flex items-center justify-center gap-3 rounded-full catalogo-boton px-5 py-3 text-sm font-semibold text-white transition-colors hover:brightness-110";
 
@@ -131,10 +137,18 @@ export default function CatalogoClientes() {
                   <p className="mb-4 text-sm text-[var(--marca-texto)]">Referencias ilustrativas. Consulta modelos, precios y disponibilidad.</p>
                   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {ejemplos[id].map(([titulo, detalle]) => (
-                      <article key={titulo} className="flex flex-col gap-3 rounded-2xl border border-[var(--marca-linea)] bg-[var(--marca-fondo)] p-5">
+                      <article key={titulo} className="flex flex-col overflow-hidden rounded-2xl border border-[var(--marca-linea)] bg-[var(--marca-fondo)]">
+                        <div
+                          className="aspect-[5/2] bg-[var(--marca-suave)]"
+                          role="img"
+                          aria-label={`Imagen ilustrativa de ${titulo.toLowerCase()}`}
+                          style={{ backgroundImage: `url("${fotosEjemplos}")`, backgroundSize: "300% 500%", backgroundPosition: posicionesFotos.get(titulo) }}
+                        />
+                        <div className="flex flex-1 flex-col gap-3 p-5">
                         <h5 className="text-lg font-bold">{titulo}</h5>
                         <p className="text-sm text-[var(--marca-texto)]">{detalle}</p>
                         <a className="mt-auto text-sm font-bold text-[var(--marca-acento)] hover:underline" href={whatsappUrl(whatsapp, `Hola, me interesa consultar por: ${titulo}.`)} target="_blank" rel="noreferrer">Consultar por WhatsApp <ArrowUpRight className="inline" size={15} aria-hidden="true"/></a>
+                        </div>
                       </article>
                     ))}
                   </div>
