@@ -14,10 +14,14 @@ const { autenticar, soloAdmin, soloTrabajadorActivo, adminOTrabajadorActivo } = 
 const app = express();
 
 const json = express.json();
+const origenesFrontend = (process.env.FRONTEND_URL || "http://localhost:5173,https://laprovidencia-marco.vercel.app")
+  .split(",")
+  .map(url => url.trim());
+origenesFrontend.push("https://marmolesygranitoslaprovidencia.vercel.app");
 
 app.use(
   cors({
-    origin: (process.env.FRONTEND_URL || "http://localhost:5173,https://laprovidencia-marco.vercel.app").split(",").map((url) => url.trim()),
+    origin: origenesFrontend,
   }),
 );
 
