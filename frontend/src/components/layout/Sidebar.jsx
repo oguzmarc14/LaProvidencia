@@ -7,6 +7,7 @@ import {
   FileText,
   ClipboardList,
   Clock,
+  BookOpen,
 } from "lucide-react";
 
 import BrandMark from "../BrandMark";
@@ -47,6 +48,7 @@ const opciones = [
     nombre: "Asistencia",
     icono: Clock,
   },
+  { id: "catalogo", nombre: "Catálogo", icono: BookOpen },
 ];
 
 export default function Sidebar({

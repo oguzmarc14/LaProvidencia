@@ -9,16 +9,20 @@ const registroVentasRoutes = require("./routes/registroVentasRoutes");
 const tareasRoutes = require("./routes/tareasRoutes");
 const authRoutes = require("./routes/authRoutes");
 const miTrabajoRoutes = require("./routes/miTrabajoRoutes");
+const catalogoRoutes = require("./routes/catalogoRoutes");
 const { autenticar, soloAdmin, soloTrabajadorActivo, adminOTrabajadorActivo } = require("./middleware/autenticacion");
 const app = express();
 
-app.use(express.json());
+const json = express.json();
 
 app.use(
   cors({
     origin: (process.env.FRONTEND_URL || "http://localhost:5173,https://laprovidencia-marco.vercel.app").split(",").map((url) => url.trim()),
   }),
 );
+
+app.use("/api/catalogo", catalogoRoutes);
+app.use(json);
 
 //aqui vamos a usar las apis de trabajos
 app.use("/api/auth", authRoutes);

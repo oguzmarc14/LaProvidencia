@@ -4,10 +4,10 @@ export const obtenerToken = () => localStorage.getItem(TOKEN_KEY);
 export const guardarToken = token => localStorage.setItem(TOKEN_KEY, token);
 export const cerrarSesionLocal = () => localStorage.removeItem(TOKEN_KEY);
 
-export async function solicitarApi(ruta, opciones = {}) {
+export async function solicitarApi(ruta, opciones = {}, { usarSesion = true } = {}) {
   const headers = new Headers(opciones.headers || {});
   if (opciones.body && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
-  const token = obtenerToken();
+  const token = usarSesion ? obtenerToken() : null;
   if (token) headers.set("Authorization", `Bearer ${token}`);
   let respuesta;
   try { respuesta = await fetch(`${BASE}${ruta}`, { ...opciones, headers }); }
