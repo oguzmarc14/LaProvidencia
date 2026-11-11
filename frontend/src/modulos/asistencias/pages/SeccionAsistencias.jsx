@@ -21,7 +21,7 @@ function distancia(posicion, zona) {
   return 6371000 * 2 * Math.asin(Math.sqrt(Math.min(1, a)));
 }
 
-export default function SeccionAsistencias({ miTrabajador } = {}) {
+export default function SeccionAsistencias({ miTrabajador, alRegistrar, compacto = false } = {}) {
   const [trabajadores, setTrabajadores] = useState([]);
   const [trabajador, setTrabajador] = useState(miTrabajador || "");
   const [zona, setZona] = useState(null);
@@ -115,6 +115,7 @@ export default function SeccionAsistencias({ miTrabajador } = {}) {
       });
       if (!montado.current) return;
       registrado = true;
+      alRegistrar?.();
       const persona = trabajadores.find((persona) => persona._id === trabajador);
       const asistencia = { ...datos.asistencia, trabajador: persona ?? datos.asistencia.trabajador };
       setRegistros((previo) => ({
@@ -142,11 +143,11 @@ export default function SeccionAsistencias({ miTrabajador } = {}) {
   };
 
   return <section className="mx-auto max-w-4xl p-4 pb-12 sm:p-6 lg:p-10">
-    <div className="mb-6 rounded-[28px] bg-gradient-to-r from-[#123e83] to-[#a13f65] p-6 text-white sm:p-9">
+    {!compacto && <div className="mb-6 rounded-[28px] bg-gradient-to-r from-[#123e83] to-[#a13f65] p-6 text-white sm:p-9">
       <Clock size={30} aria-hidden="true"/>
       <h1 className="mt-3 text-3xl font-black">Registrar asistencia</h1>
       <p className="mt-3 text-white/90">{miTrabajador ? "Verifica tu ubicación para registrar tu entrada o salida." : "Selecciona un trabajador y verifica la ubicación para registrar su entrada o salida."}</p>
-    </div>
+    </div>}
     <div className="app-panel p-5 sm:p-8">
       {cargando ? <p role="status">Cargando trabajadores y zona de asistencia...</p> : <>
         {!miTrabajador && <>
@@ -162,7 +163,7 @@ export default function SeccionAsistencias({ miTrabajador } = {}) {
         {zona && <div className="my-5 rounded-xl bg-blue-50 p-4 text-sm text-[#123e83]">
           <p className="flex items-center gap-2 font-bold"><MapPin size={18} aria-hidden="true"/>Zona de asistencia · {zona.radioMetros} metros</p>
           <p className="mt-2">{zona.direccion}</p>
-          <p className="mt-2">Verifica tu ubicación dentro de la zona para registrar tu entrada o salida. La ubicación de entrada se guarda junto con tu llegada.</p>
+          <p className="mt-2">Verifica tu ubicación dentro de la zona para registrar tu entrada o salida. La ubicación se guarda junto con cada registro.</p>
         </div>}
         <button type="button" onClick={verificar} disabled={!zona || localizando || guardando} className="rounded-xl border-2 border-blue-200 px-4 py-3 font-bold text-[#124B91] disabled:opacity-50">
           {localizando ? "Consultando ubicación..." : "Verificar mi ubicación"}

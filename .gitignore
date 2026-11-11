@@ -12,3 +12,7 @@ build/
 
 # Logs
 *.log
+
+# Verificación de navegador
+frontend/test-results/
+frontend/playwright-report/

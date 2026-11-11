@@ -5,6 +5,11 @@ const asistenciaSchema = new mongoose.Schema({
   fecha: { type: String, required: true },
   llegada: { type: Date, required: true },
   salida: { type: Date, default: null },
+  entradaPor: { type: mongoose.Schema.Types.ObjectId, ref: "Usuario" },
+  salidaPor: { type: mongoose.Schema.Types.ObjectId, ref: "Usuario" },
+  salidaGPS: {
+    latitud: Number, longitud: Number, precision: Number, distanciaMetros: Number,
+  },
   latitud: { type: Number, required: true, min: -90, max: 90 },
   longitud: { type: Number, required: true, min: -180, max: 180 },
   precision: { type: Number, required: true, min: 0 },

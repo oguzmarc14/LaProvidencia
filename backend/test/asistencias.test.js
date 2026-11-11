@@ -139,7 +139,9 @@ test("salida guarda la hora del servidor sin sobrescribir la entrada ni una sali
     assert.equal(filtro.fecha, fechaLocal());
     assert.equal(filtro.salida, null);
     assert.ok(filtro.llegada.$lte instanceof Date);
-    assert.deepEqual(Object.keys(cambios.$set), ["salida"]);
+    assert.deepEqual(Object.keys(cambios.$set), ["salida", "salidaPor", "salidaGPS"]);
+    assert.equal(String(cambios.$set.salidaPor), id);
+    assert.equal(cambios.$set.salidaGPS.latitud, zona.latitud);
     assert.ok(Math.abs(cambios.$set.salida.getTime() - Date.now()) < 2000);
     assert.equal(opciones.new, true);
     return { trabajador: id, llegada, salida: cambios.$set.salida };
