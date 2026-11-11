@@ -9,6 +9,7 @@ router.use((req, res, next) => {
   res.set("Cache-Control", "no-store");
   next();
 });
+router.use(require("./planAsistenciaRoutes"));
 
 router.get("/zona", (req, res) => res.json({ zona }));
 
@@ -60,7 +61,8 @@ async function registrar(req, res, esSalida) {
       // La condición evita sobrescribir la salida incluso con solicitudes simultáneas.
       const asistencia = await Asistencia.findOneAndUpdate(
         { ...filtro, salida: null, llegada: { $lte: ahora } },
-        { $set: { salida: ahora } },
+        { $set: { salida: ahora, salidaPor: req.usuario._id,
+          salidaGPS: { latitud, longitud, precision, distanciaMetros: distancia } } },
         { new: true, runValidators: true },
       );
       if (!asistencia) {
@@ -73,6 +75,7 @@ async function registrar(req, res, esSalida) {
     }
     const asistencia = await Asistencia.create({
       trabajador, fecha: fechaLocal(ahora), llegada: ahora,
+      entradaPor: req.usuario._id,
       latitud, longitud, precision, distanciaMetros: distancia,
     });
     return res.status(201).json({ mensaje: "Llegada registrada", asistencia });

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { BriefcaseBusiness, ClipboardList, Clock, KeyRound, LogOut, MapPin } from "lucide-react";
 import BrandMark from "../../../components/BrandMark";
 import { solicitarApi } from "../../../services/api";
-import SeccionAsistencias from "../../asistencias/pages/SeccionAsistencias";
+import SeccionAsistencias from "../../asistencias/pages/PanelAsistencias";
 
 const secciones = [
   { id: "trabajos", titulo: "Mis trabajos", icono: BriefcaseBusiness },

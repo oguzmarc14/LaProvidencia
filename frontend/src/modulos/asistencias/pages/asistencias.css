@@ -1,0 +1,92 @@
+.as-module{max-width:1440px;margin:auto;padding:24px;color:#233b56}
+.as-hero{display:flex;justify-content:space-between;align-items:center;gap:24px;background:linear-gradient(115deg,#123e83,#17627b);border-radius:24px;padding:32px;color:white;box-shadow:0 12px 32px #123e8318}
+.as-eyebrow{font-size:11px;font-weight:800;letter-spacing:.16em}
+.as-hero h1{font-size:clamp(26px,3vw,36px);font-weight:800;letter-spacing:-.04em;margin:8px 0}
+.as-hero p{max-width:620px;line-height:1.6;color:#dbeafa}
+.as-zone{display:inline-flex;gap:6px;align-items:center;font-size:12px;margin-top:18px;color:#dbeafa}
+.as-hero-icon{padding:22px;border-radius:24px;background:#ffffff12}
+.as-tabs{display:flex;gap:6px;overflow:auto;padding:16px 0}
+.as-tabs button{white-space:nowrap;padding:12px 16px;border-radius:12px;font-size:13px;font-weight:700;background:white;color:#455b72}
+.as-tabs button[aria-current]{background:#173f78;color:white}
+.as-card{background:#fff;border:1px solid #e1e8f0;border-radius:20px;padding:24px;margin-bottom:20px;box-shadow:0 4px 16px #223b5610}
+.as-section-title{display:flex;gap:12px;align-items:flex-start;margin-bottom:24px}
+.as-section-title svg{flex-shrink:0;color:#247e93;margin-top:3px}
+.as-module h2{font-size:19px;font-weight:800;letter-spacing:-.02em}
+.as-section-title p,.as-today p{font-size:13px;color:#65768a;margin-top:6px;line-height:1.6}
+.as-stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.as-stats .as-card{padding:20px}
+.as-stats span{font-size:12px;font-weight:700;color:#63768c}
+.as-stats strong{display:block;font-size:34px;line-height:1.4;letter-spacing:-.04em;color:#123e83}
+.as-stats small{font-size:10px;color:#7a8998}
+.as-module label{display:flex;flex-direction:column;gap:7px;font-size:12px;font-weight:700;color:#455b72;min-width:0}
+.as-module input,.as-module select,.as-module textarea{background:#f8fafc;border:1px solid #cbd6e2;border-radius:10px;padding:11px 12px;font:inherit;color:#233b56;width:100%;min-width:0}
+.as-module textarea{resize:vertical}
+.as-module input:focus-visible,.as-module select:focus-visible,.as-module textarea:focus-visible,.as-module button:focus-visible{outline:3px solid #46a9bc;outline-offset:3px}
+.as-filters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:end;gap:14px;background:#f8fafc;padding:18px;border-radius:14px}
+.as-button{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:42px;border:1px solid #d5deea;border-radius:10px;padding:9px 14px;background:white;font-size:12px;font-weight:700;cursor:pointer;color:#174b80}
+.as-primary{background:#124b91;color:white;border-color:#124b91}
+.as-module button:disabled{opacity:.5;cursor:wait}
+.as-toolbar,.as-toolbar>div,.as-pagination{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.as-toolbar{margin:22px 0 14px}
+.as-toolbar p{font-size:12px;color:#64748b}
+.as-table-wrap{overflow:auto}
+ .as-module table{border-collapse:collapse;width:100%;min-width:690px;text-align:left;font-size:13px}
+.as-module th{background:#f5f8fc;color:#64748b;font-size:10px;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;padding:14px 12px}
+.as-module td{padding:18px 12px;border-bottom:1px solid #edf1f6;vertical-align:top;max-width:320px;overflow-wrap:anywhere}
+.as-module td small{display:block;font-size:11px;margin-top:5px;color:#718298}
+.as-module tbody tr:hover{background:#fafcff}
+.as-badge{display:inline-block;white-space:nowrap;padding:5px 9px;border-radius:7px;font-size:11px;font-weight:700;background:#edf2f8;color:#49627d}
+.as-badge.trabajando,.as-badge.finalizado{background:#e7f6ef;color:#19734d}
+.as-badge.ausente{background:#ffeded;color:#ad3131}
+.as-badge.pendiente{background:#fff5df;color:#96600d}
+.as-module .as-late{color:#a36710}
+.as-empty{text-align:center;padding:40px 16px;color:#6f8093;font-size:14px}
+.as-error,.as-success{border-radius:12px;padding:14px 18px;margin:16px 0;font-size:13px}
+.as-error{background:#fff0f0;color:#a02f35}
+.as-error button{text-decoration:underline;margin-left:10px}
+.as-success{background:#e7f6ef;color:#19734d}
+.as-form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:18px 0}
+.as-editor fieldset{min-width:0}
+.as-editor fieldset>label{margin:16px 0}
+.as-week{border:1px solid #e4eaf2;border-radius:14px;padding:0 16px}
+.as-day{display:grid;grid-template-columns:140px 1fr 1fr 90px;gap:16px;align-items:center;border-bottom:1px solid #edf1f6;padding:12px 0}
+.as-day:last-child{border:0}
+.as-module .as-check{display:flex;flex-direction:row;align-items:center;gap:8px}
+.as-check input{width:17px;height:17px;accent-color:#124b91}
+.as-day input:disabled{opacity:.4}
+.as-muted,.as-note{font-size:12px;color:#718298}
+.as-note{margin:16px 0;line-height:1.7}
+.as-today{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:20px}
+.as-pagination{justify-content:flex-end;margin-top:20px;font-size:12px}
+.as-module>section:not(.as-card){padding:20px 0;max-width:none}
+@media(max-width:900px){.as-stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+.as-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.as-day{grid-template-columns:120px 1fr 1fr}
+.as-day>span{grid-column:1/-1}
+.as-filters{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:540px){.as-module{padding:14px}
+.as-hero{padding:24px}
+.as-hero-icon{display:none}
+.as-card{padding:18px;border-radius:16px}
+.as-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.as-stats .as-card{padding:14px;margin-bottom:0}
+.as-stats{margin-bottom:16px}
+.as-filters{padding:12px;gap:12px}
+.as-form-grid{grid-template-columns:1fr}
+.as-day{grid-template-columns:1fr 1fr;gap:10px}
+.as-day>.as-check,.as-day>strong{grid-column:1/-1}
+.as-today{align-items:flex-start;flex-direction:column}
+.as-toolbar>div{width:100%}
+.as-toolbar .as-button{flex:1}
+}
+
+
+@media(max-width:540px){
+.as-jornadas,.as-jornadas tbody{display:block;min-width:0;width:100%}
+.as-jornadas thead{display:none}
+.as-jornadas tr{display:block;border:1px solid #e2eaf3;border-radius:14px;padding:8px 12px;margin:12px 0}
+.as-module .as-jornadas td{display:block;max-width:none;padding:10px 0;min-height:40px}
+.as-jornadas td::before{content:attr(data-label);display:block;font-size:10px;color:#718298;font-weight:700;text-transform:uppercase;margin-bottom:6px;letter-spacing:.04em}
+.as-jornadas td:last-child{border:0}
+}
