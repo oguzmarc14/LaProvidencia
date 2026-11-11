@@ -21,8 +21,16 @@ import SeccionVentas from "./modulos/ventas/pages/SeccionVentas";
 import SeccionAsistencias from "./modulos/asistencias/pages/SeccionAsistencias";
 import SeccionTareas from "./modulos/tareas/pages/SeccionTareas";
 import PortalTrabajador from "./modulos/trabajadores/pages/PortalTrabajador";
+import CatalogoAdmin from "./modulos/catalogo/CatalogoAdmin";
+import CatalogoClientes from "./modulos/catalogo/CatalogoClientes";
 
 export default function App() {
+  return new URLSearchParams(window.location.search).get("catalogo") === "1"
+    ? <CatalogoClientes />
+    : <Sistema />;
+}
+
+function Sistema() {
   const [seccion, setSeccion] = useState("dashboard");
   const [editandoContrasena, setEditandoContrasena] = useState(false);
   const [usuario, setUsuario] = useState(null);
@@ -174,6 +182,8 @@ export default function App() {
       <SeccionAsistencias />
     ) : seccion === "tareas" ? (
       <SeccionTareas />
+    ) : seccion === "catalogo" ? (
+      <CatalogoAdmin />
     ) : (
       <SeccionTrabajadores />
     );

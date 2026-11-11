@@ -20,6 +20,7 @@ const nombres = {
   ventas: "Registro de lápidas",
   tareas: "Planificación de tareas",
   asistencias: "Asistencia",
+  catalogo: "Catálogo para clientes",
 };
 
 export default function MainLayout({
