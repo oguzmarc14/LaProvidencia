@@ -75,7 +75,7 @@ function Galeria() {
           <p className="lp-etiqueta">Proyectos destacados</p>
           <h2 id="lp-proyectos-titulo">Conoce nuestro trabajo</h2>
           <p>Ideas para encimeras, cocinas y baños en mármol y granito.</p>
-          <a className="lp-boton lp-boton-linea" href="#catalogo">Ver catálogo <ArrowRight size={17} aria-hidden="true" /></a>
+          <a className="lp-boton lp-boton-linea" href="/catalogo">Ver catálogo <ArrowRight size={17} aria-hidden="true" /></a>
         </div>
         <div className="lp-galeria" aria-roledescription="carrusel" aria-label="Galería de inspiración">
           <motion.div key={inicio} className="lp-galeria-fotos" initial={reducirMovimiento ? false : { opacity: 0.78 }} animate={{ opacity: 1 }} transition={{ duration: 0.22 }}>
@@ -126,7 +126,7 @@ function Footer() {
         <nav aria-label="Enlaces del pie de página">
           <strong>Enlaces</strong>
           {navegacion.map(([id, nombre]) => <a key={id} href={`#${id}`}>{nombre}</a>)}
-          <a href="#catalogo">Catálogo</a>
+          <a href="/catalogo">Catálogo</a>
         </nav>
         <div><strong><Clock size={17} aria-hidden="true" /> Horario</strong><p>Lunes a viernes</p><p>9:00 a. m. – 3:00 p. m.</p><p>4:00 p. m. – 7:00 p. m.</p></div>
         <div><strong>Contacto</strong><a href={cotizar} target="_blank" rel="noreferrer">WhatsApp · {telefono}</a>

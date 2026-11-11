@@ -25,8 +25,12 @@ import CatalogoAdmin from "./modulos/catalogo/CatalogoAdmin";
 import CatalogoClientes from "./modulos/catalogo/CatalogoClientes";
 
 export default function App() {
-  return new URLSearchParams(window.location.search).get("catalogo") === "1"
-    ? <CatalogoClientes />
+  const { hostname, pathname, search } = window.location;
+  const abrirCatalogo = /^\/catalogo\/?$/.test(pathname);
+  const abrirPortada = hostname === "marmolesygranitoslaprovidencia.vercel.app" && pathname === "/";
+  const enlaceAnterior = new URLSearchParams(search).get("catalogo") === "1";
+  return abrirPortada || abrirCatalogo || enlaceAnterior
+    ? <CatalogoClientes abrirCatalogo={abrirCatalogo} />
     : <Sistema />;
 }
 

@@ -69,20 +69,24 @@ function Tarjeta({ producto, whatsapp }) {
   );
 }
 
-export default function CatalogoClientes() {
+export default function CatalogoClientes({ abrirCatalogo = false }) {
   const [catalogo, setCatalogo] = useState(null);
   const [error, setError] = useState("");
   const [intento, setIntento] = useState(0);
 
   useEffect(() => {
     const titulo = document.title;
-    const descripcion = document.createElement("meta");
-    descripcion.name = "description";
-    descripcion.content = "La Providencia fabrica e instala encimeras y superficies de mármol, granito y cuarzo. Consulta proyectos, productos y cotizaciones.";
-    document.head.append(descripcion);
-    document.title = "La Providencia | Encimeras de Mármol y Granito";
-    return () => { document.title = titulo; descripcion.remove(); };
-  }, []);
+    document.title = abrirCatalogo
+      ? "Catálogo | Mármoles y Granitos La Providencia"
+      : "Mármoles y Granitos La Providencia";
+    const desplazamiento = abrirCatalogo && !window.location.hash
+      ? requestAnimationFrame(() => document.getElementById("catalogo")?.scrollIntoView({ behavior: "instant" }))
+      : null;
+    return () => {
+      document.title = titulo;
+      if (desplazamiento !== null) cancelAnimationFrame(desplazamiento);
+    };
+  }, [abrirCatalogo]);
 
   useEffect(() => {
     const consulta = new AbortController();
