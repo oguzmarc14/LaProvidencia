@@ -29,10 +29,11 @@ router.get("/hoy", async (req, res) => {
 });
 
 async function registrar(req, res, esSalida) {
+  if (req.usuario.rol !== "usuario") {
+    return res.status(403).json({ mensaje: "Solo los trabajadores pueden registrar su asistencia" });
+  }
   const { latitud, longitud, precision, tomadaEn } = req.body || {};
-  const trabajador = req.usuario.rol === "usuario"
-    ? String(req.usuario.trabajador)
-    : req.body?.trabajador;
+  const trabajador = String(req.usuario.trabajador);
   const numero = (valor) => typeof valor === "number" && Number.isFinite(valor);
   if (typeof trabajador !== "string" || !mongoose.isValidObjectId(trabajador) ||
       !numero(latitud) || Math.abs(latitud) > 90 ||
