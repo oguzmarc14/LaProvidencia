@@ -25,16 +25,23 @@ before(async () => {
 after(() => new Promise((resolve, reject) => servidor.close((error) => error ? reject(error) : resolve())));
 afterEach(() => mock.restoreAll());
 const token = jwt.sign({ sub: id }, process.env.JWT_SECRET);
-const solicitar = (url, opciones = {}) => {
+const solicitar = (url, opciones = {}, rol = opciones.method === "POST" ? "usuario" : "admin") => {
   mock.method(Usuario, "findById", () => ({
-    select: async () => ({ _id: id, rol: "admin" }),
+    select: async () => ({ _id: id, rol, trabajador: id }),
   }));
+  if (rol === "usuario") mock.method(Trabajador, "exists", async () => true);
   return fetch(url, {
     ...opciones, headers: { ...opciones.headers, Authorization: `Bearer ${token}` },
   });
 };
 const post = (datos) => solicitar(base, {
   method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(datos),
+});
+
+test("administración solo consulta, no registra entradas ni salidas", async () => {
+  for (const ruta of ["", "/salida"]) {
+    assert.equal((await solicitar(base + ruta, { method: "POST" }, "admin")).status, 403);
+  }
 });
 
 test("zona fija de 100 metros y respuestas sin caché", async () => {
@@ -65,7 +72,6 @@ test("checar guarda la hora del servidor y no acepta fecha u hora del cliente", 
 test("rechaza coordenadas inválidas, ubicación vieja o poco precisa antes de consultar BD", async () => {
   mock.method(Trabajador, "findById", () => assert.fail("No debe consultar la BD"));
   for (const cambios of [
-    { trabajador: "invalido" }, { trabajador: { $ne: null } },
     { latitud: null }, { latitud: "21.5" }, { latitud: 91 },
     { longitud: -181 }, { precision: -1 }, { precision: 101 },
     { tomadaEn: null }, { tomadaEn: Date.now() - 60000 }, { tomadaEn: Date.now() + 60000 },
