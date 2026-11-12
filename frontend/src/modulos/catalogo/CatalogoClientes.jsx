@@ -264,7 +264,6 @@ export default function CatalogoClientes({ abrirCatalogo = false }) {
                       {s.productos.map(producto => <Tarjeta key={producto._id} producto={producto} whatsapp={whatsapp} abrir={setProductoAbierto}/>)}
                     </div>
                   </div>)}
-                  <h4 className="mb-2 text-lg font-bold">Ejemplos para tu proyecto</h4>
                   <p className="mb-4 text-sm text-[var(--marca-texto)]">Referencias con precios y medidas ilustrativos. Solicita una cotización para tu proyecto.</p>
                   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {ejemplosConFicha.get(id).map(producto => (
