@@ -109,7 +109,7 @@ export default function CatalogoClientes({ abrirCatalogo = false }) {
   return (
     <PortadaProvidencia>
     <section id="catalogo" aria-labelledby="catalogo-titulo" className="lp-productos scroll-mt-32 border-y border-[var(--marca-linea)] bg-white md:scroll-mt-24">
-      <div className="lp-ancho py-8">
+      <div className="lp-ancho py-14 sm:py-20">
         <p className="mb-2 text-xs font-bold uppercase tracking-[.17em] text-[var(--marca-acento)]">Productos</p>
         <h2 id="catalogo-titulo" className="font-serif text-4xl tracking-tight sm:text-5xl">Explora el catálogo</h2>
         {!error && !catalogo && <p role="status" className="mt-6 text-slate-600">Consultando productos publicados…</p>}
@@ -125,10 +125,10 @@ export default function CatalogoClientes({ abrirCatalogo = false }) {
                 <a key={id} href={`#${id}`} className="inline-flex items-center gap-2 rounded-full border border-[var(--marca-linea)] bg-white px-4 py-2 text-sm font-semibold hover:bg-[var(--marca-suave)]">{nombre} <ArrowDownRight size={14} aria-hidden="true" /></a>
               ))}
             </nav>
-            <div className="space-y-10">
+            <div className="space-y-14 sm:space-y-20">
               {apartados.map(({ nombre, id, descripcion, secciones: subsecciones }) => (
                 <section key={id} id={id} aria-labelledby={`${id}-titulo`} className="scroll-mt-32 md:scroll-mt-24">
-                  <h3 id={`${id}-titulo`} className="mb-4 border-t border-[var(--marca-linea)] pt-5 font-serif text-3xl">{nombre}</h3>
+                  <h3 id={`${id}-titulo`} className="mb-5 border-t border-[var(--marca-linea)] pt-8 font-serif text-3xl sm:pt-12">{nombre}</h3>
                   <p className="mb-4 text-sm text-[var(--marca-texto)]">{descripcion}</p>
                   <div className="mb-6 flex flex-wrap gap-2">{subsecciones.map(s => <span key={s.id} className="rounded-full bg-[var(--marca-suave)] px-3 py-1.5 text-xs font-semibold text-[var(--marca-oscuro)]">{nombreCategoria(s.nombre)}</span>)}</div>
                   {subsecciones.filter(s => s.productos.length).map(s => <div key={s.id} className="mb-7">
