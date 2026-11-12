@@ -76,7 +76,12 @@ function Tarjeta({ producto, whatsapp, abrir }) {
           <p className="lp-producto-resumen">{producto.caracteristicas}</p>
         </div>
       </button>
-      <div className="lp-producto-acciones"><BotonWhatsApp producto={producto} whatsapp={whatsapp}/></div>
+      <div className="lp-producto-acciones">
+        <button type="button" className="lp-ver-mas" onClick={() => abrir(producto)} aria-haspopup="dialog">
+          Ver más <ChevronRight size={18} aria-hidden="true"/>
+        </button>
+        <BotonWhatsApp producto={producto} whatsapp={whatsapp}/>
+      </div>
     </article>
   );
 }

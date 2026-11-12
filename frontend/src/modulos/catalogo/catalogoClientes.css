@@ -421,7 +421,23 @@ html:has(.lp-ficha[open]) { overflow: hidden; }
 .lp-producto-texto h4 { font-size: 1.15rem; font-weight: 800; }
 .lp-precio { margin-top: .35rem; color: var(--marca-acento); font-weight: 800; }
 .lp-producto-resumen { margin-top: .55rem; color: var(--marca-texto); font-size: .92rem; line-height: 1.5; overflow-wrap: anywhere; }
-.lp-producto-acciones { display: flex; justify-content: flex-end; padding: .35rem 1.25rem 1rem; }
+.lp-producto-acciones { display: flex; gap: .6rem; padding: .75rem 1.25rem 1.25rem; }
+.lp-ver-mas {
+  display: inline-flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: .45rem;
+  min-height: 2.9rem;
+  border-radius: .9rem;
+  background: var(--marca-azul);
+  color: white;
+  font-weight: 800;
+  transition: background .2s;
+}
+.lp-ver-mas:is(:hover, :focus-visible) { background: var(--marca-oscuro); }
+.lp-producto-acciones .lp-whatsapp { background: #eaf7ef; color: #107346; }
+.lp-producto-acciones .lp-whatsapp:is(:hover, :focus-visible) { background: #d8f0e2; }
 .lp-whatsapp {
   display: inline-flex;
   align-items: center;
