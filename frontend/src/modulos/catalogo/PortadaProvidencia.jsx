@@ -4,6 +4,7 @@ import {
   ArrowRight, ChevronLeft, ChevronRight, Clock, Menu, MessageCircle, Star, UserRound, X,
 } from "lucide-react";
 import logo from "../../public/logo-providencia.png";
+import fotosProceso from "./fotos/proceso-ilustrado.png";
 import { atributos, cotizar, navegacion, proceso, proyectos, servicios, telefono, testimonios, ventajas } from "./datosSitio";
 import "./catalogoClientes.css";
 
@@ -158,11 +159,26 @@ export default function PortadaProvidencia({ children }) {
             {ventajas.map(([Icono, titulo, texto]) => <li className="lp-tarjeta" key={titulo}><span><Icono size={34} strokeWidth={1.6} aria-hidden="true" /></span><h3>{titulo}</h3><p>{texto}</p></li>)}
           </ul>
         </section>
-        <section className="lp-ancho" aria-labelledby="lp-proceso-titulo">
-          <div className="lp-proceso lp-degradado">
+        <section id="proceso" className="lp-proceso" aria-labelledby="lp-proceso-titulo">
+          <div className="lp-ancho lp-proceso-interior">
             <div><h2 id="lp-proceso-titulo">Nuestro proceso de trabajo</h2><p>Te acompañamos en cada paso para llevar tu proyecto de la idea a la realidad.</p></div>
             <ol>
-              {proceso.map(([Icono, texto], i) => <li key={texto}><span className="lp-paso-numero">{i + 1}</span><Icono size={33} strokeWidth={1.6} aria-hidden="true" /><p>{texto}</p>{i < proceso.length - 1 && <ChevronRight className="lp-conector" size={18} aria-hidden="true" />}</li>)}
+              {proceso.map(([Icono, titulo, texto], i) => (
+                <li key={titulo}>
+                  <article className="lp-paso">
+                    <span className="lp-paso-numero" aria-hidden="true">{i + 1}</span>
+                    <div className="lp-paso-texto">
+                      <span className="lp-paso-icono"><Icono size={44} strokeWidth={1.6} aria-hidden="true" /></span>
+                      <h3>{titulo}</h3>
+                      <p>{texto}</p>
+                    </div>
+                    <div className="lp-paso-foto" aria-hidden="true">
+                      <div style={{ backgroundImage: `url("${fotosProceso}")`, backgroundPosition: `${(i % 2) * 100}% ${Math.floor(i / 2) * 100}%` }} />
+                    </div>
+                  </article>
+                  {i < proceso.length - 1 && <span className="lp-conector" aria-hidden="true"><ChevronRight size={22} /></span>}
+                </li>
+              ))}
             </ol>
           </div>
         </section>

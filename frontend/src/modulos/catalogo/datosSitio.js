@@ -34,8 +34,10 @@ export const ventajas = [
   [BadgeCheck, "Respaldo y confianza", "Acompañamiento desde la selección del material hasta la instalación."],
 ];
 export const proceso = [
-  [MessageSquareText, "Contáctanos y cuéntanos tu idea."], [Layers3, "Te asesoramos en materiales y diseño."],
-  [Settings, "Fabricamos tu encimera a medida."], [Truck, "Instalamos con precisión."],
+  [MessageSquareText, "Contáctanos", "Cuéntanos tu idea, tus necesidades y las medidas de tu espacio."],
+  [Layers3, "Asesoría y diseño", "Te ayudamos a elegir los materiales, acabados y diseño para tu proyecto."],
+  [Settings, "Fabricación", "Fabricamos tu encimera a medida y cuidamos la precisión de cada corte."],
+  [Truck, "Instalación", "Colocamos tu cubierta y revisamos el nivel y los acabados."],
 ];
 export const testimonios = [
   { nombre: "María G.", tipo: "Proyecto residencial", comentario: "El acabado de la encimera y la instalación cuidaron cada detalle.", calificacion: 5 },
