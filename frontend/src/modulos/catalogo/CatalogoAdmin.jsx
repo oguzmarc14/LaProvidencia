@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Copy, ImagePlus, Package, X } from "lucide-react";
 import { catalogoAdmin, categorias, apartadosCatalogo, nombreCategoria, enlaceCatalogo, estados, moneda, unidades } from "./catalogoService";
 
-const nuevo = { nombre: "", categoria: categorias[0], medidas: "", caracteristicas: "", precio: "", unidad: unidades[0], estado: estados[0], imagenes: [] };
+const nuevo = { nombre: "", categoria: categorias[0], medidas: "", material: "", presentacion: "", acabados: "", precioDesde: false, caracteristicas: "", precio: "", unidad: unidades[0], estado: estados[0], imagenes: [] };
 const tiposImagen = ["image/jpeg", "image/png", "image/webp"];
 const maxBytes = 400 * 1024;
 const leerImagen = (archivo) => new Promise((resolve, reject) => {
@@ -73,7 +73,7 @@ export default function CatalogoAdmin() {
   }, []);
 
   function campo(nombre) {
-    return { className: "app-field", value: form[nombre], onChange: (e) => setForm({ ...form, [nombre]: e.target.value }) };
+    return { className: "app-field", value: form[nombre] ?? "", onChange: (e) => setForm({ ...form, [nombre]: e.target.value }) };
   }
 
   async function ejecutar(accion) {
@@ -156,7 +156,16 @@ export default function CatalogoAdmin() {
               <Campo titulo="Precio (MXN)"><input {...campo("precio")} type="number" min="0" max="10000000" step="0.01" placeholder="0.00" required /></Campo>
               <Campo titulo="Unidad"><select {...campo("unidad")}>{unidades.map(valor => <option key={valor}>{valor}</option>)}</select></Campo>
             </div>
-            <Campo titulo="Medidas"><input {...campo("medidas")} maxLength={120} placeholder="Ej. 1.20 × 0.60 m" /></Campo>
+            <label className="flex items-center gap-2 text-sm font-semibold">
+              <input type="checkbox" checked={form.precioDesde ?? false} onChange={e => setForm({ ...form, precioDesde: e.target.checked })} />
+              Mostrar el precio como «Desde»
+            </label>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Campo titulo="Tipo de material"><input {...campo("material")} maxLength={100} placeholder="Ej. Cuarzo ingenierizado" /></Campo>
+              <Campo titulo="Presentación"><input {...campo("presentacion")} maxLength={100} placeholder="Ej. Láminas" /></Campo>
+              <Campo titulo="Dimensiones"><input {...campo("medidas")} maxLength={120} placeholder="Ej. 323 × 163 cm" /></Campo>
+              <Campo titulo="Acabados"><input {...campo("acabados")} maxLength={200} placeholder="Ej. Pulido, Mate, Satinado" /></Campo>
+            </div>
             <Campo titulo="Características"><textarea {...campo("caracteristicas")} rows={4} maxLength={1500} placeholder="Describe el material, el acabado y los detalles del producto." /></Campo>
           </div>
           <div className="min-w-0 space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5">

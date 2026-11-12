@@ -86,9 +86,28 @@ function Tarjeta({ producto, whatsapp, abrir }) {
   );
 }
 
-function FichaProducto({ producto, whatsapp, cerrar }) {
+const precioFicha = new Intl.NumberFormat("es-MX", {
+  style: "currency", currency: "MXN", minimumFractionDigits: 0, maximumFractionDigits: 2,
+});
+
+const referenciaCuarzo = {
+  precio: 5900,
+  precioDesde: true,
+  unidad: "m²",
+  material: "Cuarzo ingenierizado",
+  presentacion: "Láminas",
+  medidas: "323 × 163 cm (espesor de 2 o 3 cm)",
+  acabados: "Pulido, Mate, Satinado",
+  caracteristicas: "Cuarzo blanco con vetas sutiles, ilustrado en una cubierta de cocina. El tono y el acabado dependen del modelo.",
+};
+
+function FichaProducto({ producto: seleccionado, whatsapp, cerrar }) {
   const dialogo = useRef(null);
   const [foto, setFoto] = useState(0);
+  const producto = seleccionado.ilustrativo && seleccionado.nombre === "Cuarzo blanco veteado"
+    ? { ...seleccionado, ...referenciaCuarzo }
+    : seleccionado;
+  const acabados = (producto.acabados ?? "").split(",").map(acabado => acabado.trim()).filter(Boolean);
   const total = producto.imagenes.length;
   const mover = paso => setFoto(actual => (actual + paso + total) % total);
   useEffect(() => {
@@ -105,7 +124,7 @@ function FichaProducto({ producto, whatsapp, cerrar }) {
         if (e.key === "ArrowRight") mover(1);
       }}>
       <div className="lp-ficha-contenido">
-        <button type="button" className="lp-ficha-cerrar" aria-label="Cerrar ficha" onClick={cerrar}><X size={22}/></button>
+        <button type="button" className="lp-ficha-cerrar" aria-label="Cerrar ficha" onClick={cerrar}>Cerrar <X size={21} aria-hidden="true"/></button>
         <div className="lp-ficha-galeria">
           <div className="lp-ficha-foto">
             <FotoProducto producto={producto} indice={foto}/>
@@ -120,14 +139,20 @@ function FichaProducto({ producto, whatsapp, cerrar }) {
         </div>
         <div className="lp-ficha-datos">
           <h3 id="lp-ficha-titulo">{producto.nombre}</h3>
-          {producto.precio != null && <p className="lp-ficha-precio"><Tag size={19} aria-hidden="true"/> {moneda.format(producto.precio)} MXN / {producto.unidad}</p>}
+          {producto.precio != null && <div className="lp-ficha-precio">
+            <Tag size={23} aria-hidden="true"/>
+            {producto.precioDesde && <span>Desde</span>}
+            <strong>{precioFicha.format(producto.precio)}</strong>
+            <span className="lp-ficha-moneda">MXN/{producto.unidad}</span>
+          </div>}
+          {producto.caracteristicas && <p className="lp-ficha-descripcion">{producto.caracteristicas}</p>}
           <dl className="lp-ficha-especificaciones">
-            <div><Layers3 size={23} aria-hidden="true"/><span><dt>Categoría</dt><dd>{nombreCategoria(producto.categoria)}</dd></span></div>
-            {producto.unidad && <div><Maximize2 size={23} aria-hidden="true"/><span><dt>Unidad de venta</dt><dd>{producto.unidad}</dd></span></div>}
+            <div><Layers3 size={27} aria-hidden="true"/><span><dt>{producto.material ? "Tipo de material" : "Categoría"}</dt><dd>{producto.material || nombreCategoria(producto.categoria)}</dd></span></div>
+            {(producto.presentacion || producto.unidad) && <div><Maximize2 size={27} aria-hidden="true"/><span><dt>{producto.presentacion ? "Presentación" : "Unidad de venta"}</dt><dd>{producto.presentacion || producto.unidad}</dd></span></div>}
             {producto.medidas && <div><Ruler size={23} aria-hidden="true"/><span><dt>Dimensiones</dt><dd>{producto.medidas}</dd></span></div>}
-            {producto.caracteristicas && <div className="lp-ficha-caracteristicas"><Palette size={23} aria-hidden="true"/><span><dt>Características</dt><dd>{producto.caracteristicas}</dd></span></div>}
+            {acabados.length > 0 && <div className="lp-ficha-acabados"><Palette size={27} aria-hidden="true"/><span><dt>Acabados</dt><dd>{acabados.map((acabado, i) => <span key={i}>{acabado}</span>)}</dd></span></div>}
           </dl>
-          {producto.ilustrativo && <p className="text-sm text-slate-600">Referencia ilustrativa</p>}
+          {producto.ilustrativo && <p className="text-sm text-slate-600">{producto.precio != null ? "Ficha y precio ilustrativos" : "Referencia ilustrativa"}</p>}
           <BotonWhatsApp producto={producto} whatsapp={whatsapp} amplio/>
         </div>
       </div>

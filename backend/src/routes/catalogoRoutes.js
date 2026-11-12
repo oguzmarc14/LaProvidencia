@@ -5,7 +5,7 @@ const { autenticar, soloAdmin } = require("../middleware/autenticacion");
 const router = express.Router();
 const admin = express.Router();
 const accesoId = "catalogo";
-const campos = "nombre categoria caracteristicas medidas precio unidad imagenes";
+const campos = "nombre categoria caracteristicas medidas material presentacion acabados precioDesde precio unidad imagenes";
 
 router.use((req, res, next) => {
   res.set("Cache-Control", "no-store");
@@ -33,8 +33,10 @@ admin.get("/productos", async (req, res) => {
 });
 
 async function guardarProducto(req, res) {
-  const { nombre, categoria, caracteristicas, medidas, precio, unidad, estado, imagenes } = req.body || {};
+  const { nombre, categoria, caracteristicas, medidas, precio, unidad, estado, imagenes, material, presentacion, acabados, precioDesde } = req.body || {};
   if (![nombre, categoria, caracteristicas, medidas, unidad, estado].every((valor) => typeof valor === "string") ||
+      [material, presentacion, acabados].some(valor => valor !== undefined && typeof valor !== "string") ||
+      (precioDesde !== undefined && typeof precioDesde !== "boolean") ||
       typeof precio !== "number" || !Number.isFinite(precio) || !Array.isArray(imagenes) ||
       imagenes.some((imagen) => typeof imagen !== "string")) {
     return res.status(400).json({ mensaje: "Revisa el precio y las imágenes." });
@@ -42,7 +44,7 @@ async function guardarProducto(req, res) {
   if (estado === "publicado" && !imagenes.length) {
     return res.status(400).json({ mensaje: "Agrega al menos una foto antes de publicar." });
   }
-  const datos = { nombre, categoria, caracteristicas, medidas, precio, unidad, estado, imagenes };
+  const datos = { nombre, categoria, caracteristicas, medidas, precio, unidad, estado, imagenes, material, presentacion, acabados, precioDesde };
   const id = req.params.id;
   if (id && !/^[a-f0-9]{24}$/i.test(id)) return res.status(400).json({ mensaje: "Producto inválido." });
   try {
