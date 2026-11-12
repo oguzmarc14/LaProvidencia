@@ -521,3 +521,37 @@ html:has(.lp-ficha[open]) { overflow: hidden; }
   html:has(.lp-sitio) { scroll-behavior: auto; }
   .lp-ficha[open] { animation: none; }
 }
+
+.lp-ficha { width: min(calc(100% - 2rem), 1480px); }
+.lp-ficha-contenido {
+  grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr);
+  gap: clamp(1.25rem, 2.5vw, 2.75rem);
+  padding: clamp(1.4rem, 3vw, 2.75rem);
+}
+.lp-ficha-cerrar { width: auto; padding-inline: .8rem; display: flex; gap: .45rem; font-size: .9rem; font-weight: 750; }
+.lp-ficha-galeria { min-width: 0; }
+.lp-ficha-foto .lp-foto-producto { aspect-ratio: 16 / 10; }
+.lp-ficha-miniaturas button { flex: 1; max-width: 34%; }
+.lp-ficha-datos { border-left: 1px solid var(--marca-linea); padding: 0 0 0 clamp(1.25rem, 2.5vw, 2.75rem); gap: 1.25rem; }
+.lp-ficha-datos h3 { padding-right: 5.5rem; font-size: clamp(1.65rem, 3vw, 2.65rem); }
+.lp-ficha-precio { flex-wrap: wrap; gap: .4rem; padding: .65rem 1rem; border-radius: 1rem; background: #fad8ee; }
+.lp-ficha-precio strong { font-size: clamp(1.5rem, 3vw, 2rem); line-height: 1; }
+.lp-ficha-moneda { font-size: .95rem; font-weight: 800; }
+.lp-ficha-descripcion { color: var(--marca-texto); font-size: 1rem; line-height: 1.55; white-space: pre-line; overflow-wrap: anywhere; }
+.lp-ficha-especificaciones { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .9rem; }
+.lp-ficha-especificaciones > div { padding: .55rem 0; background: none; border-radius: 0; }
+.lp-ficha-especificaciones > div:not(:first-child):not(.lp-ficha-acabados) { border-left: 1px solid var(--marca-linea); padding-left: .75rem; }
+.lp-ficha-especificaciones dt { font-size: .9rem; margin-bottom: .25rem; }
+.lp-ficha-especificaciones dd { font-size: 1rem; }
+.lp-ficha-acabados { grid-column: 1 / -1; }
+.lp-ficha-acabados dd { display: flex; flex-wrap: wrap; gap: .45rem; }
+.lp-ficha-acabados dd span { padding: .35rem .75rem; border-radius: 999px; background: #eae1f4; font-size: .85rem; }
+.lp-ficha .lp-whatsapp-amplio { min-height: 3.45rem; font-size: 1.05rem; }
+@media (max-width: 950px) {
+  .lp-ficha-especificaciones { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .lp-ficha-contenido { grid-template-columns: 1fr; padding: 3.6rem 1rem 1rem; }
+  .lp-ficha-datos { padding: 0; border-left: 0; }
+  .lp-ficha-datos h3 { padding-right: 0; }
+}
