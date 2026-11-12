@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowDownRight, ChevronLeft, ChevronRight, Layers3, Maximize2, MessageCircle, Palette, Phone, Ruler, Tag, X } from "lucide-react";
-import { catalogoClientes, categorias, apartadosCatalogo, nombreCategoria, moneda } from "./catalogoService";
+import { catalogoClientes, categorias, apartadosCatalogo, nombreCategoria } from "./catalogoService";
 import PortadaProvidencia from "./PortadaProvidencia";
 import { telefono } from "./datosSitio";
 import fotosEjemplos from "./fotos/ejemplos-catalogo.png";
@@ -33,10 +33,45 @@ const ejemplos = {
   ],
 };
 
-// Las fotos de la lámina siguen el orden de los ejemplos, en tres columnas.
-const posicionesFotos = new Map(Object.values(ejemplos).flat().map(([titulo], indice) => [
-  titulo, `${(indice % 3) * 50}% ${Math.floor(indice / 3) * 25}%`,
-]));
+// Los datos y las fotos siguen el mismo orden que las referencias del catálogo.
+const especificacionesEjemplos = [
+  { precio: 4800, unidad: "m²", material: "Granito natural", presentacion: "Lámina", medidas: "300 × 180 cm · espesor 2 cm", acabados: "Pulido" },
+  { precio: 5900, unidad: "m²", material: "Cuarzo ingenierizado", presentacion: "Lámina", medidas: "323 × 163 cm · espesor 2 o 3 cm", acabados: "Pulido, Mate, Satinado" },
+  { precio: 4400, unidad: "m²", material: "Porcelanato", presentacion: "Lámina", medidas: "320 × 160 cm · espesor 12 mm", acabados: "Mate, Pulido" },
+  { precio: 890, unidad: "m²", material: "Piedra natural", presentacion: "Panel de fachaleta", medidas: "15 × 60 cm por panel", acabados: "Rústico" },
+  { precio: 1180, unidad: "m²", material: "Cantera natural", presentacion: "Placa", medidas: "40 × 60 cm · espesor 2 cm", acabados: "Apomazado, Rústico" },
+  { precio: 760, unidad: "m²", material: "Laja natural", presentacion: "Piezas irregulares", medidas: "Piezas de 20 a 45 cm · espesor variable", acabados: "Natural" },
+  { precio: 2450, unidad: "pieza", material: "Acero inoxidable", presentacion: "Tarja de una cubeta", medidas: "55 × 45 × 20 cm", acabados: "Cepillado" },
+  { precio: 1890, unidad: "pieza", material: "Latón", presentacion: "Monomando para cocina", medidas: "Altura 38 cm · alcance 22 cm", acabados: "Cromado" },
+  { precio: 6200, unidad: "pieza", material: "Acero inoxidable", presentacion: "Campana de pared", medidas: "60 × 48 cm", acabados: "Cepillado" },
+  { precio: 5300, unidad: "pieza", material: "Vidrio templado y metal", presentacion: "Parrilla empotrable de gas", medidas: "60 × 51 cm", acabados: "Negro brillante" },
+  { precio: 1490, unidad: "pieza", material: "Cerámica", presentacion: "Ovalín sobre cubierta", medidas: "48 × 36 × 14 cm", acabados: "Blanco brillante" },
+  { precio: 1790, unidad: "pieza", material: "Latón", presentacion: "Monomando alto para lavabo", medidas: "Altura 30 cm · alcance 16 cm", acabados: "Cromado" },
+  { precio: 1250, unidad: "pieza", material: "Vidrio espejado", presentacion: "Espejo rectangular", medidas: "60 × 80 cm · espesor 5 mm", acabados: "Cantos pulidos" },
+  { precio: 690, unidad: "pieza", material: "Vidrio templado", presentacion: "Repisa rectangular", medidas: "60 × 20 cm · espesor 8 mm", acabados: "Cantos pulidos" },
+  { precio: 3900, unidad: "pieza", material: "Granito natural", presentacion: "Placa con grabado", medidas: "60 × 40 cm · espesor 3 cm", acabados: "Pulido" },
+];
+
+const ejemplosConFicha = new Map();
+const posicionesFotos = new Map();
+let indiceFoto = 0;
+for (const apartado of apartadosCatalogo) {
+  const productos = ejemplos[apartado.id].map(([nombre, caracteristicas]) => {
+    const especificaciones = especificacionesEjemplos[indiceFoto];
+    posicionesFotos.set(nombre, `${(indiceFoto % 3) * 50}% ${Math.floor(indiceFoto / 3) * 25}%`);
+    indiceFoto += 1;
+    return {
+      ...especificaciones,
+      nombre,
+      caracteristicas,
+      categoria: apartado.nombre,
+      precioDesde: true,
+      imagenes: [],
+      ilustrativo: true,
+    };
+  });
+  ejemplosConFicha.set(apartado.id, productos);
+}
 
 const botonOscuro = "inline-flex items-center justify-center gap-3 rounded-full catalogo-boton px-5 py-3 text-sm font-semibold text-white transition-colors hover:brightness-110";
 
@@ -72,7 +107,8 @@ function Tarjeta({ producto, whatsapp, abrir }) {
         <FotoProducto producto={producto}/>
         <div className="lp-producto-texto">
           <h4>{producto.nombre}</h4>
-          {producto.precio != null && <p className="lp-precio">{moneda.format(producto.precio)} MXN / {producto.unidad}</p>}
+          {producto.precio != null && <p className="lp-precio">{producto.precioDesde && "Desde "}{precioFicha.format(producto.precio)} MXN/{producto.unidad}</p>}
+          {producto.ilustrativo && <p className="text-xs text-slate-600">Precio ilustrativo</p>}
           <p className="lp-producto-resumen">{producto.caracteristicas}</p>
         </div>
       </button>
@@ -90,23 +126,9 @@ const precioFicha = new Intl.NumberFormat("es-MX", {
   style: "currency", currency: "MXN", minimumFractionDigits: 0, maximumFractionDigits: 2,
 });
 
-const referenciaCuarzo = {
-  precio: 5900,
-  precioDesde: true,
-  unidad: "m²",
-  material: "Cuarzo ingenierizado",
-  presentacion: "Láminas",
-  medidas: "323 × 163 cm (espesor de 2 o 3 cm)",
-  acabados: "Pulido, Mate, Satinado",
-  caracteristicas: "Cuarzo blanco con vetas sutiles, ilustrado en una cubierta de cocina. El tono y el acabado dependen del modelo.",
-};
-
-function FichaProducto({ producto: seleccionado, whatsapp, cerrar }) {
+function FichaProducto({ producto, whatsapp, cerrar }) {
   const dialogo = useRef(null);
   const [foto, setFoto] = useState(0);
-  const producto = seleccionado.ilustrativo && seleccionado.nombre === "Cuarzo blanco veteado"
-    ? { ...seleccionado, ...referenciaCuarzo }
-    : seleccionado;
   const acabados = (producto.acabados ?? "").split(",").map(acabado => acabado.trim()).filter(Boolean);
   const total = producto.imagenes.length;
   const mover = paso => setFoto(actual => (actual + paso + total) % total);
@@ -243,11 +265,10 @@ export default function CatalogoClientes({ abrirCatalogo = false }) {
                     </div>
                   </div>)}
                   <h4 className="mb-2 text-lg font-bold">Ejemplos para tu proyecto</h4>
-                  <p className="mb-4 text-sm text-[var(--marca-texto)]">Referencias ilustrativas para cotizar tu proyecto.</p>
+                  <p className="mb-4 text-sm text-[var(--marca-texto)]">Referencias con precios y medidas ilustrativos. Solicita una cotización para tu proyecto.</p>
                   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {ejemplos[id].map(([titulo, detalle]) => (
-                      <Tarjeta key={titulo} producto={{ nombre: titulo, caracteristicas: detalle, categoria: nombre, imagenes: [], ilustrativo: true }}
-                        whatsapp={whatsapp} abrir={setProductoAbierto}/>
+                    {ejemplosConFicha.get(id).map(producto => (
+                      <Tarjeta key={producto.nombre} producto={producto} whatsapp={whatsapp} abrir={setProductoAbierto}/>
                     ))}
                   </div>
                 </section>
