@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { ArrowDownRight, ArrowUpRight } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowDownRight, ChevronLeft, ChevronRight, Layers3, Maximize2, MessageCircle, Palette, Phone, Ruler, Tag, X } from "lucide-react";
 import { catalogoClientes, categorias, apartadosCatalogo, nombreCategoria, moneda } from "./catalogoService";
 import PortadaProvidencia from "./PortadaProvidencia";
 import { telefono } from "./datosSitio";
@@ -44,28 +44,89 @@ function whatsappUrl(numero, mensaje) {
   return `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`;
 }
 
-function Tarjeta({ producto, whatsapp }) {
-  const [foto, setFoto] = useState(0);
+function BotonWhatsApp({ producto, whatsapp, amplio = false }) {
   return (
-    <article className="flex h-full flex-col overflow-hidden rounded-2xl border border-[var(--marca-linea)] bg-white">
-      <img className="aspect-[4/3] w-full bg-[var(--marca-suave)] object-contain" src={producto.imagenes[foto]} alt={`${producto.nombre}, foto ${foto + 1}`} loading="lazy" />
-      <div className="flex flex-1 flex-col gap-3 p-5">
-        {producto.imagenes.length > 1 && (
-          <div className="flex gap-2">
-            {producto.imagenes.map((imagen, i) => (
-              <button key={i} type="button" aria-pressed={foto === i} aria-label={`Ver foto ${i + 1}`} onClick={() => setFoto(i)} className={`overflow-hidden rounded-lg border-2 ${foto === i ? "border-[var(--marca-azul)]" : "border-transparent"}`}>
-                <img src={imagen} alt="" className="h-12 w-16 object-cover" loading="lazy" />
-              </button>
-            ))}
-          </div>
-        )}
-        <h4 className="font-serif text-2xl text-[var(--marca-oscuro)]">{producto.nombre}</h4>
-        <p className="font-bold text-[var(--marca-oscuro)]">{moneda.format(producto.precio)} MXN <span className="text-sm font-normal text-[var(--marca-texto)]">/ {producto.unidad}</span></p>
-        {producto.medidas && <p className="text-sm font-medium text-[var(--marca-texto)]">Medidas · {producto.medidas}</p>}
-        {producto.caracteristicas && <p className="whitespace-pre-line text-sm text-[var(--marca-texto)]">{producto.caracteristicas}</p>}
-        {whatsapp && <a className="mt-auto inline-flex w-fit items-center gap-2 pt-2 text-sm font-bold text-[var(--marca-acento)] hover:underline" href={whatsappUrl(whatsapp, `Hola, me interesa cotizar: ${producto.nombre}.`)} target="_blank" rel="noreferrer">Cotizar producto <ArrowUpRight size={16} aria-hidden="true" /></a>}
-      </div>
+    <a className={`lp-whatsapp ${amplio ? "lp-whatsapp-amplio" : ""}`}
+      href={whatsappUrl(whatsapp, `Hola, me interesa cotizar: ${producto.nombre}.`)}
+      target="_blank" rel="noreferrer" aria-label={`Cotizar ${producto.nombre} por WhatsApp`}>
+      <span className="lp-whatsapp-icono" aria-hidden="true"><MessageCircle size={26}/><Phone size={12}/></span>
+      {amplio && "Cotizar por WhatsApp"}
+    </a>
+  );
+}
+
+function FotoProducto({ producto, indice = 0 }) {
+  if (producto.ilustrativo) return (
+    <div className="lp-foto-ejemplo" role="img" aria-label={`Imagen ilustrativa de ${producto.nombre.toLowerCase()}`}
+      style={{ backgroundImage: `url("${fotosEjemplos}")`, backgroundPosition: posicionesFotos.get(producto.nombre) }}/>
+  );
+  const imagen = producto.imagenes[indice];
+  return imagen ? <img className="lp-foto-producto" src={imagen} alt={`${producto.nombre}, foto ${indice + 1}`} loading="lazy"/> : null;
+}
+
+function Tarjeta({ producto, whatsapp, abrir }) {
+  return (
+    <article className="lp-producto">
+      <button className="lp-producto-abrir" type="button" onClick={() => abrir(producto)}
+        aria-label={`Ver detalles de ${producto.nombre}`} aria-haspopup="dialog">
+        <FotoProducto producto={producto}/>
+        <div className="lp-producto-texto">
+          <h4>{producto.nombre}</h4>
+          {producto.precio != null && <p className="lp-precio">{moneda.format(producto.precio)} MXN / {producto.unidad}</p>}
+          <p className="lp-producto-resumen">{producto.caracteristicas}</p>
+        </div>
+      </button>
+      <div className="lp-producto-acciones"><BotonWhatsApp producto={producto} whatsapp={whatsapp}/></div>
     </article>
+  );
+}
+
+function FichaProducto({ producto, whatsapp, cerrar }) {
+  const dialogo = useRef(null);
+  const [foto, setFoto] = useState(0);
+  const total = producto.imagenes.length;
+  const mover = paso => setFoto(actual => (actual + paso + total) % total);
+  useEffect(() => {
+    const elemento = dialogo.current;
+    elemento.showModal();
+    return () => elemento.close();
+  }, []);
+  return (
+    <dialog ref={dialogo} className="lp-ficha" aria-labelledby="lp-ficha-titulo"
+      onCancel={cerrar} onClick={e => { if (e.target === e.currentTarget) cerrar(); }}
+      onKeyDown={e => {
+        if (total < 2) return;
+        if (e.key === "ArrowLeft") mover(-1);
+        if (e.key === "ArrowRight") mover(1);
+      }}>
+      <div className="lp-ficha-contenido">
+        <button type="button" className="lp-ficha-cerrar" aria-label="Cerrar ficha" onClick={cerrar}><X size={22}/></button>
+        <div className="lp-ficha-galeria">
+          <div className="lp-ficha-foto">
+            <FotoProducto producto={producto} indice={foto}/>
+            {total > 1 && <>
+              <button type="button" className="lp-ficha-anterior" aria-label="Foto anterior" onClick={() => mover(-1)}><ChevronLeft/></button>
+              <button type="button" className="lp-ficha-siguiente" aria-label="Foto siguiente" onClick={() => mover(1)}><ChevronRight/></button>
+            </>}
+          </div>
+          {total > 1 && <div className="lp-ficha-miniaturas">
+            {producto.imagenes.map((imagen, i) => <button key={i} type="button" aria-label={`Ver foto ${i + 1}`} aria-pressed={foto === i} onClick={() => setFoto(i)}><img src={imagen} alt=""/></button>)}
+          </div>}
+        </div>
+        <div className="lp-ficha-datos">
+          <h3 id="lp-ficha-titulo">{producto.nombre}</h3>
+          {producto.precio != null && <p className="lp-ficha-precio"><Tag size={19} aria-hidden="true"/> {moneda.format(producto.precio)} MXN / {producto.unidad}</p>}
+          <dl className="lp-ficha-especificaciones">
+            <div><Layers3 size={23} aria-hidden="true"/><span><dt>Categoría</dt><dd>{nombreCategoria(producto.categoria)}</dd></span></div>
+            {producto.unidad && <div><Maximize2 size={23} aria-hidden="true"/><span><dt>Unidad de venta</dt><dd>{producto.unidad}</dd></span></div>}
+            {producto.medidas && <div><Ruler size={23} aria-hidden="true"/><span><dt>Dimensiones</dt><dd>{producto.medidas}</dd></span></div>}
+            {producto.caracteristicas && <div className="lp-ficha-caracteristicas"><Palette size={23} aria-hidden="true"/><span><dt>Características</dt><dd>{producto.caracteristicas}</dd></span></div>}
+          </dl>
+          {producto.ilustrativo && <p className="text-sm text-slate-600">Referencia ilustrativa</p>}
+          <BotonWhatsApp producto={producto} whatsapp={whatsapp} amplio/>
+        </div>
+      </div>
+    </dialog>
   );
 }
 
@@ -73,6 +134,20 @@ export default function CatalogoClientes({ abrirCatalogo = false }) {
   const [catalogo, setCatalogo] = useState(null);
   const [error, setError] = useState("");
   const [intento, setIntento] = useState(0);
+  const [productoAbierto, setProductoAbierto] = useState(null);
+  const [apartadoActivo, setApartadoActivo] = useState("");
+
+  useEffect(() => {
+    const observador = new IntersectionObserver(entradas => {
+      const visible = entradas.find(entrada => entrada.isIntersecting);
+      if (visible) setApartadoActivo(visible.target.id);
+    }, { rootMargin: "-25% 0px -60% 0px" });
+    for (const { id } of apartadosCatalogo) {
+      const elemento = document.getElementById(id);
+      if (elemento) observador.observe(elemento);
+    }
+    return () => observador.disconnect();
+  }, []);
 
   useEffect(() => {
     const titulo = document.title;
@@ -120,40 +195,29 @@ export default function CatalogoClientes({ abrirCatalogo = false }) {
           </div>
         )}
           <>
-            <nav aria-label="Secciones del catálogo" className="mb-9 mt-6 flex flex-wrap gap-2">
+            <nav aria-label="Secciones del catálogo" className="lp-catalogo-nav">
               {apartados.map(({ nombre, id }) => (
-                <a key={id} href={`#${id}`} className="inline-flex items-center gap-2 rounded-full border border-[var(--marca-linea)] bg-white px-4 py-2 text-sm font-semibold hover:bg-[var(--marca-suave)]">{nombre} <ArrowDownRight size={14} aria-hidden="true" /></a>
+                <a key={id} href={`#${id}`} aria-current={apartadoActivo === id ? "location" : undefined} onClick={() => setApartadoActivo(id)}>{nombre} <ArrowDownRight size={14} aria-hidden="true" /></a>
               ))}
             </nav>
             <div className="space-y-14 sm:space-y-20">
               {apartados.map(({ nombre, id, descripcion, secciones: subsecciones }) => (
-                <section key={id} id={id} aria-labelledby={`${id}-titulo`} className="scroll-mt-32 md:scroll-mt-24">
+                <section key={id} id={id} aria-labelledby={`${id}-titulo`} className="lp-catalogo-apartado">
                   <h3 id={`${id}-titulo`} className="mb-5 border-t border-[var(--marca-linea)] pt-8 font-serif text-3xl sm:pt-12">{nombre}</h3>
                   <p className="mb-4 text-sm text-[var(--marca-texto)]">{descripcion}</p>
                   <div className="mb-6 flex flex-wrap gap-2">{subsecciones.map(s => <span key={s.id} className="rounded-full bg-[var(--marca-suave)] px-3 py-1.5 text-xs font-semibold text-[var(--marca-oscuro)]">{nombreCategoria(s.nombre)}</span>)}</div>
                   {subsecciones.filter(s => s.productos.length).map(s => <div key={s.id} className="mb-7">
                     <h4 className="mb-4 text-lg font-bold text-[var(--marca-oscuro)]">{nombreCategoria(s.nombre)}</h4>
                     <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                      {s.productos.map(producto => <Tarjeta key={producto._id} producto={producto} whatsapp={whatsapp}/>)}
+                      {s.productos.map(producto => <Tarjeta key={producto._id} producto={producto} whatsapp={whatsapp} abrir={setProductoAbierto}/>)}
                     </div>
                   </div>)}
                   <h4 className="mb-2 text-lg font-bold">Ejemplos para tu proyecto</h4>
-                  <p className="mb-4 text-sm text-[var(--marca-texto)]">Referencias ilustrativas. Consulta modelos, precios y disponibilidad.</p>
+                  <p className="mb-4 text-sm text-[var(--marca-texto)]">Referencias ilustrativas para cotizar tu proyecto.</p>
                   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {ejemplos[id].map(([titulo, detalle]) => (
-                      <article key={titulo} className="flex flex-col overflow-hidden rounded-2xl border border-[var(--marca-linea)] bg-[var(--marca-fondo)]">
-                        <div
-                          className="aspect-[5/2] bg-[var(--marca-suave)]"
-                          role="img"
-                          aria-label={`Imagen ilustrativa de ${titulo.toLowerCase()}`}
-                          style={{ backgroundImage: `url("${fotosEjemplos}")`, backgroundSize: "300% 500%", backgroundPosition: posicionesFotos.get(titulo) }}
-                        />
-                        <div className="flex flex-1 flex-col gap-3 p-5">
-                        <h5 className="text-lg font-bold">{titulo}</h5>
-                        <p className="text-sm text-[var(--marca-texto)]">{detalle}</p>
-                        <a className="mt-auto text-sm font-bold text-[var(--marca-acento)] hover:underline" href={whatsappUrl(whatsapp, `Hola, me interesa consultar por: ${titulo}.`)} target="_blank" rel="noreferrer">Consultar por WhatsApp <ArrowUpRight className="inline" size={15} aria-hidden="true"/></a>
-                        </div>
-                      </article>
+                      <Tarjeta key={titulo} producto={{ nombre: titulo, caracteristicas: detalle, categoria: nombre, imagenes: [], ilustrativo: true }}
+                        whatsapp={whatsapp} abrir={setProductoAbierto}/>
                     ))}
                   </div>
                 </section>
@@ -162,6 +226,7 @@ export default function CatalogoClientes({ abrirCatalogo = false }) {
           </>
       </div>
     </section>
+    {productoAbierto && <FichaProducto producto={productoAbierto} whatsapp={whatsapp} cerrar={() => setProductoAbierto(null)}/>}
     </PortadaProvidencia>
   );
 }
