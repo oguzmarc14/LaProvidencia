@@ -12,3 +12,9 @@ export const registrarLlegada = (datos) => solicitar("/", {
 export const registrarSalida = (datos) => solicitar("/salida", {
   method: "POST", body: JSON.stringify(datos),
 });
+
+export const obtenerMisRegistros = (periodo, fecha, signal) => {
+  const consulta = new URLSearchParams({ periodo });
+  if (fecha) consulta.set("fecha", fecha);
+  return solicitar(`/mis-registros?${consulta}`, { signal });
+};

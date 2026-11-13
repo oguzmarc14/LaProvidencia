@@ -138,3 +138,24 @@ test("un cambio de contraseña invalida los tokens de la versión anterior", asy
   vincular({ versionSesion: 1 });
   assert.equal((await solicitar("/auth/me")).status, 401);
 });
+
+test("el historial personal limita semana y mes a la ficha autenticada", async () => {
+  vincular();
+  for (const [periodo, desde, hasta] of [
+    ["semana", "2025-02-24", "2025-03-02"],
+    ["mes", "2025-02-01", "2025-02-28"],
+  ]) {
+    comprobarConsulta(Asistencia, { trabajador, fecha: { $gte: desde, $lte: hasta } }, {
+      fecha: "2025-02-26", llegada: "2025-02-26T15:00:00Z", latitud: 21,
+    });
+    const respuesta = await solicitar(`/asistencias/mis-registros?periodo=${periodo}&fecha=2025-02-26&trabajador=${otraFicha}`);
+    assert.equal(respuesta.status, 200);
+    const datos = await respuesta.json();
+    assert.equal(datos.desde, desde);
+    assert.equal(datos.hasta, hasta);
+    assert.equal(datos.asistencias.length, 1);
+    assert.equal(datos.asistencias[0].latitud, undefined);
+    Asistencia.find.mock.restore();
+  }
+  assert.equal((await solicitar("/asistencias/mis-registros?fecha=2025-02-30")).status, 400);
+});

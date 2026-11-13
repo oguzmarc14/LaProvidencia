@@ -30,6 +30,32 @@ router.get("/historial", soloAdmin, async (req, res) => {
   }
 });
 
+router.get("/mis-registros", async (req, res) => {
+  if (req.usuario.rol !== "usuario") {
+    return res.status(403).json({ mensaje: "Esta consulta es para trabajadores activos" });
+  }
+  const { periodo = "semana", fecha = fechaLocal() } = req.query;
+  if (!["semana", "mes"].includes(periodo) || typeof fecha !== "string" ||
+      !/^\d{4}-\d{2}-\d{2}$/.test(fecha) || !Number.isFinite(Date.parse(fecha)) ||
+      new Date(fecha).toISOString().slice(0, 10) !== fecha || fecha > fechaLocal()) {
+    return res.status(400).json({ mensaje: "Selecciona un periodo y una fecha válidos" });
+  }
+
+  const inicio = new Date(fecha);
+  inicio.setUTCDate(periodo === "mes" ? 1 : inicio.getUTCDate() - ((inicio.getUTCDay() + 6) % 7));
+  const fin = new Date(inicio);
+  if (periodo === "mes") fin.setUTCMonth(fin.getUTCMonth() + 1, 0);
+  else fin.setUTCDate(fin.getUTCDate() + 6);
+
+  const desde = inicio.toISOString().slice(0, 10);
+  const hasta = fin.toISOString().slice(0, 10);
+  const asistencias = await Asistencia.find({
+    trabajador: req.usuario.trabajador,
+    fecha: { $gte: desde, $lte: hasta },
+  }).select("fecha llegada salida").sort({ fecha: -1 }).lean();
+  res.json({ desde, hasta, zonaHoraria: zona.zonaHoraria, asistencias });
+});
+
 router.get("/hoy", async (req, res) => {
   try {
     const fecha = fechaLocal();
