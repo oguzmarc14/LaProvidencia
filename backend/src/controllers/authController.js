@@ -5,6 +5,7 @@ const Usuario = require("../models/Usuario");
 
 const DURACION_TOKEN = "12h";
 const MINIMO_PASSWORD = 12;
+const MINIMO_PASSWORD_ALTA = 8;
 const correoValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const crearToken = (usuario) =>
@@ -62,9 +63,9 @@ const crearUsuario = async (req, res, next) => {
     const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
     const password = typeof req.body?.password === "string" ? req.body.password : "";
 
-    if (!correoValido.test(email) || email.length > 254 || password.length < MINIMO_PASSWORD || password.length > 128) {
+    if (!correoValido.test(email) || email.length > 254 || password.length < MINIMO_PASSWORD_ALTA || password.length > 128) {
       return res.status(400).json({
-        mensaje: `Ingresa un correo válido y una contraseña de entre ${MINIMO_PASSWORD} y 128 caracteres`,
+        mensaje: `Ingresa un correo válido y una contraseña de entre ${MINIMO_PASSWORD_ALTA} y 128 caracteres`,
       });
     }
 

@@ -75,7 +75,7 @@ test("solo el administrador puede crear usuarios y el rol no se acepta del clien
     select: async () => id === admin._id ? admin : usuario,
   }));
   mock.method(bcrypt, "hash", async (password, saltos) => {
-    assert.equal(password, "contraseña-de-prueba");
+    assert.equal(password, "Clave8!x");
     assert.equal(saltos, 12);
     return "hash-seguro";
   });
@@ -96,14 +96,14 @@ test("solo el administrador puede crear usuarios y el rol no se acepta del clien
   const noAdmin = await solicitar("/auth/users", {
     method: "POST",
     persona: usuario,
-    body: JSON.stringify({ email: usuario.email, password: "contraseña-de-prueba", trabajador: ficha, rol: "superadmin" }),
+    body: JSON.stringify({ email: usuario.email, password: "Clave8!x", trabajador: ficha, rol: "superadmin" }),
   });
   assert.equal(noAdmin.status, 403);
 
   const creado = await solicitar("/auth/users", {
     method: "POST",
     persona: admin,
-    body: JSON.stringify({ email: usuario.email, password: "contraseña-de-prueba", trabajador: ficha, rol: "superadmin" }),
+    body: JSON.stringify({ email: usuario.email, password: "Clave8!x", trabajador: ficha, rol: "superadmin" }),
   });
   assert.equal(creado.status, 201);
   assert.deepEqual((await creado.json()).usuario, {
@@ -120,7 +120,7 @@ test("el endpoint para crear usuarios rechaza contraseñas débiles", async () =
   const respuesta = await solicitar("/auth/users", {
     method: "POST",
     persona: admin,
-    body: JSON.stringify({ email: "nuevo@empresa.com", password: "corta" }),
+    body: JSON.stringify({ email: "nuevo@empresa.com", password: "Clave7!" }),
   });
   assert.equal(respuesta.status, 400);
 });
@@ -191,7 +191,7 @@ test("el cambio de contraseña admin rechaza IDs inválidos y contraseñas débi
   const passwordDebil = await solicitar(`/auth/users/${usuario._id}/password`, {
     method: "PATCH",
     persona: admin,
-    body: JSON.stringify({ password: "corta" }),
+    body: JSON.stringify({ password: "Clave7!" }),
   });
   assert.equal(passwordDebil.status, 400);
 });

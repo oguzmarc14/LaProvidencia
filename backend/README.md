@@ -42,7 +42,7 @@ Todas las rutas bajo `/api/trabajos`, `/api/clientes`, `/api/trabajadores` y
 | PATCH | `/api/auth/users/:id/password` | Solo administrador | Cambia la contraseña de un usuario y obliga a renovarla al iniciar sesión. |
 | POST | `/api/auth/change-password` | Sesión válida | Cambia la contraseña actual. |
 
-Para crear o vincular un acceso, envía `email`, `password` (mínimo 12 caracteres)
+Para crear o vincular un acceso, envía `email`, `password` (mínimo 8 caracteres)
 y `trabajador` (ID de su ficha) como JSON a `/api/auth/users`. Cada ficha admite
 una sola cuenta. Las cuentas nuevas y las contraseñas restablecidas deben
 renovarse en el primer inicio de sesión.
