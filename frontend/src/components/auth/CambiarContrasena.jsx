@@ -1,6 +1,28 @@
-import { useState } from "react";
-import { LockKeyhole } from "lucide-react";
+import { useId, useState } from "react";
+import { Eye, EyeOff, LockKeyhole } from "lucide-react";
 import BrandMark from "../BrandMark";
+
+function CampoContrasena({ etiqueta, candado = false, ...input }) {
+  const id = useId();
+  const [visible, setVisible] = useState(false);
+  const Icono = visible ? EyeOff : Eye;
+
+  return (
+    <div>
+      <label className="app-label" htmlFor={id}>{etiqueta}</label>
+      <div className="relative">
+        {candado && <LockKeyhole className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} aria-hidden="true" />}
+        <input {...input} id={id} className="app-field" style={{ paddingRight: "3.25rem", ...(candado && { paddingLeft: "2.875rem" }) }}
+          type={visible ? "text" : "password"} required />
+        <button type="button" aria-label={`${visible ? "Ocultar" : "Mostrar"} ${etiqueta.toLowerCase()}`}
+          aria-controls={id} onClick={() => setVisible(actual => !actual)}
+          className="absolute right-1 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-700">
+          <Icono size={19} aria-hidden="true" />
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function CambiarContrasena({ alCambiar, temporal = true, minimo = 12, alCancelar }) {
   const [contrasenaActual, setContrasenaActual] = useState("");
@@ -38,21 +60,13 @@ export default function CambiarContrasena({ alCambiar, temporal = true, minimo =
             <p className="mt-2 text-sm text-slate-500">{temporal ? "La clave temporal ya no podrá usarse después de este paso." : "Confirma tu contraseña actual para elegir otra."}</p>
           </div>
           {error && <p role="alert" className="rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p>}
-          <label className="block">
-            <span className="app-label">Contraseña actual</span>
-            <span className="relative block">
-              <LockKeyhole className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} aria-hidden="true"/>
-              <input className="app-field pl-10" type="password" autoComplete="current-password" required value={contrasenaActual} onChange={(evento) => setContrasenaActual(evento.target.value)} placeholder={temporal ? "Contraseña temporal" : "Contraseña actual"}/>
-            </span>
-          </label>
-          <label className="block">
-            <span className="app-label">Nueva contraseña</span>
-            <input className="app-field" type="password" autoComplete="new-password" required minLength={minimo} maxLength={128} value={contrasenaNueva} onChange={(evento) => setContrasenaNueva(evento.target.value)} placeholder={`Mínimo ${minimo} caracteres`}/>
-          </label>
-          <label className="block">
-            <span className="app-label">Confirma la nueva contraseña</span>
-            <input className="app-field" type="password" autoComplete="new-password" required minLength={minimo} maxLength={128} value={confirmacion} onChange={(evento) => setConfirmacion(evento.target.value)} placeholder="Repite tu nueva contraseña"/>
-          </label>
+          <CampoContrasena etiqueta="Contraseña actual" candado autoComplete="current-password"
+            value={contrasenaActual} onChange={evento => setContrasenaActual(evento.target.value)}
+            placeholder={temporal ? "Contraseña temporal" : "Contraseña actual"} />
+          <CampoContrasena etiqueta="Nueva contraseña" autoComplete="new-password" minLength={minimo} maxLength={128}
+            value={contrasenaNueva} onChange={evento => setContrasenaNueva(evento.target.value)} placeholder={`Mínimo ${minimo} caracteres`} />
+          <CampoContrasena etiqueta="Confirma la nueva contraseña" autoComplete="new-password" minLength={minimo} maxLength={128}
+            value={confirmacion} onChange={evento => setConfirmacion(evento.target.value)} placeholder="Repite tu nueva contraseña" />
           <button className="app-primary w-full rounded-xl px-5 py-3 font-semibold disabled:opacity-60" disabled={cargando} type="submit">
             {cargando ? "Actualizando..." : "Guardar contraseña"}
           </button>
