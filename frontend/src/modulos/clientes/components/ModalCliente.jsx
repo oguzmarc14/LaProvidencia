@@ -34,7 +34,7 @@ export default function ModalCliente({ cliente, guardar, cerrar, guardando }) {
           </div>
           <footer className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-white px-5 py-5 sm:px-8">
             <span className="hidden items-center gap-2 text-sm font-medium text-slate-500 sm:flex"><CheckCircle2 size={18} className="text-emerald-600"/> Los campos con * son obligatorios</span>
-            <div className="ml-auto flex gap-3"><button type="button" onClick={cerrar} className="rounded-xl border-2 border-slate-200 px-5 py-3 font-bold text-slate-700 hover:bg-slate-50">Cancelar</button><button type="submit" disabled={guardando || !form.nombre.trim()} className="rounded-xl bg-gradient-to-r from-[#124B91] to-[#64417c] px-6 py-3 font-extrabold text-white shadow-lg shadow-blue-900/20 transition hover:brightness-110 disabled:opacity-50">{guardando ? "Guardando..." : cliente ? "Guardar cambios" : "Registrar cliente"}</button></div>
+            <div className="ml-auto grid w-full gap-3 sm:flex sm:w-auto"><button type="button" onClick={cerrar} className="accion-ancho-movil rounded-xl border-2 border-slate-200 px-5 py-3 font-bold text-slate-700 hover:bg-slate-50">Cancelar</button><button type="submit" disabled={guardando || !form.nombre.trim()} className="accion-ancho-movil rounded-xl bg-gradient-to-r from-[#124B91] to-[#64417c] px-6 py-3 font-extrabold text-white shadow-lg shadow-blue-900/20 transition hover:brightness-110 disabled:opacity-50">{guardando ? "Guardando..." : cliente ? "Guardar cambios" : "Registrar cliente"}</button></div>
           </footer>
         </form>
       </div>

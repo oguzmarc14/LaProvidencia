@@ -45,8 +45,8 @@ export default function DetalleCliente({ cliente, onClose, onEditar, onNuevoTrab
         </div>
         <div className="flex flex-wrap gap-2">
           {whatsapp ? <a href={whatsapp + "?text=" + encodeURIComponent(`Hola, ${cliente.nombre}. Te contactamos de La Providencia.`)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-700"><MessageCircle size={17}/> Enviar WhatsApp</a> : <span className="rounded-xl bg-slate-100 px-4 py-3 text-sm text-slate-500">Sin WhatsApp válido</span>}
-          {onNuevoTrabajo && <button onClick={() => onNuevoTrabajo(cliente)} className="inline-flex items-center gap-2 rounded-xl bg-[#124B91] px-4 py-3 text-sm font-bold text-white hover:bg-blue-900"><Plus size={17}/> Nuevo trabajo</button>}
-          {onEditar && <button onClick={() => onEditar(cliente)} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50"><Pencil size={17}/> Editar</button>}
+          {onNuevoTrabajo && <button onClick={() => onNuevoTrabajo(cliente)} className="accion-ancho-movil inline-flex items-center gap-2 rounded-xl bg-[#124B91] px-4 py-3 text-sm font-bold text-white hover:bg-blue-900"><Plus size={17}/> Nuevo trabajo</button>}
+          {onEditar && <button onClick={() => onEditar(cliente)} className="accion-ancho-movil inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50"><Pencil size={17}/> Editar</button>}
         </div>
         <div className="space-y-3 rounded-2xl border border-slate-200 p-4">
           <h3 className="font-extrabold text-slate-900">Información de contacto</h3>

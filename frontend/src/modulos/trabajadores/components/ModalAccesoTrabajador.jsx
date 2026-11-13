@@ -63,7 +63,7 @@ export default function ModalAccesoTrabajador({ trabajador, alCerrar }) {
             <input className="app-field" type="password" required minLength={8} maxLength={128}
               autoComplete="new-password" value={password} onChange={(evento) => setPassword(evento.target.value)}/>
           </label>
-          <button className="app-primary rounded-xl px-4 py-3 font-bold disabled:opacity-60" disabled={guardando}>
+          <button className="accion-ancho-movil app-primary rounded-xl px-4 py-3 font-bold disabled:opacity-60" disabled={guardando}>
             {guardando ? "Guardando..." : cuenta ? "Restablecer contraseña" : "Crear acceso"}
           </button>
         </form>

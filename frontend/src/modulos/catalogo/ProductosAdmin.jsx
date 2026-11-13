@@ -43,10 +43,10 @@ export default function ProductosAdmin({ editar, nuevo }) {
     <header className="flex flex-wrap items-center justify-between gap-5 rounded-[28px] bg-gradient-to-r from-[#123e83] via-[#513d79] to-[#a13f65] p-6 text-white shadow-lg sm:p-9">
       <h1 className="text-3xl font-extrabold">Productos</h1>
       <div className="grid w-full gap-2 sm:flex sm:w-auto">
-      <button type="button" onClick={nuevo} className="rounded-xl bg-white px-5 py-3 text-center font-bold text-[#123e83] hover:bg-blue-50">
+      <button type="button" onClick={nuevo} className="accion-ancho-movil rounded-xl bg-white px-5 py-3 text-center font-bold text-[#123e83] hover:bg-blue-50">
         Nuevo producto
       </button>
-      <a href={enlaceCatalogo} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 border border-white/40 hover:bg-white/15 rounded-xl px-5 py-3 font-bold">
+      <a href={enlaceCatalogo} target="_blank" rel="noreferrer" className="accion-ancho-movil inline-flex items-center justify-center gap-2 border border-white/40 hover:bg-white/15 rounded-xl px-5 py-3 font-bold">
         Ver catálogo público <ArrowUpRight size={18} aria-hidden="true" />
       </a>
       </div>
@@ -83,14 +83,14 @@ export default function ProductosAdmin({ editar, nuevo }) {
                 <div key={titulo}><dt className="inline font-semibold">{titulo} </dt><dd className="inline">{valor}</dd></div>
               ))}
             </dl>
-            <div className="mt-auto grid grid-cols-2 gap-2 border-t border-slate-100 pt-4">
-            <button type="button" onClick={() => editar(producto)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2 font-semibold text-blue-800 hover:bg-blue-50">
+            <div className="mt-auto grid grid-cols-1 gap-2 border-t sm:grid-cols-2 border-slate-100 pt-4">
+            <button type="button" onClick={() => editar(producto)} className="accion-ancho-movil inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2 font-semibold text-blue-800 hover:bg-blue-50">
               <Pencil size={16} aria-hidden="true" /> Editar
             </button>
             <button type="button" onClick={() => setAlerta({
               tipo: "danger", titulo: "¿Eliminar producto?", confirmarTexto: "Eliminar producto", producto,
               mensaje: `Se eliminará «${producto.nombre}» del sistema y del catálogo. Esta acción es permanente.`,
-            })} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-rose-200 px-4 py-2 font-semibold text-rose-700 hover:bg-rose-50">
+            })} className="accion-ancho-movil inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-rose-200 px-4 py-2 font-semibold text-rose-700 hover:bg-rose-50">
               <Trash2 size={16} aria-hidden="true" /> Eliminar
             </button>
             </div>

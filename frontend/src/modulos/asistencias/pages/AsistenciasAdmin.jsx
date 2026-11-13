@@ -65,7 +65,7 @@ export default function AsistenciasAdmin() {
         <input id="buscar-asistencias" type="search" className="app-field" value={busqueda} onChange={e => setBusqueda(e.target.value)} placeholder="Nombre del trabajador"/>
       </label>
       <button type="button" onClick={() => setFecha(hoy())} className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-bold text-[#124B91]">Hoy</button>
-      <button type="button" disabled={cargando || !fecha} onClick={() => setActualizacion(valor => valor + 1)} className="app-primary inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold disabled:opacity-50">
+      <button type="button" disabled={cargando || !fecha} onClick={() => setActualizacion(valor => valor + 1)} className="accion-ancho-movil app-primary inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold disabled:opacity-50">
         <RefreshCw size={17} className={cargando ? "animate-spin" : ""}/> Actualizar
       </button>
     </div>

@@ -93,3 +93,15 @@ button:disabled { cursor: not-allowed; }
     flex-shrink: 0;
   }
 }
+
+@media (max-width: 639px) {
+  .acciones-moviles .accion-ancho-movil {
+    display: flex;
+    inline-size: 100%;
+    min-block-size: 44px;
+    flex: 0 0 100%;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+}

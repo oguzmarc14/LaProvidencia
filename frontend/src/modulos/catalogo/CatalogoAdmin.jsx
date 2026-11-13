@@ -135,7 +135,7 @@ export default function CatalogoAdmin({ productoInicial, verProductos }) {
   return (
     <section className="mx-auto max-w-6xl space-y-5 p-4 sm:p-6">
       <div className="flex justify-center sm:justify-end">
-        <button type="button" onClick={copiarCatalogo} className="app-primary inline-flex w-full items-center justify-center gap-2 sm:w-auto rounded-xl px-4 py-3 text-sm font-bold">
+        <button type="button" onClick={copiarCatalogo} className="accion-ancho-movil app-primary inline-flex w-full items-center justify-center gap-2 sm:w-auto rounded-xl px-4 py-3 text-sm font-bold">
           <Copy size={17} aria-hidden="true" /> Copiar catálogo
         </button>
       </div>
@@ -202,10 +202,10 @@ export default function CatalogoAdmin({ productoInicial, verProductos }) {
             <p className="text-sm text-slate-600">Agrega al menos una foto para publicar.</p>
           </div>
           <div className="grid gap-3 sm:flex sm:flex-wrap border-t border-slate-200 pt-5 lg:col-span-2">
-            <button className="app-primary rounded-xl px-5 py-3 font-bold" disabled={!form.imagenes.length}>
+            <button className="accion-ancho-movil app-primary rounded-xl px-5 py-3 font-bold" disabled={!form.imagenes.length}>
               {ocupado ? "Procesando…" : "Publicar producto"}
             </button>
-            {form._id && <button type="button" className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-bold text-blue-800" onClick={verProductos}>Cancelar edición</button>}
+            {form._id && <button type="button" className="accion-ancho-movil rounded-xl border border-slate-200 px-4 py-3 text-sm font-bold text-blue-800" onClick={verProductos}>Cancelar edición</button>}
           </div>
         </fieldset>
       </form>
