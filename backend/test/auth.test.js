@@ -163,7 +163,7 @@ test("solo el administrador puede cambiar la contraseña de una cuenta de usuari
     return { ...usuario, ...cambio.$set };
   });
   mock.method(bcrypt, "hash", async (password, saltos) => {
-    assert.equal(password, "nueva-clave-temporal");
+    assert.equal(password, "Clave8!x");
     assert.equal(saltos, 12);
     return "hash-nuevo";
   });
@@ -171,7 +171,7 @@ test("solo el administrador puede cambiar la contraseña de una cuenta de usuari
   const respuesta = await solicitar(`/auth/users/${usuario._id}/password`, {
     method: "PATCH",
     persona: admin,
-    body: JSON.stringify({ password: "nueva-clave-temporal" }),
+    body: JSON.stringify({ password: "Clave8!x" }),
   });
   assert.equal(respuesta.status, 200);
   assert.equal((await respuesta.json()).usuario.debeCambiarContrasena, true);
@@ -184,7 +184,7 @@ test("el cambio de contraseña admin rechaza IDs inválidos y contraseñas débi
   const idInvalido = await solicitar("/auth/users/no-es-id/password", {
     method: "PATCH",
     persona: admin,
-    body: JSON.stringify({ password: "nueva-clave-temporal" }),
+    body: JSON.stringify({ password: "Clave8!x" }),
   });
   assert.equal(idInvalido.status, 400);
 

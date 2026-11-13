@@ -5,7 +5,7 @@ const Usuario = require("../models/Usuario");
 
 const DURACION_TOKEN = "12h";
 const MINIMO_PASSWORD = 12;
-const MINIMO_PASSWORD_ALTA = 8;
+const MINIMO_PASSWORD_TRABAJADOR = 8;
 const correoValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const crearToken = (usuario) =>
@@ -63,9 +63,9 @@ const crearUsuario = async (req, res, next) => {
     const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
     const password = typeof req.body?.password === "string" ? req.body.password : "";
 
-    if (!correoValido.test(email) || email.length > 254 || password.length < MINIMO_PASSWORD_ALTA || password.length > 128) {
+    if (!correoValido.test(email) || email.length > 254 || password.length < MINIMO_PASSWORD_TRABAJADOR || password.length > 128) {
       return res.status(400).json({
-        mensaje: `Ingresa un correo válido y una contraseña de entre ${MINIMO_PASSWORD_ALTA} y 128 caracteres`,
+        mensaje: `Ingresa un correo válido y una contraseña de entre ${MINIMO_PASSWORD_TRABAJADOR} y 128 caracteres`,
       });
     }
 
@@ -98,9 +98,9 @@ const crearUsuario = async (req, res, next) => {
 const cambiarContrasenaUsuario = async (req, res, next) => {
   try {
     const password = typeof req.body?.password === "string" ? req.body.password : "";
-    if (password.length < MINIMO_PASSWORD || password.length > 128) {
+    if (password.length < MINIMO_PASSWORD_TRABAJADOR || password.length > 128) {
       return res.status(400).json({
-        mensaje: `La nueva contraseña debe tener entre ${MINIMO_PASSWORD} y 128 caracteres`,
+        mensaje: `La nueva contraseña debe tener entre ${MINIMO_PASSWORD_TRABAJADOR} y 128 caracteres`,
       });
     }
 
@@ -127,9 +127,10 @@ const cambiarContrasena = async (req, res, next) => {
   try {
     const actual = typeof req.body?.contrasenaActual === "string" ? req.body.contrasenaActual : "";
     const nueva = typeof req.body?.contrasenaNueva === "string" ? req.body.contrasenaNueva : "";
-    if (nueva.length < MINIMO_PASSWORD || nueva.length > 128) {
+    const minimo = req.usuario.rol === "usuario" ? MINIMO_PASSWORD_TRABAJADOR : MINIMO_PASSWORD;
+    if (nueva.length < minimo || nueva.length > 128) {
       return res.status(400).json({
-        mensaje: `La nueva contraseña debe tener entre ${MINIMO_PASSWORD} y 128 caracteres`,
+        mensaje: `La nueva contraseña debe tener entre ${minimo} y 128 caracteres`,
       });
     }
 

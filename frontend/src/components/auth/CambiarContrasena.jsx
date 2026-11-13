@@ -2,7 +2,7 @@ import { useState } from "react";
 import { LockKeyhole } from "lucide-react";
 import BrandMark from "../BrandMark";
 
-export default function CambiarContrasena({ alCambiar, temporal = true, alCancelar }) {
+export default function CambiarContrasena({ alCambiar, temporal = true, minimo = 12, alCancelar }) {
   const [contrasenaActual, setContrasenaActual] = useState("");
   const [contrasenaNueva, setContrasenaNueva] = useState("");
   const [confirmacion, setConfirmacion] = useState("");
@@ -47,11 +47,11 @@ export default function CambiarContrasena({ alCambiar, temporal = true, alCancel
           </label>
           <label className="block">
             <span className="app-label">Nueva contraseña</span>
-            <input className="app-field" type="password" autoComplete="new-password" required minLength={12} maxLength={128} value={contrasenaNueva} onChange={(evento) => setContrasenaNueva(evento.target.value)} placeholder="Mínimo 12 caracteres"/>
+            <input className="app-field" type="password" autoComplete="new-password" required minLength={minimo} maxLength={128} value={contrasenaNueva} onChange={(evento) => setContrasenaNueva(evento.target.value)} placeholder={`Mínimo ${minimo} caracteres`}/>
           </label>
           <label className="block">
             <span className="app-label">Confirma la nueva contraseña</span>
-            <input className="app-field" type="password" autoComplete="new-password" required minLength={12} maxLength={128} value={confirmacion} onChange={(evento) => setConfirmacion(evento.target.value)} placeholder="Repite tu nueva contraseña"/>
+            <input className="app-field" type="password" autoComplete="new-password" required minLength={minimo} maxLength={128} value={confirmacion} onChange={(evento) => setConfirmacion(evento.target.value)} placeholder="Repite tu nueva contraseña"/>
           </label>
           <button className="app-primary w-full rounded-xl px-5 py-3 font-semibold disabled:opacity-60" disabled={cargando} type="submit">
             {cargando ? "Actualizando..." : "Guardar contraseña"}

@@ -162,6 +162,7 @@ function Sistema() {
       <CambiarContrasena
         alCambiar={actualizarContrasena}
         temporal={usuario.debeCambiarContrasena}
+        minimo={usuario.rol === "usuario" ? 8 : 12}
         alCancelar={usuario.debeCambiarContrasena ? salir : () => setEditandoContrasena(false)}
       />
     );
