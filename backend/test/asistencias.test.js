@@ -137,6 +137,50 @@ const postSalida = (datos) => solicitar(`${base}/salida`, {
   method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(datos),
 });
 
+test("el administrador consulta checadas por fecha sin recibir coordenadas", async () => {
+  const asistencia = { _id: "registro", trabajador: { _id: id, nombre: "Salva" }, fecha: "2026-10-23", llegada: "2026-10-23T14:00:00Z", salida: "2026-10-23T22:00:00Z" };
+  mock.method(Asistencia, "find", filtro => {
+    assert.deepEqual(filtro, { fecha: "2026-10-23" });
+    return {
+      select(campos) { assert.equal(campos, "trabajador fecha llegada salida"); return this; },
+      populate(modelo, campos) { assert.equal(modelo, "trabajador"); assert.equal(campos, "nombre"); return this; },
+      sort: async () => [asistencia],
+    };
+  });
+  const respuesta = await solicitar(`${base}/historial?fecha=2026-10-23`);
+  assert.equal(respuesta.status, 200);
+  assert.equal(respuesta.headers.get("cache-control"), "no-store");
+  assert.deepEqual(await respuesta.json(), { fecha: "2026-10-23", zonaHoraria: zona.zonaHoraria, asistencias: [asistencia] });
+});
+
+test("el historial usa hoy por defecto y acepta un día bisiesto válido", async () => {
+  let fechaEsperada = fechaLocal();
+  mock.method(Asistencia, "find", filtro => {
+    assert.deepEqual(filtro, { fecha: fechaEsperada });
+    return { select: () => ({ populate: () => ({ sort: async () => [] }) }) };
+  });
+  assert.equal((await solicitar(`${base}/historial`)).status, 200);
+  fechaEsperada = "2024-02-29";
+  assert.equal((await solicitar(`${base}/historial?fecha=${fechaEsperada}`)).status, 200);
+});
+
+test("el historial rechaza fechas inválidas antes de consultar y exige sesión", async () => {
+  mock.method(Asistencia, "find", () => assert.fail("No debe consultar la BD"));
+  for (const fecha of ["", "2026-02-30", "2026-02-29", "2026-13-01", "23-10-2026", "2026-10-23T00:00:00Z"]) {
+    assert.equal((await solicitar(`${base}/historial?fecha=${encodeURIComponent(fecha)}`)).status, 400, fecha);
+  }
+  assert.equal((await solicitar(`${base}/historial?fecha=2026-10-23&fecha=2026-10-24`)).status, 400);
+  assert.equal((await fetch(`${base}/historial`)).status, 401);
+});
+
+test("el historial devuelve un error controlado si falla la base de datos", async () => {
+  mock.method(console, "error", () => {});
+  mock.method(Asistencia, "find", () => { throw new Error("BD desconectada"); });
+  const respuesta = await solicitar(`${base}/historial`);
+  assert.equal(respuesta.status, 500);
+  assert.equal((await respuesta.json()).mensaje, "No se pudo consultar el historial de asistencias");
+});
+
 test("salida guarda la hora del servidor sin sobrescribir la entrada ni una salida existente", async () => {
   const llegada = new Date(Date.now() - 3600000);
   mock.method(Trabajador, "findById", async () => ({ activo: true }));

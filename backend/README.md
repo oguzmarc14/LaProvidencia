@@ -102,8 +102,13 @@ es atómica para evitar sobrescribir la hora ante solicitudes simultáneas.
 `GET /api/asistencias/hoy` incluye `salida`, que también aparece en la lista de
 asistencias. Los registros anteriores sin ese campo se consideran sin salida.
 
-En **Asistencia**, los administradores pueden seleccionar un trabajador activo.
-Los trabajadores registran su propia asistencia con la ficha vinculada a su sesión.
+En **Asistencia**, los administradores consultan una tabla de entradas y salidas,
+con búsqueda por nombre, selección de fecha y duración entre ambas checadas.
+`GET /api/asistencias/historial?fecha=YYYY-MM-DD` requiere un administrador y
+devuelve únicamente trabajador, fecha, llegada y salida, además de la zona horaria.
+Si se omite la fecha usa el día actual de México. Las fechas inválidas devuelven 400.
+Los trabajadores registran su propia asistencia desde su portal con la ficha
+vinculada a su sesión y no pueden consultar el historial administrativo.
 El centro está en `21.5224892,
 -102.246005` (Cuenca Lerma Santiago 26) con radio de 100 metros. La configuración
 está en `src/utils/asistencia.js` y se consulta en `GET /api/asistencias/zona`.
@@ -136,9 +141,9 @@ separados por comas y por defecto permite `http://localhost:5173`.
 `localhost` en un celular corresponde al propio celular, no a la computadora.
 Entrar por una IP local con HTTP normalmente no permite geolocalización.
 
-Esta versión no tiene autenticación: cualquiera puede seleccionar otro nombre y
-el navegador puede enviar coordenadas manipuladas. El radio valida las coordenadas
-recibidas, no acredita la identidad ni impide falsificar el GPS. La ubicación se
+La cuenta de trabajador usa su ficha autenticada aunque se envíe otro nombre o ID.
+El navegador puede enviar coordenadas manipuladas: el radio valida las coordenadas
+recibidas y no impide falsificar el GPS. La ubicación se
 consulta en la pantalla y se almacena solo al registrar una llegada.
 Después de pulsar **Verificar mi ubicación**, se solicita una lectura nueva cada
 10 segundos, aunque el dispositivo permanezca quieto. Las consultas se detienen

@@ -5,6 +5,7 @@ const solicitar = (ruta, opciones) =>
 
 export const obtenerZona = () => solicitar("/zona");
 export const obtenerLlegadasHoy = () => solicitar("/hoy");
+export const obtenerHistorial = (fecha, signal) => solicitar(`/historial?${new URLSearchParams({ fecha })}`, { signal });
 export const registrarLlegada = (datos) => solicitar("/", {
   method: "POST", body: JSON.stringify(datos),
 });
