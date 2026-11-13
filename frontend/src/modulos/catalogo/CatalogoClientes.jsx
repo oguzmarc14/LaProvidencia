@@ -179,10 +179,9 @@ export default function CatalogoClientes({ abrirCatalogo = false }) {
               ))}
             </nav>
             <div className="space-y-14 sm:space-y-20">
-              {apartados.map(({ nombre, id, descripcion, secciones: subsecciones }) => (
+              {apartados.map(({ nombre, id, secciones: subsecciones }) => (
                 <section key={id} id={id} aria-labelledby={`${id}-titulo`} className="lp-catalogo-apartado">
                   <h3 id={`${id}-titulo`} className="mb-5 border-t border-[var(--marca-linea)] pt-8 font-serif text-3xl sm:pt-12">{nombre}</h3>
-                  <p className="mb-4 text-sm text-[var(--marca-texto)]">{descripcion}</p>
                   <EtiquetasCategoria categorias={subsecciones.map(s => s.nombre)} activa={filtros[id] || ""}
                     seleccionar={categoria => setFiltros(previo => ({ ...previo, [id]: categoria }))} />
                   {catalogo && (() => {

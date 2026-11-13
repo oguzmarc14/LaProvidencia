@@ -4,6 +4,7 @@ import { catalogoAdmin, categorias, apartadosCatalogo, nombreCategoria, enlaceCa
 
 const nuevo = { nombre: "", categoria: categorias[0], medidas: "", material: "", presentacion: "", acabados: "", precioDesde: false, caracteristicas: "", precio: "", unidad: unidades[0], estado: estados[0], imagenes: [] };
 const tiposImagen = ["image/jpeg", "image/png", "image/webp"];
+const normalizarCategoria = texto => texto.trim().normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 const maxFotos = 8;
 const maxBytes = 400 * 1024;
 const leerImagen = (archivo) => new Promise((resolve, reject) => {
@@ -52,6 +53,7 @@ function Campo({ titulo, children }) {
 }
 
 export default function CatalogoAdmin({ productoInicial, verProductos }) {
+  const [busquedaCategoria, setBusquedaCategoria] = useState("");
   const [form, setForm] = useState(productoInicial ?? nuevo);
   const [ocupado, setOcupado] = useState(false);
   const [error, setError] = useState("");
@@ -108,6 +110,7 @@ export default function CatalogoAdmin({ productoInicial, verProductos }) {
       const { _id, ...datos } = form;
       const { producto } = await catalogoAdmin(_id ? `/productos/${_id}` : "/productos", _id ? "PUT" : "POST", { ...datos, precio: Number(datos.precio) });
       setForm(nuevo);
+      setBusquedaCategoria("");
       setErrorFoto("");
       const fotos = producto.imagenes.length;
       const visibilidad = producto.estado === "publicado" ? "Visible para clientes." : "Solo visible en administración.";
@@ -130,13 +133,22 @@ export default function CatalogoAdmin({ productoInicial, verProductos }) {
           <div className="min-w-0 space-y-5">
             <h2 className="text-lg font-bold">Datos del producto</h2>
             <Campo titulo="Nombre"><input {...campo("nombre")} required maxLength={100} placeholder="Ej. Cubierta de granito negro" /></Campo>
-            <Campo titulo="Categoría">
-              <select {...campo("categoria")}>{apartadosCatalogo.map(apartado => (
-                <optgroup key={apartado.id} label={apartado.nombre}>
-                  {apartado.categorias.map(valor => <option key={valor} value={valor}>{nombreCategoria(valor)}</option>)}
-                </optgroup>
-              ))}</select>
-            </Campo>
+            <div className="space-y-2">
+              <Campo titulo="Buscar categoría">
+                <input className="app-field" type="search" value={busquedaCategoria}
+                  onChange={evento => setBusquedaCategoria(evento.target.value)} placeholder="Ej. Granitos" />
+              </Campo>
+              <Campo titulo="Categoría">
+                <select {...campo("categoria")}>{apartadosCatalogo.map(apartado => {
+                  const consulta = normalizarCategoria(busquedaCategoria);
+                  const opciones = apartado.categorias.filter(valor => valor === form.categoria ||
+                    normalizarCategoria(apartado.nombre + " " + nombreCategoria(valor)).includes(consulta));
+                  return opciones.length ? <optgroup key={apartado.id} label={apartado.nombre}>
+                    {opciones.map(valor => <option key={valor} value={valor}>{nombreCategoria(valor)}</option>)}
+                  </optgroup> : null;
+                })}</select>
+              </Campo>
+            </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <Campo titulo="Precio (MXN)"><input {...campo("precio")} type="number" min="0" max="10000000" step="0.01" placeholder="0.00" required /></Campo>
               <Campo titulo="Unidad"><select {...campo("unidad")}>{unidades.map(valor => <option key={valor}>{valor}</option>)}</select></Campo>
