@@ -18,7 +18,7 @@ import SeccionTrabajadores from "./modulos/trabajadores/pages/SeccionTrabajadore
 import SeccionClientes from "./modulos/clientes/pages/SeccionClientes";
 import SeccionTrabajos from "./modulos/trabajos/pages/SeccionTrabajos";
 import SeccionVentas from "./modulos/ventas/pages/SeccionVentas";
-import SeccionAsistencias from "./modulos/asistencias/pages/SeccionAsistencias";
+import AsistenciasAdmin from "./modulos/asistencias/pages/AsistenciasAdmin";
 import SeccionTareas from "./modulos/tareas/pages/SeccionTareas";
 import PortalTrabajador from "./modulos/trabajadores/pages/PortalTrabajador";
 
@@ -171,7 +171,7 @@ export default function App() {
     ) : seccion === "ventas" ? (
       <SeccionVentas />
     ) : seccion === "asistencias" ? (
-      <SeccionAsistencias />
+      <AsistenciasAdmin />
     ) : seccion === "tareas" ? (
       <SeccionTareas />
     ) : (

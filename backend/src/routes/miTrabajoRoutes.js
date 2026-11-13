@@ -14,8 +14,8 @@ router.get("/", async (req, res) => {
     Tarea.find({ trabajador })
       .select("titulo descripcion fechaInicio fechaLimite prioridad estado progreso")
       .sort({ fechaLimite: 1 }).lean(),
-    RegistroVenta.find({ trabajador, gaveta: { $exists: true, $nin: ["", null] } })
-      .select("gaveta pasillo localidad modeloLapida materialLapida fechaEntrega")
+    RegistroVenta.find({ trabajador })
+      .select("gaveta pasillo localidad modeloLapida materialLapida nombreDifunto epitafio fechaEntrega precioTotal")
       .sort({ fechaEntrega: 1 }).lean(),
   ]);
   res.set("Cache-Control", "no-store").json({ trabajos, tareas, gavetas });

@@ -8,7 +8,7 @@ const secciones = [
   { id: "trabajos", titulo: "Mis trabajos", icono: BriefcaseBusiness },
   { id: "asistencia", titulo: "Mi asistencia", icono: Clock },
   { id: "tareas", titulo: "Mis tareas", icono: ClipboardList },
-  { id: "gavetas", titulo: "Mis gavetas", icono: MapPin },
+  { id: "gavetas", titulo: "Mis lápidas", icono: MapPin },
 ];
 
 const formatoFecha = new Intl.DateTimeFormat("es-MX", { dateStyle: "medium", timeZone: "UTC" });
@@ -18,10 +18,14 @@ const estado = (valor) => valor?.replaceAll("_", " ");
 function DetalleAsignacion({ seccion, item }) {
   if (seccion === "gavetas") {
     return <>
-      <h3 className="text-lg font-bold">Gaveta {item.gaveta}</h3>
+      <h3 className="text-lg font-bold">Lápida {item.modeloLapida}</h3>
+      {item.nombreDifunto && <p>Difunto(a): {item.nombreDifunto}</p>}
+      {item.gaveta && <p>Gaveta: {item.gaveta}</p>}
       <p>{[item.localidad, item.pasillo && "Pasillo " + item.pasillo].filter(Boolean).join(" · ")}</p>
       <p>{[item.modeloLapida, item.materialLapida].filter(Boolean).join(" · ")}</p>
       <p>Entrega: {fecha(item.fechaEntrega)}</p>
+      {item.epitafio && <p className="whitespace-pre-wrap">Grabado: {item.epitafio}</p>}
+      <p className="rounded-xl bg-blue-50 p-3 font-bold text-[#124B91]">Precio: {item.precioTotal == null ? "Sin precio registrado" : Number(item.precioTotal).toLocaleString("es-MX", { style: "currency", currency: "MXN" })}</p>
     </>;
   }
   if (seccion === "tareas") {
@@ -76,6 +80,11 @@ export default function PortalTrabajador({ usuario, alSalir, alCambiarContrasena
           </div>
         </div>
       </header>
+      <div className="mx-auto max-w-6xl px-5 pt-6">
+        <p className="text-sm font-semibold text-[#124B91]">Portal del trabajador</p>
+        <h1 className="mt-1 text-2xl font-black text-[#203d6b]">Mi espacio de trabajo</h1>
+        <p className="mt-2 text-sm text-slate-600">Consulta tus asignaciones y registra tu asistencia.</p>
+      </div>
       {!trabajador ? (
         <p role="status" className="mx-auto max-w-3xl p-6">Tu cuenta todavía no está vinculada a una ficha. Pide al administrador que habilite el acceso desde Trabajadores.</p>
       ) : (

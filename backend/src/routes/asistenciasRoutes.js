@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const Asistencia = require("../models/Asistencia");
 const Trabajador = require("../models/Trabajador");
 const { zona, distanciaMetros, fechaLocal } = require("../utils/asistencia");
+const { soloAdmin } = require("../middleware/autenticacion");
 
 const router = express.Router();
 router.use((req, res, next) => {
@@ -11,6 +12,23 @@ router.use((req, res, next) => {
 });
 
 router.get("/zona", (req, res) => res.json({ zona }));
+
+router.get("/historial", soloAdmin, async (req, res) => {
+  const fecha = req.query.fecha ?? fechaLocal();
+  if (typeof fecha !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(fecha) ||
+      !Number.isFinite(Date.parse(fecha)) || new Date(fecha).toISOString().slice(0, 10) !== fecha) {
+    return res.status(400).json({ mensaje: "Selecciona una fecha válida" });
+  }
+  try {
+    const asistencias = await Asistencia.find({ fecha })
+      .select("trabajador fecha llegada salida")
+      .populate("trabajador", "nombre").sort({ llegada: -1 });
+    return res.json({ fecha, zonaHoraria: zona.zonaHoraria, asistencias });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ mensaje: "No se pudo consultar el historial de asistencias" });
+  }
+});
 
 router.get("/hoy", async (req, res) => {
   try {

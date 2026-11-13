@@ -51,7 +51,8 @@ function comprobarConsulta(Modelo, filtroEsperado, datos) {
     return {
       select(campos) {
         const visibles = new Set(campos.split(" "));
-        assert.ok(!["precioTotal", "anticipo", "saldoPendiente", "telefonoCliente", "cliente"].some(c => visibles.has(c)));
+        assert.ok(!["anticipo", "saldoPendiente", "telefonoCliente", "cliente", "nombreCliente", "vendedor", "observaciones"].some(c => visibles.has(c)));
+        assert.equal(visibles.has("precioTotal"), Modelo === RegistroVenta);
         return {
           sort: () => ({
             lean: async () => [Object.fromEntries(Object.entries(datos).filter(([campo]) => visibles.has(campo)))],
@@ -62,25 +63,25 @@ function comprobarConsulta(Modelo, filtroEsperado, datos) {
   });
 }
 
-test("el portal filtra asignaciones por la ficha de sesión y no devuelve información financiera", async () => {
+test("el portal filtra por la ficha de sesión y muestra solo el precio de las lápidas, incluso sin gaveta", async () => {
   vincular();
   comprobarConsulta(Trabajo, { $or: [{ trabajador }, { responsableTemple: trabajador }] },
     { nombre: "Instalación", precioTotal: 2500 });
   comprobarConsulta(Tarea, { trabajador }, { titulo: "Medir", descripcion: "Revisar espacio" });
-  comprobarConsulta(RegistroVenta, { trabajador, gaveta: { $exists: true, $nin: ["", null] } },
-    { gaveta: "14", pasillo: "A", precioTotal: 1000, anticipo: 100, saldoPendiente: 900 });
+  comprobarConsulta(RegistroVenta, { trabajador },
+    { modeloLapida: "120", pasillo: "A", precioTotal: 1000, anticipo: 100, saldoPendiente: 900, nombreCliente: "Privado", telefonoCliente: "4491234567" });
   const respuesta = await solicitar("/mi-trabajo?trabajador=" + otraFicha);
   assert.equal(respuesta.status, 200);
   assert.deepEqual(await respuesta.json(), {
     trabajos: [{ nombre: "Instalación" }],
     tareas: [{ titulo: "Medir", descripcion: "Revisar espacio" }],
-    gavetas: [{ gaveta: "14", pasillo: "A" }],
+    gavetas: [{ modeloLapida: "120", pasillo: "A", precioTotal: 1000 }],
   });
 });
 
 test("la cuenta de trabajador no puede usar los endpoints administrativos ni editar asignaciones", async () => {
   vincular();
-  for (const ruta of ["/trabajos", "/clientes", "/trabajadores", "/dashboard/resumen", "/registro-ventas", "/tareas", "/auth/users"]) {
+  for (const ruta of ["/trabajos", "/clientes", "/trabajadores", "/dashboard/resumen", "/registro-ventas", "/tareas", "/auth/users", "/asistencias/historial", "/asistencias/historial?fecha=2026-10-23"]) {
     assert.equal((await solicitar(ruta)).status, 403, ruta);
   }
   assert.equal((await solicitar("/mi-trabajo", { method: "POST" })).status, 404);
