@@ -9,6 +9,7 @@ import {
   Clock,
   BookOpen,
   Package,
+  Ellipsis,
 } from "lucide-react";
 
 import BrandMark from "../BrandMark";
@@ -58,9 +59,28 @@ export default function Sidebar({
   navegar,
   abierto,
   cerrar,
+  abrir,
 }) {
+  const accesos = opciones.filter(({ id }) => ["dashboard", "trabajadores", "trabajos", "asistencias"].includes(id));
+  const enOtros = !accesos.some(({ id }) => id === actual);
+  const estilo = activo => `flex min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-0.5 py-2 text-[10px] font-bold ${activo ? "bg-[#124B91] text-white" : "text-[#124B91] hover:bg-blue-50"}`;
+
   return (
     <>
+      <nav aria-label="Accesos móviles de administración"
+        className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 gap-1 border-t border-slate-200 bg-white/95 px-1 pt-2 pb-[max(.5rem,env(safe-area-inset-bottom))] shadow-lg backdrop-blur md:hidden">
+        {accesos.map(({ id, nombre, icono: Icono }) => (
+          <button key={id} type="button" aria-current={actual === id ? "page" : undefined}
+            onClick={() => { navegar(id); window.scrollTo(0, 0); }} className={estilo(actual === id)}>
+            <Icono size={20} aria-hidden="true" />
+            {id === "dashboard" ? "Inicio" : nombre}
+          </button>
+        ))}
+        <button type="button" aria-expanded={abierto} aria-controls="menu-administracion"
+          onClick={abierto ? cerrar : abrir} className={estilo(enOtros || abierto)}>
+          <Ellipsis size={20} aria-hidden="true" /> Más
+        </button>
+      </nav>
       {abierto && (
         <button
           className="fixed inset-0 z-30 bg-slate-950/60 md:hidden"
@@ -70,8 +90,9 @@ export default function Sidebar({
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-68 flex-col text-white shadow-xl transition-transform md:sticky md:top-0 md:h-screen md:translate-x-0 ${
-          abierto ? "translate-x-0" : "-translate-x-full"
+        id="menu-administracion"
+        className={`fixed inset-y-0 left-0 z-40 w-68 md:flex flex-col text-white shadow-xl transition-transform md:sticky md:top-0 md:h-screen md:translate-x-0 ${
+          abierto ? "flex translate-x-0" : "hidden md:flex"
         }`}
         style={{
           background:

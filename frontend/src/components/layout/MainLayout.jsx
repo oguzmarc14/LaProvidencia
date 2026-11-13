@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import {
-  Menu,
   LogOut,
   ShieldCheck,
   ChevronRight,
@@ -89,18 +88,12 @@ export default function MainLayout({
         navegar={navegar}
         abierto={menuAbierto}
         cerrar={() => setMenuAbierto(false)}
+        abrir={() => setMenuAbierto(true)}
       />
 
       <div className="min-w-0 flex-1">
         <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/95 shadow-sm backdrop-blur-xl">
           <div className="flex h-[72px] items-center gap-3 px-4 sm:px-6 lg:px-10">
-            <button
-              className="rounded-xl p-2 text-slate-700 hover:bg-slate-100 md:hidden"
-              onClick={() => setMenuAbierto(true)}
-              aria-label="Abrir menú"
-            >
-              <Menu size={22} />
-            </button>
 
             {/* Sección actual */}
             <div className="min-w-0">
@@ -292,7 +285,7 @@ export default function MainLayout({
           </div>
         </header>
 
-        <main>{children}</main>
+        <main className="pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0">{children}</main>
       </div>
     </div>
   );
