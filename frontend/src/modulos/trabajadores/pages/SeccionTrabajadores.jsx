@@ -1,3 +1,4 @@
+import { avisar } from "../../../services/avisos";
 import { useCallback, useEffect, useState } from "react";
 import { BriefcaseBusiness, Pencil, Plus, Search, Users, KeyRound, MessageCircle, ArrowUpRight, Phone } from "lucide-react";
 import { actualizarTrabajador, crearTrabajador, obtenerTrabajadores } from "../services/trabajadoresService";
@@ -79,12 +80,12 @@ export default function SeccionTrabajadores() {
                 <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-100 bg-slate-50 px-3 py-3">
                   <Phone size={17} className="shrink-0 text-[#124B91]"/>
                   <div className="min-w-0 flex-1"><p className="text-[11px] font-semibold text-slate-500">Contacto</p><p className="break-all text-sm font-bold text-slate-800">{t.whatsapp || "Sin número registrado"}</p></div>
-                  {whatsapp && <a href={whatsapp + "?text=" + encodeURIComponent(`Hola, ${t.nombre}. Te contactamos de La Providencia.`)} target="_blank" rel="noopener noreferrer" aria-label={`Enviar WhatsApp a ${t.nombre}`} className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-extrabold text-white transition hover:bg-emerald-700"><MessageCircle size={16}/> WhatsApp</a>}
+                  {whatsapp && <a href={whatsapp + "?text=" + encodeURIComponent(`Hola, ${t.nombre}. Te contactamos de La Providencia.`)} onClick={() => avisar("info", "WhatsApp", "El mensaje se prepara en WhatsApp para que puedas revisarlo y enviarlo.")} target="_blank" rel="noopener noreferrer" aria-label={`Enviar WhatsApp a ${t.nombre}`} className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-extrabold text-white transition hover:bg-emerald-700 sm:w-auto"><MessageCircle size={16}/> WhatsApp</a>}
                 </div>
-                <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4">
+                <div className="grid gap-2 sm:flex sm:flex-wrap border-t border-slate-100 pt-4">
                   <button type="button" onClick={() => setViendoTrabajos(t)} className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#124B91] px-4 py-3 text-sm font-extrabold text-white transition hover:bg-[#0d3770]"><BriefcaseBusiness size={17}/> Ver seguimiento <ArrowUpRight size={15}/></button>
                   <button type="button" onClick={() => { setEditando(t); setModalAbierto(true); }} className="inline-flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-white px-4 py-3 text-sm font-bold text-[#124B91] transition hover:bg-blue-50"><Pencil size={16}/> Editar</button>
-                  {t.activo && <button type="button" onClick={() => setAcceso(t)} className="inline-flex items-center gap-2 rounded-xl border border-blue-200 px-4 py-3 text-sm font-bold text-[#124B91] hover:bg-blue-50"><KeyRound size={16}/> Acceso</button>}
+                  {t.activo && <button type="button" onClick={() => setAcceso(t)} className="inline-flex items-center justify-center gap-2 rounded-xl border border-blue-200 px-4 py-3 text-sm font-bold text-[#124B91] hover:bg-blue-50"><KeyRound size={16}/> Acceso</button>}
                 </div>
               </div>
             </article>;
