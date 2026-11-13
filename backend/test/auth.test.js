@@ -84,31 +84,31 @@ test("solo el administrador puede crear usuarios y el rol no se acepta del clien
     return { _id: ficha };
   });
   mock.method(Usuario, "findOneAndUpdate", async (filtro, cambio, opciones) => {
-    assert.deepEqual(filtro, { email: usuario.email, rol: "usuario", trabajador: null });
+    assert.deepEqual(filtro, { email: "ricardo@laprovidencia", rol: "usuario", trabajador: null });
     assert.deepEqual(cambio, {
       $set: { trabajador: ficha, password: "hash-seguro", debeCambiarContrasena: true },
       $inc: { versionSesion: 1 },
     });
     assert.equal(opciones.upsert, true);
-    return { ...usuario, ...cambio.$set };
+    return { ...usuario, email: filtro.email, ...cambio.$set };
   });
 
   const noAdmin = await solicitar("/auth/users", {
     method: "POST",
     persona: usuario,
-    body: JSON.stringify({ email: usuario.email, password: "Clave8!x", trabajador: ficha, rol: "superadmin" }),
+    body: JSON.stringify({ email: "ricardo@laprovidencia", password: "Clave8!x", trabajador: ficha, rol: "superadmin" }),
   });
   assert.equal(noAdmin.status, 403);
 
   const creado = await solicitar("/auth/users", {
     method: "POST",
     persona: admin,
-    body: JSON.stringify({ email: usuario.email, password: "Clave8!x", trabajador: ficha, rol: "superadmin" }),
+    body: JSON.stringify({ email: "ricardo@laprovidencia", password: "Clave8!x", trabajador: ficha, rol: "superadmin" }),
   });
   assert.equal(creado.status, 201);
   assert.deepEqual((await creado.json()).usuario, {
     id: usuario._id,
-    email: usuario.email,
+    email: "ricardo@laprovidencia",
     rol: "usuario",
     trabajador: ficha,
     debeCambiarContrasena: true,

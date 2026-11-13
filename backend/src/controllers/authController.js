@@ -6,7 +6,7 @@ const Usuario = require("../models/Usuario");
 const DURACION_TOKEN = "12h";
 const MINIMO_PASSWORD = 12;
 const MINIMO_PASSWORD_TRABAJADOR = 8;
-const correoValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const correoValido = /^[^\s@]+@[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)*$/;
 
 const crearToken = (usuario) =>
   jwt.sign({ sub: usuario._id.toString(), version: usuario.versionSesion ?? 0 }, process.env.JWT_SECRET, {
@@ -63,9 +63,12 @@ const crearUsuario = async (req, res, next) => {
     const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
     const password = typeof req.body?.password === "string" ? req.body.password : "";
 
-    if (!correoValido.test(email) || email.length > 254 || password.length < MINIMO_PASSWORD_TRABAJADOR || password.length > 128) {
+    if (!correoValido.test(email) || email.length > 254) {
+      return res.status(400).json({ mensaje: "Ingresa un correo de acceso válido, por ejemplo ricardo@laprovidencia" });
+    }
+    if (password.length < MINIMO_PASSWORD_TRABAJADOR || password.length > 128) {
       return res.status(400).json({
-        mensaje: `Ingresa un correo válido y una contraseña de entre ${MINIMO_PASSWORD_TRABAJADOR} y 128 caracteres`,
+        mensaje: `La contraseña debe tener entre ${MINIMO_PASSWORD_TRABAJADOR} y 128 caracteres`,
       });
     }
 
