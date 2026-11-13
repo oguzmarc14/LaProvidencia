@@ -1,3 +1,4 @@
+import ProductosAdmin from "./modulos/catalogo/ProductosAdmin";
 import { useEffect, useState } from "react";
 
 import {
@@ -35,6 +36,7 @@ export default function App() {
 }
 
 function Sistema() {
+  const [productoEditado, setProductoEditado] = useState(null);
   const [seccion, setSeccion] = useState("dashboard");
   const [editandoContrasena, setEditandoContrasena] = useState(false);
   const [usuario, setUsuario] = useState(null);
@@ -187,7 +189,9 @@ function Sistema() {
     ) : seccion === "tareas" ? (
       <SeccionTareas />
     ) : seccion === "catalogo" ? (
-      <CatalogoAdmin />
+      <CatalogoAdmin productoInicial={productoEditado} verProductos={() => { setProductoEditado(null); setSeccion("productos"); }} />
+    ) : seccion === "productos" ? (
+      <ProductosAdmin nuevo={() => { setProductoEditado(null); setSeccion("catalogo"); }} editar={producto => { setProductoEditado(producto); setSeccion("catalogo"); }} />
     ) : (
       <SeccionTrabajadores />
     );
@@ -195,7 +199,7 @@ function Sistema() {
   return (
     <MainLayout
       actual={seccion}
-      navegar={setSeccion}
+      navegar={destino => { setProductoEditado(null); setSeccion(destino); }}
       usuario={usuario}
       cerrarSesion={salir}
     >

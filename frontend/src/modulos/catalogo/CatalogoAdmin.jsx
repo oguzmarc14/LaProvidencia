@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
-import { Copy, ImagePlus, Package, X } from "lucide-react";
-import { catalogoAdmin, categorias, apartadosCatalogo, nombreCategoria, enlaceCatalogo, estados, moneda, unidades } from "./catalogoService";
+import { useState } from "react";
+import { Copy, ImagePlus, X } from "lucide-react";
+import { catalogoAdmin, categorias, apartadosCatalogo, nombreCategoria, enlaceCatalogo, estados, unidades } from "./catalogoService";
 
 const nuevo = { nombre: "", categoria: categorias[0], medidas: "", material: "", presentacion: "", acabados: "", precioDesde: false, caracteristicas: "", precio: "", unidad: unidades[0], estado: estados[0], imagenes: [] };
 const tiposImagen = ["image/jpeg", "image/png", "image/webp"];
@@ -51,27 +51,12 @@ function Campo({ titulo, children }) {
   return <label className="block"><span className="app-label">{titulo}</span>{children}</label>;
 }
 
-export default function CatalogoAdmin() {
-  const [productos, setProductos] = useState([]);
-  const [form, setForm] = useState(nuevo);
-  const [cargando, setCargando] = useState(true);
-  const formulario = useRef(null);
+export default function CatalogoAdmin({ productoInicial, verProductos }) {
+  const [form, setForm] = useState(productoInicial ?? nuevo);
   const [ocupado, setOcupado] = useState(false);
   const [error, setError] = useState("");
   const [errorFoto, setErrorFoto] = useState("");
   const [aviso, setAviso] = useState("");
-
-  useEffect(() => {
-    let activo = true;
-    catalogoAdmin("/productos")
-      .then((lista) => {
-        if (!activo) return;
-        setProductos(lista.productos);
-      })
-      .catch((e) => { if (activo) setError(e.message); })
-      .finally(() => { if (activo) setCargando(false); });
-    return () => { activo = false; };
-  }, []);
 
   function campo(nombre) {
     return { className: "app-field", value: form[nombre] ?? "", onChange: (e) => setForm({ ...form, [nombre]: e.target.value }) };
@@ -122,7 +107,6 @@ export default function CatalogoAdmin() {
     ejecutar(async () => {
       const { _id, ...datos } = form;
       const { producto } = await catalogoAdmin(_id ? `/productos/${_id}` : "/productos", _id ? "PUT" : "POST", { ...datos, precio: Number(datos.precio) });
-      setProductos((anterior) => [producto, ...anterior.filter((item) => item._id !== producto._id)]);
       setForm(nuevo);
       setErrorFoto("");
       const fotos = producto.imagenes.length;
@@ -140,7 +124,7 @@ export default function CatalogoAdmin() {
       </div>
       {error && <p role="alert" className="break-words rounded-xl bg-rose-50 p-4 text-rose-800">{error}</p>}
       {aviso && <p role="status" className="rounded-xl bg-green-50 p-4 text-green-800">{aviso}</p>}
-      <form ref={formulario} className="app-panel scroll-mt-24 p-5 sm:p-8" onSubmit={guardarProducto}>
+      <form className="app-panel scroll-mt-24 p-5 sm:p-8" onSubmit={guardarProducto}>
         <h1 className="mb-6 text-2xl font-extrabold sm:text-3xl">{form._id ? "Editar producto" : "Nuevo producto"}</h1>
         <fieldset disabled={ocupado} className="grid min-w-0 gap-7 disabled:opacity-70 lg:grid-cols-[minmax(0,1fr)_minmax(0,.75fr)]">
           <div className="min-w-0 space-y-5">
@@ -199,26 +183,10 @@ export default function CatalogoAdmin() {
             <button className="app-primary rounded-xl px-5 py-3 font-bold" disabled={form.estado === "publicado" && !form.imagenes.length}>
               {ocupado ? "Procesando…" : form.estado === "publicado" ? "Guardar y publicar" : form.estado === "oculto" ? "Guardar como oculto" : "Guardar borrador"}
             </button>
-            {form._id && <button type="button" className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-bold text-blue-800" onClick={() => { setForm(nuevo); setErrorFoto(""); }}>Cancelar edición</button>}
+            {form._id && <button type="button" className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-bold text-blue-800" onClick={verProductos}>Cancelar edición</button>}
           </div>
         </fieldset>
       </form>
-        <section className="app-panel p-5">
-          <h2 className="text-xl font-bold">Productos registrados</h2>
-          {!productos.length && <p className="mt-4 flex items-center gap-2 text-sm text-slate-600"><Package size={18} aria-hidden="true" />{cargando ? "Cargando productos…" : "Todavía no hay productos."}</p>}
-          <ul className="divide-y divide-slate-100">
-            {productos.map((producto) => (
-              <li key={producto._id} className="flex items-center gap-3 py-4">
-                {producto.imagenes[0] && <img src={producto.imagenes[0]} alt="" className="h-12 w-12 rounded-lg object-cover" />}
-                <div className="min-w-0 flex-1">
-                  <p className="font-bold">{producto.nombre}</p>
-                  <p className="text-sm text-slate-600">{producto.categoria} · {moneda.format(producto.precio)} / {producto.unidad} · {producto.estado}</p>
-                </div>
-                <button type="button" disabled={ocupado} className="text-sm font-bold text-blue-800" onClick={() => { setForm(producto); setErrorFoto(""); formulario.current?.scrollIntoView({ block: "start" }); }}>Editar</button>
-              </li>
-            ))}
-          </ul>
-        </section>
     </section>
   );
 }

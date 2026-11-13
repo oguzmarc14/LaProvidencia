@@ -8,6 +8,7 @@ import {
   ClipboardList,
   Clock,
   BookOpen,
+  Package,
 } from "lucide-react";
 
 import BrandMark from "../BrandMark";
@@ -48,6 +49,7 @@ const opciones = [
     nombre: "Asistencia",
     icono: Clock,
   },
+  { id: "productos", nombre: "Productos", icono: Package },
   { id: "catalogo", nombre: "Catálogo", icono: BookOpen },
 ];
 
