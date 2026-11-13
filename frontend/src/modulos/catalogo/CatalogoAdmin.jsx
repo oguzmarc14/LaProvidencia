@@ -2,9 +2,9 @@ import AlertaModal from "../../components/ui/AlertaModal";
 import { avisar } from "../../services/avisos";
 import { useState } from "react";
 import { Copy, ImagePlus, X } from "lucide-react";
-import { catalogoAdmin, categorias, apartadosCatalogo, nombreCategoria, enlaceCatalogo, estados, unidades } from "./catalogoService";
+import { catalogoAdmin, categorias, apartadosCatalogo, nombreCategoria, enlaceCatalogo, unidades } from "./catalogoService";
 
-const nuevo = { nombre: "", categoria: categorias[0], medidas: "", material: "", presentacion: "", acabados: "", precioDesde: false, caracteristicas: "", precio: "", unidad: unidades[0], estado: estados[0], imagenes: [] };
+const nuevo = { nombre: "", categoria: categorias[0], medidas: "", material: "", presentacion: "", acabados: "", caracteristicas: "", precio: "", unidad: unidades[0], imagenes: [] };
 const tiposImagen = ["image/jpeg", "image/png", "image/webp"];
 const normalizarCategoria = texto => texto.trim().normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 const maxFotos = 8;
@@ -113,8 +113,8 @@ export default function CatalogoAdmin({ productoInicial, verProductos }) {
     e.preventDefault();
     setConfirmacion({
       tipo: "confirm", titulo: form._id ? "¿Guardar cambios?" : "¿Crear producto?",
-      mensaje: form.estado === "publicado" ? `«${form.nombre}» será visible en el catálogo público.` : `«${form.nombre}» quedará en administración.`,
-      confirmarTexto: form.estado === "publicado" ? "Guardar y publicar" : "Guardar",
+      mensaje: `«${form.nombre}» será visible en el catálogo público.`,
+      confirmarTexto: "Publicar producto",
     });
   }
 
@@ -122,13 +122,13 @@ export default function CatalogoAdmin({ productoInicial, verProductos }) {
     setConfirmacion(null);
     ejecutar(async () => {
       const { _id, ...datos } = form;
-      const { producto } = await catalogoAdmin(_id ? `/productos/${_id}` : "/productos", _id ? "PUT" : "POST", { ...datos, precio: Number(datos.precio) });
+      const { producto } = await catalogoAdmin(_id ? `/productos/${_id}` : "/productos", _id ? "PUT" : "POST", { ...datos, precio: Number(datos.precio), estado: "publicado", precioDesde: false });
       setForm(nuevo);
       setBusquedaCategoria("");
       setErrorFoto("");
       const fotos = producto.imagenes.length;
-      const visibilidad = producto.estado === "publicado" ? "Visible para clientes." : "Solo visible en administración.";
-      setAviso(`Producto guardado con ${fotos} ${fotos === 1 ? "foto" : "fotos"}. ${visibilidad}`);
+
+      setAviso(`Producto guardado con ${fotos} ${fotos === 1 ? "foto" : "fotos"}. Visible para clientes.`);
     });
   }
 
@@ -167,10 +167,6 @@ export default function CatalogoAdmin({ productoInicial, verProductos }) {
               <Campo titulo="Precio (MXN)"><input {...campo("precio")} type="number" min="0" max="10000000" step="0.01" placeholder="0.00" required /></Campo>
               <Campo titulo="Unidad"><select {...campo("unidad")}>{unidades.map(valor => <option key={valor}>{valor}</option>)}</select></Campo>
             </div>
-            <label className="flex items-center gap-2 text-sm font-semibold">
-              <input type="checkbox" checked={form.precioDesde ?? false} onChange={e => setForm({ ...form, precioDesde: e.target.checked })} />
-              Mostrar el precio como «Desde»
-            </label>
             <div className="grid gap-4 sm:grid-cols-2">
               <Campo titulo="Tipo de material"><input {...campo("material")} maxLength={100} placeholder="Ej. Cuarzo ingenierizado" /></Campo>
               <Campo titulo="Presentación"><input {...campo("presentacion")} maxLength={100} placeholder="Ej. Láminas" /></Campo>
@@ -202,12 +198,12 @@ export default function CatalogoAdmin({ productoInicial, verProductos }) {
                 </li>
               ))}
             </ul>}
-            <Campo titulo="Visibilidad"><select {...campo("estado")}>{estados.map(valor => <option key={valor} value={valor}>{valor[0].toUpperCase() + valor.slice(1)}</option>)}</select></Campo>
-            <p className="text-sm text-slate-600">{form.estado === "publicado" ? "Visible para clientes. Se requiere al menos una foto." : "Solo visible en el panel administrativo."}</p>
+
+            <p className="text-sm text-slate-600">Agrega al menos una foto para publicar.</p>
           </div>
           <div className="flex flex-wrap gap-3 border-t border-slate-200 pt-5 lg:col-span-2">
-            <button className="app-primary rounded-xl px-5 py-3 font-bold" disabled={form.estado === "publicado" && !form.imagenes.length}>
-              {ocupado ? "Procesando…" : form.estado === "publicado" ? "Guardar y publicar" : form.estado === "oculto" ? "Guardar como oculto" : "Guardar borrador"}
+            <button className="app-primary rounded-xl px-5 py-3 font-bold" disabled={!form.imagenes.length}>
+              {ocupado ? "Procesando…" : "Publicar producto"}
             </button>
             {form._id && <button type="button" className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-bold text-blue-800" onClick={verProductos}>Cancelar edición</button>}
           </div>
