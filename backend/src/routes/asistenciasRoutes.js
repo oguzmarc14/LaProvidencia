@@ -5,13 +5,14 @@ const Trabajador = require("../models/Trabajador");
 const { zona, distanciaMetros, fechaLocal } = require("../utils/asistencia");
 const { soloAdmin } = require("../middleware/autenticacion");
 
+const esperaSalidaMs = 4 * 60 * 60 * 1000;
 const router = express.Router();
 router.use((req, res, next) => {
   res.set("Cache-Control", "no-store");
   next();
 });
 
-router.get("/zona", (req, res) => res.json({ zona }));
+router.get("/zona", (req, res) => res.json({ zona: { ...zona, esperaSalidaMs } }));
 
 router.get("/historial", soloAdmin, async (req, res) => {
   const fecha = req.query.fecha ?? fechaLocal();
@@ -104,15 +105,15 @@ async function registrar(req, res, esSalida) {
       const filtro = { trabajador, fecha: fechaLocal(ahora) };
       // La condición evita sobrescribir la salida incluso con solicitudes simultáneas.
       const asistencia = await Asistencia.findOneAndUpdate(
-        { ...filtro, salida: null, llegada: { $lte: ahora } },
+        { ...filtro, salida: null, llegada: { $lte: new Date(ahora.getTime() - esperaSalidaMs) } },
         { $set: { salida: ahora } },
         { new: true, runValidators: true },
       );
       if (!asistencia) {
-        const existe = await Asistencia.exists(filtro);
-        return res.status(409).json({ mensaje: existe
-          ? "La salida ya está registrada o la llegada es posterior a la hora actual"
-          : "Primero registra tu llegada de hoy" });
+        const registro = await Asistencia.findOne(filtro).select("salida").lean();
+        return res.status(409).json({ mensaje: !registro ? "Primero registra tu llegada de hoy"
+          : registro.salida ? "La salida ya está registrada"
+          : "Podrás registrar la salida cuatro horas después de tu llegada" });
       }
       return res.json({ mensaje: "Salida registrada", asistencia });
     }

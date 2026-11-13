@@ -48,7 +48,7 @@ test("zona fija de 100 metros y respuestas sin caché", async () => {
   const respuesta = await solicitar(`${base}/zona`);
   assert.equal(respuesta.status, 200);
   assert.equal(respuesta.headers.get("cache-control"), "no-store");
-  assert.deepEqual((await respuesta.json()).zona, zona);
+  assert.deepEqual((await respuesta.json()).zona, { ...zona, esperaSalidaMs: 14400000 });
   assert.equal(zona.radioMetros, 100);
 });
 
@@ -182,13 +182,13 @@ test("el historial devuelve un error controlado si falla la base de datos", asyn
 });
 
 test("salida guarda la hora del servidor sin sobrescribir la entrada ni una salida existente", async () => {
-  const llegada = new Date(Date.now() - 3600000);
+  const llegada = new Date(Date.now() - 14400000);
   mock.method(Trabajador, "findById", async () => ({ activo: true }));
   mock.method(Asistencia, "findOneAndUpdate", async (filtro, cambios, opciones) => {
     assert.equal(filtro.trabajador, id);
     assert.equal(filtro.fecha, fechaLocal());
     assert.equal(filtro.salida, null);
-    assert.ok(filtro.llegada.$lte instanceof Date);
+    assert.equal(filtro.llegada.$lte.getTime(), cambios.$set.salida.getTime() - 14400000);
     assert.deepEqual(Object.keys(cambios.$set), ["salida"]);
     assert.ok(Math.abs(cambios.$set.salida.getTime() - Date.now()) < 2000);
     assert.equal(opciones.new, true);
@@ -204,17 +204,21 @@ test("salida guarda la hora del servidor sin sobrescribir la entrada ni una sali
 test("salida rechaza ausencia de entrada y salida duplicada", async () => {
   mock.method(Trabajador, "findById", async () => ({ activo: true }));
   mock.method(Asistencia, "findOneAndUpdate", async () => null);
-  mock.method(Asistencia, "exists", async () => null);
+  mock.method(Asistencia, "findOne", () => ({ select: () => ({ lean: async () => null }) }));
   const sinEntrada = await postSalida(entrada());
   assert.equal(sinEntrada.status, 409);
   assert.match((await sinEntrada.json()).mensaje, /Primero registra/);
   mock.restoreAll();
   mock.method(Trabajador, "findById", async () => ({ activo: true }));
   mock.method(Asistencia, "findOneAndUpdate", async () => null);
-  mock.method(Asistencia, "exists", async () => ({ _id: id }));
+  mock.method(Asistencia, "findOne", () => ({ select: () => ({ lean: async () => ({ salida: new Date() }) }) }));
   const duplicada = await postSalida(entrada());
   assert.equal(duplicada.status, 409);
   assert.match((await duplicada.json()).mensaje, /ya está registrada/);
+  Asistencia.findOne.mock.mockImplementation(() => ({ select: () => ({ lean: async () => ({ salida: null }) }) }));
+  const anticipada = await postSalida(entrada());
+  assert.equal(anticipada.status, 409);
+  assert.match((await anticipada.json()).mensaje, /cuatro horas/);
 });
 
 test("salida exige ubicación reciente, precisa y dentro del radio", async () => {

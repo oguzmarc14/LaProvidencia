@@ -1,8 +1,9 @@
+import AlertaModal from "../../../components/ui/AlertaModal";
 import { avisar } from "../../../services/avisos";
 import { useEffect, useRef, useState } from "react";
-import { Clock, MapPin } from "lucide-react";
+import { Clock } from "lucide-react";
 import { obtenerZona, obtenerLlegadasHoy, registrarLlegada, registrarSalida } from "../services/asistenciasService";
-import { consultarUbicacion, opcionesGPS } from "../services/ubicacion";
+import { opcionesGPS } from "../services/ubicacion";
 
 const mensajesGPS = {
   1: "Permite el acceso a tu ubicación en el navegador para registrar tu asistencia.",
@@ -13,27 +14,15 @@ const hora = (fecha, zonaHoraria) => new Date(fecha).toLocaleTimeString("es-MX",
   timeZone: zonaHoraria, hour: "2-digit", minute: "2-digit", second: "2-digit",
 });
 
-function distancia(posicion, zona) {
-  const rad = (valor) => valor * Math.PI / 180;
-  const a = Math.sin(rad(posicion.coords.latitude - zona.latitud) / 2) ** 2 +
-    Math.cos(rad(zona.latitud)) * Math.cos(rad(posicion.coords.latitude)) *
-    Math.sin(rad(posicion.coords.longitude - zona.longitud) / 2) ** 2;
-  return 6371000 * 2 * Math.asin(Math.sqrt(Math.min(1, a)));
-}
-
 export default function SeccionAsistencias({ miTrabajador }) {
   const trabajador = miTrabajador;
   const [zona, setZona] = useState(null);
   const [registros, setRegistros] = useState({ fecha: "", asistencias: [] });
-  const [posicion, setPosicion] = useState(null);
   const [ahora, setAhora] = useState(Date.now());
   const [cargando, setCargando] = useState(true);
-  const [localizando, setLocalizando] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState("");
-  const [errorGPS, setErrorGPS] = useState("");
   const [exito, setExito] = useState("");
-  const detenerConsulta = useRef(null);
   const montado = useRef(false);
 
   useEffect(() => {
@@ -49,42 +38,11 @@ export default function SeccionAsistencias({ miTrabajador }) {
     return () => {
       montado.current = false;
       clearInterval(reloj);
-      detenerConsulta.current?.();
-      detenerConsulta.current = null;
     };
   }, [miTrabajador]);
 
-  const verificar = () => {
-    setErrorGPS("");
-    setPosicion(null);
-    if (!window.isSecureContext || !navigator.geolocation) {
-      const mensaje = "Abre la página mediante HTTPS y usa un navegador con acceso a la ubicación.";
-      setErrorGPS(mensaje);
-      avisar("error", "Ubicación no disponible", mensaje);
-      return;
-    }
-    detenerConsulta.current?.();
-    setLocalizando(true);
-    detenerConsulta.current = consultarUbicacion(navigator.geolocation, (ubicacion) => {
-      if (!montado.current) return;
-      setPosicion(ubicacion);
-      setAhora(Date.now());
-      setLocalizando(false);
-      setErrorGPS("");
-    }, (e) => {
-      if (!montado.current) return;
-      setPosicion(null);
-      setLocalizando(false);
-      const mensaje = mensajesGPS[e.code] || "No se pudo consultar la ubicación.";
-      setErrorGPS(mensaje);
-      avisar("error", "No se pudo verificar la ubicación", mensaje);
-    });
-  };
+  const [confirmacion, setConfirmacion] = useState(null);
 
-  const metros = posicion && zona ? distancia(posicion, zona) : null;
-  const reciente = posicion && ahora - posicion.timestamp <= 30000 && posicion.timestamp - ahora <= 5000;
-  const precisa = posicion && posicion.coords.accuracy <= zona?.precisionMaxima;
-  const dentro = metros !== null && metros <= zona.radioMetros;
   const partesFecha = zona ? new Intl.DateTimeFormat("en-US", {
     timeZone: zona.zonaHoraria, year: "numeric", month: "2-digit", day: "2-digit",
   }).formatToParts(new Date(ahora)) : [];
@@ -94,21 +52,27 @@ export default function SeccionAsistencias({ miTrabajador }) {
   const registroActual = llegadas.find((registro) => (registro.trabajador?._id || registro.trabajador) === trabajador);
   const yaRegistro = !!registroActual;
   const yaSalio = !!registroActual?.salida;
-  const puedeRegistrar = trabajador && reciente && precisa && dentro && !yaSalio && !cargando && !guardando;
+  const salidaDesde = registroActual ? new Date(registroActual.llegada).getTime() + (zona.esperaSalidaMs ?? 4 * 60 * 60 * 1000) : 0;
+  const puedeRegistrar = zona && trabajador && !yaSalio && !cargando && !guardando &&
+    (!yaRegistro || ahora >= salidaDesde);
+  const accion = yaRegistro ? "Registrar salida" : "Registrar llegada";
 
   const checar = async () => {
-    if (!puedeRegistrar) return;
+    if (!puedeRegistrar || confirmacion !== accion) return;
+    setConfirmacion(null);
+    if (!window.isSecureContext || !navigator.geolocation) {
+      avisar("error", "Ubicación no disponible", "Abre la página mediante HTTPS y habilita el acceso a tu ubicación.");
+      return;
+    }
     setGuardando(true);
     setError("");
     setExito("");
-    let registrado = false;
     try {
       // Se obtiene una lectura nueva al pulsar para no enviar una ubicación anterior.
       const actual = await new Promise((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, opcionesGPS);
       });
       if (!montado.current) return;
-      setPosicion(actual);
       setAhora(Date.now());
       const registrar = yaRegistro ? registrarSalida : registrarLlegada;
       const datos = await registrar({
@@ -116,7 +80,6 @@ export default function SeccionAsistencias({ miTrabajador }) {
         precision: actual.coords.accuracy, tomadaEn: actual.timestamp,
       });
       if (!montado.current) return;
-      registrado = true;
       const asistencia = datos.asistencia;
       setRegistros((previo) => ({
         fecha: asistencia.fecha,
@@ -129,7 +92,6 @@ export default function SeccionAsistencias({ miTrabajador }) {
       if (!montado.current) return;
       setError(mensajesGPS[e.code] || e.message);
       if (e.code) {
-        setPosicion(null);
         avisar("error", "No se pudo obtener tu ubicación", mensajesGPS[e.code] || e.message);
       }
       if (e.status === 409) {
@@ -138,10 +100,6 @@ export default function SeccionAsistencias({ miTrabajador }) {
       }
     } finally {
       if (montado.current) setGuardando(false);
-      if (registrado) {
-        detenerConsulta.current?.();
-        detenerConsulta.current = null;
-      }
     }
   };
 
@@ -153,30 +111,23 @@ export default function SeccionAsistencias({ miTrabajador }) {
     </div>
     <div className="app-panel p-5 sm:p-8">
       {cargando ? <p role="status">Cargando mi asistencia...</p> : <>
-        {zona && <div className="my-5 rounded-xl bg-blue-50 p-4 text-sm text-[#123e83]">
-          <p className="flex items-center gap-2 font-bold"><MapPin size={18} aria-hidden="true"/>Zona de asistencia · {zona.radioMetros} metros</p>
-          <p className="mt-2">{zona.direccion}</p>
-          <p className="mt-2">Verifica tu ubicación dentro de la zona para registrar tu entrada o salida. La ubicación de entrada se guarda junto con tu llegada.</p>
-        </div>}
-        <button type="button" onClick={verificar} disabled={!zona || localizando || guardando} className="rounded-xl border-2 border-blue-200 px-4 py-3 font-bold text-[#124B91] disabled:opacity-50">
-          {localizando ? "Consultando ubicación..." : "Verificar mi ubicación"}
-        </button>
-        <div className="my-4 text-sm" role="status" aria-live="polite">
-          {posicion && <p>Distancia: {Math.ceil(metros)} m · Precisión estimada: ±{Math.ceil(posicion.coords.accuracy)} m.</p>}
-          {posicion && (!reciente ? <p>La ubicación caducó. Verifica tu ubicación nuevamente.</p> :
-            !precisa ? <p>La ubicación es poco precisa. Activa la ubicación precisa e inténtalo al aire libre.</p> :
-            dentro ? <p className="font-semibold text-green-700">Estás dentro de la zona de asistencia.</p> :
-            <p className="font-semibold text-amber-800">Acércate a la empresa para entrar al radio de {zona.radioMetros} metros.</p>)}
-          {yaRegistro && <p className="mt-2 font-semibold text-green-700">Entrada: {hora(registroActual.llegada, zona?.zonaHoraria)}. {yaSalio ? `Salida: ${hora(registroActual.salida, zona?.zonaHoraria)}.` : "Ya puedes checar tu salida. Verifica tu ubicación si ha caducado."}</p>}
-        </div>
-        {errorGPS && <p role="alert" className="my-4 rounded-xl bg-amber-50 p-4 text-amber-900">{errorGPS}</p>}
-        <button type="button" disabled={!puedeRegistrar} onClick={checar} className="app-primary w-full rounded-xl px-5 py-4 font-bold disabled:opacity-50">
-          {guardando ? "Registrando..." : yaSalio ? "Salida registrada" : yaRegistro ? "Checar salida" : "Registrar llegada"}
+        {yaRegistro && <p className="mb-4 text-sm font-semibold text-slate-700">
+          Llegada registrada a las {hora(registroActual.llegada, zona.zonaHoraria)}.
+          {yaSalio ? ` Salida registrada a las ${hora(registroActual.salida, zona.zonaHoraria)}.` :
+            ahora < salidaDesde ? ` Podrás registrar tu salida a partir de las ${hora(salidaDesde, zona.zonaHoraria)}.` : ""}
+        </p>}
+        <button type="button" disabled={!puedeRegistrar} onClick={() => setConfirmacion(accion)}
+          className="app-primary w-full rounded-xl px-5 py-4 font-bold disabled:opacity-50">
+          {guardando ? "Registrando..." : yaSalio ? "Salida registrada" : accion}
         </button>
         <p className="mt-4 text-sm text-slate-500">Una entrada y una salida por día. Horario de México.</p>
       </>}
       {error && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-4 text-red-700">{error}</p>}
       {exito && <p role="status" className="mt-4 rounded-xl bg-green-50 p-4 font-semibold text-green-800">{exito}</p>}
     </div>
+    <AlertaModal alerta={confirmacion === accion && puedeRegistrar && {
+      tipo: "confirm", titulo: confirmacion, confirmarTexto: confirmacion,
+      mensaje: `Usaremos tu ubicación para verificar que estás dentro del radio de ${zona.radioMetros} metros de la empresa.`,
+    }} onCerrar={() => setConfirmacion(null)} onConfirmar={checar} />
   </section>;
 }
