@@ -30,7 +30,7 @@ const Producto = model("ProductoCatalogo", new Schema({
   precio: { type: Number, required: true, min: 0, max: 10000000 },
   unidad: { type: String, enum: unidades, required: true },
   estado: { type: String, enum: estados, default: "borrador" },
-  imagenes: { type: [String], validate: (imagenes) => imagenes.length <= 3 && imagenes.every(imagenValida) },
+  imagenes: { type: [String], validate: (imagenes) => imagenes.length <= 8 && imagenes.every(imagenValida) },
 }, { timestamps: true }));
 
 const Acceso = model("AccesoCatalogo", new Schema({

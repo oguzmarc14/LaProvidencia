@@ -11,7 +11,7 @@ router.use((req, res, next) => {
   res.set("Cache-Control", "no-store");
   next();
 });
-router.use(express.json({ limit: "2mb" }));
+router.use(express.json({ limit: "5mb" }));
 router.use("/admin", autenticar, soloAdmin, admin);
 
 admin.get("/configuracion", async (req, res) => {
@@ -55,7 +55,7 @@ async function guardarProducto(req, res) {
     res.status(id ? 200 : 201).json({ producto });
   } catch (error) {
     if (error.name !== "ValidationError") throw error;
-    res.status(400).json({ mensaje: "Revisa los campos. Puedes subir hasta 3 fotos JPG, PNG o WebP de 400 KB cada una." });
+    res.status(400).json({ mensaje: "Revisa los campos. Puedes subir hasta 8 fotos JPG, PNG o WebP de 400 KB cada una." });
   }
 }
 admin.post("/productos", guardarProducto);

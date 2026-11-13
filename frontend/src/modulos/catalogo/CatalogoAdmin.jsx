@@ -4,6 +4,7 @@ import { catalogoAdmin, categorias, apartadosCatalogo, nombreCategoria, enlaceCa
 
 const nuevo = { nombre: "", categoria: categorias[0], medidas: "", material: "", presentacion: "", acabados: "", precioDesde: false, caracteristicas: "", precio: "", unidad: unidades[0], estado: estados[0], imagenes: [] };
 const tiposImagen = ["image/jpeg", "image/png", "image/webp"];
+const maxFotos = 8;
 const maxBytes = 400 * 1024;
 const leerImagen = (archivo) => new Promise((resolve, reject) => {
   const lector = new FileReader();
@@ -105,8 +106,8 @@ export default function CatalogoAdmin() {
     e.target.value = "";
     if (!archivos.length) return;
     setErrorFoto("");
-    if (form.imagenes.length + archivos.length > 3) {
-      setErrorFoto("Puedes agregar hasta 3 fotos por producto.");
+    if (form.imagenes.length + archivos.length > maxFotos) {
+      setErrorFoto(`Puedes agregar hasta ${maxFotos} fotos por producto.`);
       return;
     }
     setOcupado(true);
@@ -178,8 +179,8 @@ export default function CatalogoAdmin() {
               </div>
             )}
             <label className="relative flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-blue-300 bg-blue-50 px-3 py-3 text-center text-sm font-bold text-blue-900 focus-within:ring-2 focus-within:ring-blue-600">
-              <ImagePlus size={18} aria-hidden="true" /> Agregar fotos · {form.imagenes.length}/3
-              <input className="absolute inset-0 h-full w-full cursor-pointer opacity-0" type="file" multiple accept="image/jpeg,image/png,image/webp" onChange={agregarFotos} disabled={form.imagenes.length >= 3} />
+              <ImagePlus size={18} aria-hidden="true" /> Agregar fotos · {form.imagenes.length}/{maxFotos}
+              <input className="absolute inset-0 h-full w-full cursor-pointer opacity-0" type="file" multiple accept="image/jpeg,image/png,image/webp" onChange={agregarFotos} disabled={form.imagenes.length >= maxFotos} />
             </label>
             <p className="text-xs text-slate-600">JPG, PNG o WebP. Las fotos nuevas se guardan en WebP.</p>
             {errorFoto && <p role="alert" className="text-sm text-rose-700">{errorFoto}</p>}
