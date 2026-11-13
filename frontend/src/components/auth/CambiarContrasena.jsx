@@ -1,3 +1,4 @@
+import { avisar } from "../../services/avisos";
 import { useId, useState } from "react";
 import { Eye, EyeOff, LockKeyhole } from "lucide-react";
 import BrandMark from "../BrandMark";
@@ -36,6 +37,7 @@ export default function CambiarContrasena({ alCambiar, temporal = true, minimo =
     setError("");
     if (contrasenaNueva !== confirmacion) {
       setError("Las contraseñas nuevas no coinciden.");
+      avisar("error", "Revisa la confirmación", "Las contraseñas nuevas no coinciden.");
       return;
     }
     setCargando(true);

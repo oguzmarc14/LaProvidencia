@@ -1,9 +1,12 @@
+import AlertaModal from "../../components/ui/AlertaModal";
 import { useEffect, useState } from "react";
-import { ArrowUpRight, Image, Pencil } from "lucide-react";
+import { ArrowUpRight, Image, Pencil, Trash2 } from "lucide-react";
 import { apartadosCatalogo, catalogoAdmin, enlaceCatalogo, moneda, nombreCategoria } from "./catalogoService";
 import EtiquetasCategoria from "./EtiquetasCategoria";
 
 export default function ProductosAdmin({ editar, nuevo }) {
+  const [alerta, setAlerta] = useState(null);
+  const [borrando, setBorrando] = useState(false);
   const [productos, setProductos] = useState(null);
   const [error, setError] = useState("");
   const [apartadoId, setApartadoId] = useState("");
@@ -20,6 +23,21 @@ export default function ProductosAdmin({ editar, nuevo }) {
   const apartado = apartadosCatalogo.find(item => item.id === apartadoId);
   const visibles = productos?.filter(producto =>
     (!apartado || apartado.categorias.includes(producto.categoria)) && (!categoria || producto.categoria === categoria));
+
+  async function eliminar() {
+    if (borrando || !alerta?.producto) return;
+    setBorrando(true);
+    const producto = alerta.producto;
+    try {
+      await catalogoAdmin(`/productos/${producto._id}`, "DELETE");
+      setProductos(actuales => actuales.filter(item => item._id !== producto._id));
+      setAlerta({ tipo: "success", titulo: "Producto eliminado", mensaje: producto.nombre });
+    } catch (e) {
+      setAlerta({ tipo: "error", titulo: "No se pudo eliminar el producto", mensaje: e.message });
+    } finally {
+      setBorrando(false);
+    }
+  }
 
   return <section className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
     <header className="app-panel flex flex-wrap items-center justify-between gap-4 p-6">
@@ -65,12 +83,21 @@ export default function ProductosAdmin({ editar, nuevo }) {
                 <div key={titulo}><dt className="inline font-semibold">{titulo} </dt><dd className="inline">{valor}</dd></div>
               ))}
             </dl>
+            <div className="mt-auto flex flex-wrap gap-2">
             <button type="button" onClick={() => editar(producto)} className="mt-auto inline-flex items-center gap-2 self-start rounded-xl border border-slate-200 px-4 py-2 font-semibold text-blue-800 hover:bg-blue-50">
               <Pencil size={16} aria-hidden="true" /> Editar
             </button>
+            <button type="button" onClick={() => setAlerta({
+              tipo: "danger", titulo: "¿Eliminar producto?", confirmarTexto: "Eliminar producto", producto,
+              mensaje: `Se eliminará «${producto.nombre}» del sistema y del catálogo. Esta acción es permanente.`,
+            })} className="inline-flex items-center gap-2 rounded-xl border border-rose-200 px-4 py-2 font-semibold text-rose-700 hover:bg-rose-50">
+              <Trash2 size={16} aria-hidden="true" /> Eliminar
+            </button>
+            </div>
           </div>
         </article>
       ))}
     </div>
+    <AlertaModal alerta={alerta} procesando={borrando} onConfirmar={eliminar} onCerrar={() => setAlerta(null)} />
   </section>;
 }

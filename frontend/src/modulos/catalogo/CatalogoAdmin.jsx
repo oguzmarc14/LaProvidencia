@@ -1,3 +1,5 @@
+import AlertaModal from "../../components/ui/AlertaModal";
+import { avisar } from "../../services/avisos";
 import { useState } from "react";
 import { Copy, ImagePlus, X } from "lucide-react";
 import { catalogoAdmin, categorias, apartadosCatalogo, nombreCategoria, enlaceCatalogo, estados, unidades } from "./catalogoService";
@@ -55,6 +57,7 @@ function Campo({ titulo, children }) {
 export default function CatalogoAdmin({ productoInicial, verProductos }) {
   const [busquedaCategoria, setBusquedaCategoria] = useState("");
   const [form, setForm] = useState(productoInicial ?? nuevo);
+  const [confirmacion, setConfirmacion] = useState(null);
   const [ocupado, setOcupado] = useState(false);
   const [error, setError] = useState("");
   const [errorFoto, setErrorFoto] = useState("");
@@ -94,18 +97,29 @@ export default function CatalogoAdmin({ productoInicial, verProductos }) {
     if (!archivos.length) return;
     setErrorFoto("");
     if (form.imagenes.length + archivos.length > maxFotos) {
-      setErrorFoto(`Puedes agregar hasta ${maxFotos} fotos por producto.`);
+      const mensaje = `Puedes agregar hasta ${maxFotos} fotos por producto.`;
+      setErrorFoto(mensaje);
+      avisar("error", "Límite de fotos", mensaje);
       return;
     }
     setOcupado(true);
     Promise.all(archivos.map(prepararFoto))
       .then((imagenes) => setForm((anterior) => ({ ...anterior, imagenes: [...anterior.imagenes, ...imagenes] })))
-      .catch((e) => setErrorFoto(e.message))
+      .catch((e) => { setErrorFoto(e.message); avisar("error", "No se pudieron agregar las fotos", e.message); })
       .finally(() => setOcupado(false));
   }
 
   function guardarProducto(e) {
     e.preventDefault();
+    setConfirmacion({
+      tipo: "confirm", titulo: form._id ? "¿Guardar cambios?" : "¿Crear producto?",
+      mensaje: form.estado === "publicado" ? `«${form.nombre}» será visible en el catálogo público.` : `«${form.nombre}» quedará en administración.`,
+      confirmarTexto: form.estado === "publicado" ? "Guardar y publicar" : "Guardar",
+    });
+  }
+
+  function confirmarGuardado() {
+    setConfirmacion(null);
     ejecutar(async () => {
       const { _id, ...datos } = form;
       const { producto } = await catalogoAdmin(_id ? `/productos/${_id}` : "/productos", _id ? "PUT" : "POST", { ...datos, precio: Number(datos.precio) });
@@ -199,6 +213,7 @@ export default function CatalogoAdmin({ productoInicial, verProductos }) {
           </div>
         </fieldset>
       </form>
+      <AlertaModal alerta={confirmacion} onCerrar={() => setConfirmacion(null)} onConfirmar={confirmarGuardado} />
     </section>
   );
 }

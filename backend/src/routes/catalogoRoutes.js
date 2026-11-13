@@ -60,6 +60,13 @@ async function guardarProducto(req, res) {
 }
 admin.post("/productos", guardarProducto);
 admin.put("/productos/:id", guardarProducto);
+admin.delete("/productos/:id", async (req, res) => {
+  const { id } = req.params;
+  if (!/^[a-f0-9]{24}$/i.test(id)) return res.status(400).json({ mensaje: "Producto inválido." });
+  const resultado = await Producto.deleteOne({ _id: id });
+  if (!resultado.deletedCount) return res.status(404).json({ mensaje: "Producto no encontrado." });
+  res.json({ mensaje: "Producto eliminado." });
+});
 
 router.get("/productos", async (req, res) => {
   const [productos, acceso] = await Promise.all([

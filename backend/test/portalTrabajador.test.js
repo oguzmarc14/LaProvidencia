@@ -159,3 +159,18 @@ test("el historial personal limita semana y mes a la ficha autenticada", async (
   }
   assert.equal((await solicitar("/asistencias/mis-registros?fecha=2025-02-30")).status, 400);
 });
+
+test("solo administración puede eliminar un producto existente", async () => {
+  const { Producto } = require("../src/models/Catalogo");
+  vincular();
+  assert.equal((await solicitar(`/catalogo/admin/productos/${otraFicha}`, { method: "DELETE" })).status, 403);
+  Usuario.findById.mock.restore();
+  vincular({ rol: "admin" });
+  const eliminar = mock.method(Producto, "deleteOne", async filtro => {
+    assert.deepEqual(filtro, { _id: otraFicha });
+    return { deletedCount: eliminar.mock.callCount() === 0 ? 1 : 0 };
+  });
+  assert.equal((await solicitar("/catalogo/admin/productos/invalido", { method: "DELETE" })).status, 400);
+  assert.equal((await solicitar(`/catalogo/admin/productos/${otraFicha}`, { method: "DELETE" })).status, 200);
+  assert.equal((await solicitar(`/catalogo/admin/productos/${otraFicha}`, { method: "DELETE" })).status, 404);
+});

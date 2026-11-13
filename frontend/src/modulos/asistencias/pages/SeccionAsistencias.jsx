@@ -1,3 +1,4 @@
+import { avisar } from "../../../services/avisos";
 import { useEffect, useRef, useState } from "react";
 import { Clock, MapPin } from "lucide-react";
 import { obtenerZona, obtenerLlegadasHoy, registrarLlegada, registrarSalida } from "../services/asistenciasService";
@@ -57,7 +58,9 @@ export default function SeccionAsistencias({ miTrabajador }) {
     setErrorGPS("");
     setPosicion(null);
     if (!window.isSecureContext || !navigator.geolocation) {
-      setErrorGPS("Abre la página mediante HTTPS y usa un navegador con acceso a la ubicación.");
+      const mensaje = "Abre la página mediante HTTPS y usa un navegador con acceso a la ubicación.";
+      setErrorGPS(mensaje);
+      avisar("error", "Ubicación no disponible", mensaje);
       return;
     }
     detenerConsulta.current?.();
@@ -72,7 +75,9 @@ export default function SeccionAsistencias({ miTrabajador }) {
       if (!montado.current) return;
       setPosicion(null);
       setLocalizando(false);
-      setErrorGPS(mensajesGPS[e.code] || "No se pudo consultar la ubicación.");
+      const mensaje = mensajesGPS[e.code] || "No se pudo consultar la ubicación.";
+      setErrorGPS(mensaje);
+      avisar("error", "No se pudo verificar la ubicación", mensaje);
     });
   };
 
@@ -123,7 +128,10 @@ export default function SeccionAsistencias({ miTrabajador }) {
     } catch (e) {
       if (!montado.current) return;
       setError(mensajesGPS[e.code] || e.message);
-      if (e.code) setPosicion(null);
+      if (e.code) {
+        setPosicion(null);
+        avisar("error", "No se pudo obtener tu ubicación", mensajesGPS[e.code] || e.message);
+      }
       if (e.status === 409) {
         try { const datos = await obtenerLlegadasHoy(); if (montado.current) setRegistros(datos); }
         catch { /* Se conserva el mensaje del servidor. */ }
