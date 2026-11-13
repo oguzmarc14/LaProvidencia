@@ -55,17 +55,17 @@ export default function AsistenciasAdmin() {
       <p className="mt-3 text-white/90">Consulta las entradas y salidas de los trabajadores por fecha. Horario de México.</p>
     </header>
 
-    <div className="app-panel mt-6 flex flex-wrap items-end gap-4 p-5">
-      <label className="min-w-48 flex-1 text-sm font-bold text-slate-700" htmlFor="fecha-asistencias">
+    <div className="app-panel mt-6 grid grid-cols-2 gap-3 p-5 sm:flex sm:flex-wrap sm:items-end">
+      <label className="col-span-2 min-w-0 flex-1 text-sm sm:min-w-48 font-bold text-slate-700" htmlFor="fecha-asistencias">
         <span className="mb-2 flex items-center gap-2"><CalendarDays size={17}/> Fecha de consulta</span>
         <input id="fecha-asistencias" type="date" className="app-field" value={fecha} onChange={e => setFecha(e.target.value)}/>
       </label>
-      <label className="min-w-48 flex-1 text-sm font-bold text-slate-700" htmlFor="buscar-asistencias">
+      <label className="col-span-2 min-w-0 flex-1 text-sm sm:min-w-48 font-bold text-slate-700" htmlFor="buscar-asistencias">
         <span className="mb-2 flex items-center gap-2"><Search size={17}/> Buscar trabajador</span>
         <input id="buscar-asistencias" type="search" className="app-field" value={busqueda} onChange={e => setBusqueda(e.target.value)} placeholder="Nombre del trabajador"/>
       </label>
       <button type="button" onClick={() => setFecha(hoy())} className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-bold text-[#124B91]">Hoy</button>
-      <button type="button" disabled={cargando || !fecha} onClick={() => setActualizacion(valor => valor + 1)} className="app-primary inline-flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-bold disabled:opacity-50">
+      <button type="button" disabled={cargando || !fecha} onClick={() => setActualizacion(valor => valor + 1)} className="app-primary inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold disabled:opacity-50">
         <RefreshCw size={17} className={cargando ? "animate-spin" : ""}/> Actualizar
       </button>
     </div>

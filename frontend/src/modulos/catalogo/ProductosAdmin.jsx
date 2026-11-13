@@ -40,19 +40,19 @@ export default function ProductosAdmin({ editar, nuevo }) {
   }
 
   return <section className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
-    <header className="app-panel flex flex-wrap items-center justify-between gap-4 p-6">
+    <header className="flex flex-wrap items-center justify-between gap-5 rounded-[28px] bg-gradient-to-r from-[#123e83] via-[#513d79] to-[#a13f65] p-6 text-white shadow-lg sm:p-9">
       <h1 className="text-3xl font-extrabold">Productos</h1>
-      <div className="flex flex-wrap gap-2">
-      <button type="button" onClick={nuevo} className="rounded-xl border border-slate-200 px-5 py-3 font-bold text-blue-800 hover:bg-blue-50">
+      <div className="grid w-full gap-2 sm:flex sm:w-auto">
+      <button type="button" onClick={nuevo} className="rounded-xl bg-white px-5 py-3 text-center font-bold text-[#123e83] hover:bg-blue-50">
         Nuevo producto
       </button>
-      <a href={enlaceCatalogo} target="_blank" rel="noreferrer" className="app-primary inline-flex items-center gap-2 rounded-xl px-5 py-3 font-bold">
+      <a href={enlaceCatalogo} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 border border-white/40 hover:bg-white/15 rounded-xl px-5 py-3 font-bold">
         Ver catálogo público <ArrowUpRight size={18} aria-hidden="true" />
       </a>
       </div>
     </header>
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-2" role="group" aria-label="Secciones de productos">
+      <div className="grid w-full gap-2 sm:flex sm:w-auto" role="group" aria-label="Secciones de productos">
         {[{ id: "", nombre: "Todos" }, ...apartadosCatalogo].map(item => (
           <button key={item.id} type="button" aria-pressed={apartadoId === item.id}
             className={`rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold ${apartadoId === item.id ? "app-primary" : "bg-white text-slate-700 hover:bg-slate-100"}`}
@@ -66,11 +66,11 @@ export default function ProductosAdmin({ editar, nuevo }) {
     {visibles?.length === 0 && <p className="text-slate-600">No hay productos en esta selección.</p>}
     <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
       {visibles?.map(producto => (
-        <article key={producto._id} className="app-panel flex flex-col overflow-hidden">
+        <article key={producto._id} className="brand-card flex min-w-0 flex-col overflow-hidden">
           {producto.imagenes?.[0] ? (
-            <img src={producto.imagenes[0]} alt={producto.nombre} className="aspect-[4/3] w-full object-cover" loading="lazy" />
+            <img src={producto.imagenes[0]} alt={producto.nombre} className="aspect-[4/3] w-full bg-slate-50 object-contain" loading="lazy" />
           ) : <div className="grid aspect-[4/3] place-items-center bg-slate-100 text-slate-500"><Image size={36} aria-label="Sin foto" /></div>}
-          <div className="flex flex-1 flex-col gap-3 p-5">
+          <div className="flex min-w-0 flex-1 flex-col gap-3 break-words p-5">
             <div className="flex flex-wrap gap-2 text-xs font-semibold">
               <span className="rounded-full bg-sky-100 px-3 py-1 text-sky-900">{nombreCategoria(producto.categoria)}</span>
               <span className="rounded-full bg-slate-100 px-3 py-1 capitalize text-slate-700">{producto.estado}</span>
@@ -83,14 +83,14 @@ export default function ProductosAdmin({ editar, nuevo }) {
                 <div key={titulo}><dt className="inline font-semibold">{titulo} </dt><dd className="inline">{valor}</dd></div>
               ))}
             </dl>
-            <div className="mt-auto flex flex-wrap gap-2">
-            <button type="button" onClick={() => editar(producto)} className="mt-auto inline-flex items-center gap-2 self-start rounded-xl border border-slate-200 px-4 py-2 font-semibold text-blue-800 hover:bg-blue-50">
+            <div className="mt-auto grid grid-cols-2 gap-2 border-t border-slate-100 pt-4">
+            <button type="button" onClick={() => editar(producto)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2 font-semibold text-blue-800 hover:bg-blue-50">
               <Pencil size={16} aria-hidden="true" /> Editar
             </button>
             <button type="button" onClick={() => setAlerta({
               tipo: "danger", titulo: "¿Eliminar producto?", confirmarTexto: "Eliminar producto", producto,
               mensaje: `Se eliminará «${producto.nombre}» del sistema y del catálogo. Esta acción es permanente.`,
-            })} className="inline-flex items-center gap-2 rounded-xl border border-rose-200 px-4 py-2 font-semibold text-rose-700 hover:bg-rose-50">
+            })} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-rose-200 px-4 py-2 font-semibold text-rose-700 hover:bg-rose-50">
               <Trash2 size={16} aria-hidden="true" /> Eliminar
             </button>
             </div>
