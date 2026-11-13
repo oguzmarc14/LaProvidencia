@@ -82,7 +82,7 @@ export default function PortalTrabajador({ usuario, alSalir, alCambiarContrasena
   }
 
   return (
-    <main className="app-background min-h-screen pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0">
+    <main className="acciones-moviles app-background min-h-screen min-w-0 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0">
       <header className="relative z-20 bg-gradient-to-br from-[#f5444b] via-[#a33d63] to-[#554372] px-4 py-5 text-white sm:py-7">
         <div className="mx-auto grid max-w-6xl justify-items-center gap-4">
           <BrandMark />

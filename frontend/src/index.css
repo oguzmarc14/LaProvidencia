@@ -71,3 +71,25 @@ button:disabled { cursor: not-allowed; }
   .brand-card { transition: none; }
   .brand-card:hover { transform: none; }
 }
+
+
+@media (max-width: 767px) {
+  .acciones-moviles :where(button, a.app-primary) {
+    max-inline-size: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .acciones-moviles :where(button.flex, button.inline-flex, a.inline-flex):not(.text-left) {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .acciones-moviles :where(button.app-primary, a.app-primary) {
+    min-block-size: 44px;
+    text-align: center;
+  }
+
+  .acciones-moviles :where(button, a.inline-flex) > svg {
+    flex-shrink: 0;
+  }
+}
