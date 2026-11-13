@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import {
   LogOut,
-  ShieldCheck,
+  UserRound,
+  Settings,
   ChevronRight,
   CalendarClock,
   Bell,
@@ -31,6 +32,7 @@ export default function MainLayout({
   children,
 }) {
   const [menuAbierto, setMenuAbierto] = useState(false);
+  const [perfilAbierto, setPerfilAbierto] = useState(false);
   const [avisosAbiertos, setAvisosAbiertos] = useState(false);
   const [tareas, setTareas] = useState([]);
   const [errorAvisos, setErrorAvisos] = useState("");
@@ -134,7 +136,7 @@ export default function MainLayout({
               {/* Notificaciones */}
               <div className="relative">
                 <button
-                  onClick={() => setAvisosAbiertos(!avisosAbiertos)}
+                  onClick={() => { setPerfilAbierto(false); setAvisosAbiertos(!avisosAbiertos); }}
                   aria-label="Ver avisos de tareas"
                   aria-expanded={avisosAbiertos}
                   className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-[#124B91] transition hover:bg-blue-50"
@@ -252,35 +254,28 @@ export default function MainLayout({
                 )}
               </div>
 
-              {/* Perfil real del usuario */}
-              <div className="hidden items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-2 py-1.5 sm:flex">
-                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#123e83] to-[#934467] text-white">
-                  <ShieldCheck size={17} />
-                </span>
-
-                <div className="hidden max-w-[180px] md:block">
-                  <p className="truncate text-xs font-black text-[#203d6b]">
-                    {usuario?.usuario || usuario?.email || "Usuario"}
-                  </p>
-
-                  <p className="text-[10px] uppercase tracking-wide text-slate-500">
-                    {["admin", "superadmin"].includes(usuario?.rol)
-                      ? "Administrador"
-                      : "Usuario"}
-                  </p>
-                </div>
+              <div className="relative" onKeyDown={evento => { if (evento.key === "Escape") setPerfilAbierto(false); }}>
+                <button type="button" aria-label="Perfil del administrador" aria-expanded={perfilAbierto}
+                  onClick={() => { setAvisosAbiertos(false); setPerfilAbierto(!perfilAbierto); }}
+                  className="grid size-10 place-items-center rounded-xl border border-slate-200 bg-slate-50 text-[#124B91] hover:bg-blue-50">
+                  <UserRound size={19} aria-hidden="true" />
+                </button>
+                {perfilAbierto && <>
+                  <button type="button" tabIndex={-1} aria-label="Cerrar perfil" onClick={() => setPerfilAbierto(false)} className="fixed inset-0 z-10 cursor-default" />
+                  <div className="absolute right-0 top-full z-20 mt-2 w-64 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
+                    <div className="border-b border-slate-100 px-3 py-2">
+                      <p className="break-words font-bold text-[#203d6b]">{usuario?.nombre || usuario?.usuario || usuario?.email || "Administrador"}</p>
+                      <p className="text-xs text-slate-500">Administrador</p>
+                    </div>
+                    <button type="button" disabled className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-sm text-slate-500">
+                      <Settings size={16} aria-hidden="true" /> Configuración <span className="ml-auto text-xs">Próximamente</span>
+                    </button>
+                    <button type="button" onClick={cerrarSesion} className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-sm font-semibold text-rose-700 hover:bg-rose-50">
+                      <LogOut size={16} aria-hidden="true" /> Salir
+                    </button>
+                  </div>
+                </>}
               </div>
-
-              {/* Cerrar sesión */}
-              <button
-                onClick={cerrarSesion}
-                className="flex h-10 items-center gap-2 rounded-xl border border-slate-200 px-3 text-sm font-semibold text-slate-600 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700"
-                aria-label="Cerrar sesión"
-                title="Cerrar sesión"
-              >
-                <LogOut size={17} />
-                <span className="hidden lg:inline">Salir</span>
-              </button>
             </div>
           </div>
         </header>

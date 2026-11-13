@@ -61,24 +61,24 @@ export default function Sidebar({
   cerrar,
   abrir,
 }) {
-  const accesos = opciones.filter(({ id }) => ["dashboard", "trabajadores", "trabajos", "asistencias"].includes(id));
-  const enOtros = !accesos.some(({ id }) => id === actual);
   const estilo = activo => `flex min-h-12 min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-0.5 py-2 text-[10px] font-bold ${activo ? "bg-[#124B91] text-white" : "text-[#124B91] hover:bg-blue-50"}`;
 
   return (
     <>
       <nav aria-label="Accesos móviles de administración"
-        className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 gap-1 border-t border-slate-200 bg-white/95 px-1 pt-2 pb-[max(.5rem,env(safe-area-inset-bottom))] shadow-lg backdrop-blur md:hidden">
-        {accesos.map(({ id, nombre, icono: Icono }) => (
+        className="fixed inset-x-0 bottom-0 z-40 flex items-stretch gap-1 border-t border-slate-200 bg-white/95 px-1 pt-2 pb-[max(.5rem,env(safe-area-inset-bottom))] shadow-lg backdrop-blur md:hidden">
+        <div className="flex min-w-0 flex-1 snap-x gap-1 overflow-x-auto overscroll-x-contain pb-1">
+        {opciones.map(({ id, nombre, icono: Icono }) => (
           <button key={id} type="button" aria-current={actual === id ? "page" : undefined}
-            onClick={() => { navegar(id); window.scrollTo(0, 0); }} className={estilo(actual === id)}>
+            onClick={() => { navegar(id); window.scrollTo(0, 0); }} className={estilo(actual === id) + " w-[4.75rem] shrink-0 snap-start"}>
             <Icono size={20} aria-hidden="true" />
             {id === "dashboard" ? "Inicio" : nombre}
           </button>
         ))}
+        </div>
         <button type="button" aria-expanded={abierto} aria-controls="menu-administracion"
-          onClick={abierto ? cerrar : abrir} className={estilo(enOtros || abierto)}>
-          <Ellipsis size={20} aria-hidden="true" /> Más
+          onClick={abierto ? cerrar : abrir} className={estilo(abierto) + " w-16 shrink-0"}>
+          <Ellipsis size={20} aria-hidden="true" /> Ver más
         </button>
       </nav>
       {abierto && (
@@ -86,16 +86,16 @@ export default function Sidebar({
           <button type="button" className="fixed inset-0 z-20 bg-slate-950/50 md:hidden" onClick={cerrar} aria-label="Cerrar menú" />
           <section id="menu-administracion" aria-label="Todas las secciones"
             onKeyDown={evento => { if (evento.key === "Escape") cerrar(); }}
-            className="fixed inset-x-0 bottom-[calc(3.75rem+max(.5rem,env(safe-area-inset-bottom)))] z-30 rounded-t-3xl border border-blue-100 bg-white p-4 shadow-xl md:hidden">
+            className="fixed inset-x-0 bottom-[calc(3.75rem+max(.5rem,env(safe-area-inset-bottom)))] z-30 rounded-t-3xl border border-blue-100 max-h-[65dvh] overflow-y-auto bg-white p-4 shadow-xl md:hidden">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="font-extrabold text-[#203d6b]">Secciones</h2>
               <button type="button" aria-label="Cerrar secciones" onClick={cerrar} className="grid size-11 place-items-center rounded-xl bg-blue-50 text-blue-800"><X size={18}/></button>
             </div>
-            <nav aria-label="Secciones del sistema" className="flex snap-x gap-2 overflow-x-auto overscroll-x-contain pb-3">
+            <nav aria-label="Secciones del sistema" className="grid grid-cols-3 gap-2">
               {opciones.map(({ id, nombre, icono: Icono }) => (
                 <button key={id} type="button" aria-current={id === actual ? "page" : undefined}
                   onClick={() => { navegar(id); cerrar(); window.scrollTo(0, 0); }}
-                  className={estilo(id === actual) + " min-h-16 w-24 shrink-0 snap-start border border-blue-100"}>
+                  className={estilo(id === actual) + " min-h-16 w-full border border-blue-100"}>
                   <Icono size={21} aria-hidden="true" />{nombre}
                 </button>
               ))}
