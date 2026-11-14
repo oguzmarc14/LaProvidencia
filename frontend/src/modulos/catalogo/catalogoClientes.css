@@ -407,7 +407,8 @@ html:has(.lp-ficha[open]) { overflow: hidden; }
   border-color: #c995bf;
   box-shadow: 0 14px 28px #48265c20;
 }
-.lp-producto-abrir { display: block; width: 100%; flex: 1; text-align: left; }
+.lp-producto-abrir { display: flex; flex-direction: column; justify-content: flex-start; width: 100%; flex: 1; text-align: left; }
+.lp-producto-abrir > .lp-foto-producto { flex: none; }
 .lp-producto-abrir:focus-visible { outline-offset: -3px; }
 .lp-foto-producto, .lp-foto-ejemplo {
   display: block;
