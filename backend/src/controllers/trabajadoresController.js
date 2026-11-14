@@ -5,6 +5,8 @@ const Trabajo = require("../models/Trabajo");
 const nombreInvalido = (nombre) =>
   typeof nombre !== "string" || nombre.trim().length === 0;
 
+const puestoInvalido = puesto => puesto !== undefined && (typeof puesto !== "string" || puesto.trim().length > 20);
+
 const whatsappInvalido = (whatsapp) =>
   whatsapp !== undefined && typeof whatsapp !== "string";
 
@@ -18,11 +20,11 @@ const errorServidor = (res, error) => {
 
 const crearTrabajador = async (req, res) => {
   try {
-    const { nombre, whatsapp } = req.body;
-    if (nombreInvalido(nombre) || whatsappInvalido(whatsapp)) {
+    const { nombre, whatsapp, puesto } = req.body;
+    if (nombreInvalido(nombre) || whatsappInvalido(whatsapp) || puestoInvalido(puesto)) {
       return res.status(400).json({ mensaje: "Verifica nombre y WhatsApp" });
     }
-    const trabajador = await Trabajador.create({ nombre, whatsapp });
+    const trabajador = await Trabajador.create({ nombre, whatsapp, puesto });
     return res.status(201).json({ mensaje: "Trabajador registrado", trabajador });
   } catch (error) {
     return errorServidor(res, error);
@@ -61,12 +63,12 @@ const actualizarTrabajador = async (req, res) => {
       return res.status(400).json({ mensaje: "ID de trabajador inválido" });
     }
     const campos = Object.keys(req.body);
-    if (!campos.length || campos.some((campo) => !["nombre", "whatsapp", "activo"].includes(campo))) {
+    if (!campos.length || campos.some((campo) => !["nombre", "whatsapp", "puesto", "activo"].includes(campo))) {
       return res.status(400).json({ mensaje: "Indica campos válidos para actualizar" });
     }
-    const { nombre, whatsapp, activo } = req.body;
+    const { nombre, whatsapp, puesto, activo } = req.body;
     if ((nombre !== undefined && nombreInvalido(nombre)) ||
-        whatsappInvalido(whatsapp) ||
+        whatsappInvalido(whatsapp) || puestoInvalido(puesto) ||
         (activo !== undefined && typeof activo !== "boolean")) {
       return res.status(400).json({ mensaje: "Datos de actualización no válidos" });
     }
@@ -76,6 +78,7 @@ const actualizarTrabajador = async (req, res) => {
     }
     if (nombre !== undefined) trabajador.nombre = nombre;
     if (whatsapp !== undefined) trabajador.whatsapp = whatsapp;
+    if (puesto !== undefined) trabajador.puesto = puesto;
     if (activo !== undefined) trabajador.activo = activo;
     await trabajador.save();
     return res.status(200).json({ mensaje: "Trabajador actualizado", trabajador });

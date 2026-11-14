@@ -133,8 +133,8 @@ export default function SeccionTrabajos() {
           const whatsapp = enlaceWhatsApp(t.cliente?.whatsapp);
           const mensaje = encodeURIComponent(`Hola, ${t.cliente?.nombre || ""}. Te contactamos de La Providencia para dar seguimiento a tu trabajo: ${t.nombre}.`);
           const maps = enlaceMaps(t.ubicacionMaps);
-          return <article key={t._id} className="brand-card overflow-hidden">
-            <div className="space-y-4 p-4 sm:p-6">
+          return <article key={t._id} className="brand-card flex flex-col overflow-hidden">
+            <div className="flex flex-1 flex-col gap-4 p-4 sm:p-6">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="flex min-w-0 flex-1 items-start gap-3">
                   <span className="rounded-xl bg-blue-50 p-3 text-[#124B91]"><BriefcaseBusiness size={22}/></span>
@@ -163,8 +163,8 @@ export default function SeccionTrabajos() {
               </div>
               {t.fotoMedidas && <a href={t.fotoMedidas} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-2 text-sm font-bold text-[#124B91] hover:bg-blue-50"><img src={t.fotoMedidas} alt="Croquis o medidas" className="h-16 w-20 rounded-lg object-cover"/><ImageIcon size={17}/> Ver fotografía de medidas <ExternalLink size={14}/></a>}
               {(t.direccionInstalacion || maps) && <div className="flex flex-wrap items-center gap-3 rounded-xl bg-slate-50 p-3"><MapPin size={18} className="shrink-0 text-[#124B91]"/><div className="min-w-0 flex-1"><p className="text-xs text-slate-500">Ubicación de instalación</p><p className="break-words text-sm font-semibold text-slate-800">{t.direccionInstalacion || "Ver ubicación en el mapa"}</p></div>{maps && <a href={maps} onClick={() => avisar("info", "Ubicación de instalación", "Google Maps se abrirá en otra pestaña.")} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 w-full items-center justify-center gap-1 rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm font-bold text-[#124B91] hover:bg-blue-50 sm:w-auto">Maps <ExternalLink size={14}/></a>}</div>}
-              {t.especificaciones && <p className="line-clamp-2 text-sm text-slate-500">{t.especificaciones}</p>}
-                <div className="relative border-t border-slate-100 pt-4">
+              <div className="min-h-10"><p className="line-clamp-2 break-words text-sm text-slate-500">{t.especificaciones}</p></div>
+                <div className="relative mt-auto border-t border-slate-100 pt-4">
                   <label className="sr-only" htmlFor={`estado-trabajo-${t._id}`}>Cambiar estado de {t.nombre}</label>
                   <select id={`estado-trabajo-${t._id}`} value={t.estado} disabled={cambiandoEstado !== null} onChange={e => cambiarEstado(t, e.target.value)} title="Cambiar estado del trabajo" className={`min-h-11 w-full text-center cursor-pointer appearance-none rounded-full border border-transparent py-2 pl-3 pr-8 text-xs font-extrabold shadow-sm outline-none transition hover:border-slate-300 focus:ring-2 focus:ring-[#124B91] disabled:cursor-wait disabled:opacity-60 sm:max-w-none ${colores[t.estado] || "bg-slate-100 text-slate-700"}`}>
                     {Object.entries(etapas).map(([id, nombre]) => <option key={id} value={id}>{nombre}</option>)}

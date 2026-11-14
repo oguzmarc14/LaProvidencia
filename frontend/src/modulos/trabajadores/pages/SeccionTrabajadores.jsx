@@ -40,7 +40,7 @@ export default function SeccionTrabajadores() {
       setGuardando(true);
       try {
         if (esEdicion) await actualizarTrabajador(id, datos);
-        else await crearTrabajador({ nombre:datos.nombre, whatsapp:datos.whatsapp });
+        else await crearTrabajador({ nombre:datos.nombre, whatsapp:datos.whatsapp, puesto:datos.puesto });
         setModalAbierto(false); setEditando(null);
         await cargar();
         return { tipo:"success", titulo:esEdicion ? "Trabajador actualizado" : "Trabajador registrado", mensaje:"Los datos se guardaron correctamente." };
@@ -84,7 +84,7 @@ export default function SeccionTrabajadores() {
               <div className="space-y-4 p-5 sm:p-6">
                 <div className="flex items-start gap-3">
                   <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-blue-100 to-purple-100 text-[#124B91]"><Users size={24}/></span>
-                  <div className="min-w-0 flex-1"><p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Miembro del equipo</p><button type="button" onClick={() => setViendoTrabajos(t)} className="mt-1 break-words text-left text-lg font-extrabold leading-snug text-slate-900 transition hover:text-[#124B91] hover:underline">{t.nombre} <ArrowUpRight size={15} className="inline align-baseline"/></button></div>
+                  <div className="min-w-0 flex-1"><p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 break-words">{t.puesto || "Sin puesto"}</p><button type="button" onClick={() => setViendoTrabajos(t)} className="mt-1 break-words text-left text-lg font-extrabold leading-snug text-slate-900 transition hover:text-[#124B91] hover:underline">{t.nombre} <ArrowUpRight size={15} className="inline align-baseline"/></button></div>
                   <div className="flex shrink-0 gap-1.5">
                     <button type="button" title="Editar trabajador" aria-label={`Editar a ${t.nombre}`}
                       onClick={() => { setEditando(t); setModalAbierto(true); }}

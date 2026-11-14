@@ -2,9 +2,9 @@ import { X, UserRoundPlus, Phone, UserRound, CheckCircle2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function ModalTrabajador({ trabajador, onClose, onSave, saving }) {
-  const [form, setForm] = useState({ nombre: "", whatsapp: "", activo: true });
+  const [form, setForm] = useState({ nombre: "", whatsapp: "", puesto: "", activo: true });
   useEffect(() => {
-    setForm({ nombre: trabajador?.nombre || "", whatsapp: trabajador?.whatsapp || "", activo: trabajador?.activo ?? true });
+    setForm({ nombre: trabajador?.nombre || "", whatsapp: trabajador?.whatsapp || "", puesto: trabajador?.puesto || "", activo: trabajador?.activo ?? true });
   }, [trabajador]);
 
   const enviar = event => {
@@ -34,6 +34,7 @@ export default function ModalTrabajador({ trabajador, onClose, onSave, saving })
               <div className="space-y-5">
                 <div><label htmlFor="nombre-trabajador" className="mb-2 block text-sm font-extrabold text-[#233d65]">Nombre completo <span className="text-rose-600">*</span></label><input id="nombre-trabajador" required autoFocus maxLength={120} value={form.nombre} onChange={e => setForm({ ...form, nombre: e.target.value })} className={campo} placeholder="Ej. José Martínez" autoComplete="name"/></div>
                 <div><label htmlFor="whatsapp-trabajador" className="mb-2 flex items-center gap-2 text-sm font-extrabold text-[#233d65]"><Phone size={16}/> WhatsApp <span className="font-medium text-slate-400">(opcional)</span></label><input id="whatsapp-trabajador" type="tel" value={form.whatsapp} onChange={e => setForm({ ...form, whatsapp: e.target.value })} className={campo} placeholder="Ej. 449 123 4567" autoComplete="tel"/></div>
+                <label className="block text-sm font-extrabold text-[#233d65]">Puesto <span className="font-normal text-slate-500">(máx. 20 caracteres)</span><input className={campo} maxLength={20} value={form.puesto} onChange={e => setForm({ ...form, puesto: e.target.value })} placeholder="Ej. Instalador" /></label>
                 {trabajador && <label className="flex items-center gap-3 rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm font-bold text-[#233d65]"><input type="checkbox" className="h-5 w-5 accent-[#124B91]" checked={form.activo} onChange={e => setForm({ ...form, activo: e.target.checked })}/> Trabajador activo</label>}
               </div>
             </section>
