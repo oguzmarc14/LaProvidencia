@@ -43,7 +43,7 @@
 .lp-boton-linea:hover { background-color: #ffffff1e; }
 .catalogo-boton { background: var(--marca-oscuro); }
 
-.lp-hero { position: relative; display: flex; align-items: center; min-height: calc(100vh - var(--lp-altura-navbar)); min-height: calc(100dvh - var(--lp-altura-navbar)); isolation: isolate; overflow: hidden; border-radius: 0 0 50% 2% / 0 0 3% 2%; }
+.lp-hero { position: relative; display: flex; align-items: center; min-height: calc(100vh - var(--lp-altura-navbar)); min-height: calc(100dvh - var(--lp-altura-navbar)); isolation: isolate; overflow: hidden; }
 .lp-hero-foto { position: absolute; z-index: -2; inset: 0 0 0 auto; width: 78%; height: 100%; object-fit: cover; object-position: 66% center; }
 .lp-hero::before { content: ""; position: absolute; z-index: -1; inset: 0; background: linear-gradient(20deg, #063987 0%, transparent 46%), linear-gradient(90deg, #a62962 0%, #71386ff5 30%, #71386f99 46%, transparent 70%); }
 .lp-hero-contenido { padding-block: clamp(2.5rem, 5vw, 4.5rem); }
