@@ -23,8 +23,24 @@ function WhatsApp({ children, className = "" }) {
 
 function Navbar() {
   const [abierto, setAbierto] = useState(false);
+  const [fueraDelHero, setFueraDelHero] = useState(false);
+  const cabecera = useRef(null);
+
+  useEffect(() => {
+    const medir = () => {
+      const hero = document.getElementById("lp-hero");
+      if (hero) setFueraDelHero(hero.getBoundingClientRect().bottom <= cabecera.current.offsetHeight);
+    };
+    medir();
+    window.addEventListener("scroll", medir, { passive: true });
+    window.addEventListener("resize", medir);
+    return () => {
+      window.removeEventListener("scroll", medir);
+      window.removeEventListener("resize", medir);
+    };
+  }, []);
   return (
-    <header className="lp-header lp-degradado">
+    <header ref={cabecera} className={`lp-header ${fueraDelHero ? "lp-header-solido" : ""}`}>
       <div className="lp-ancho lp-navbar" onKeyDown={(e) => { if (e.key === "Escape") setAbierto(false); }}>
         <Marca />
         <button type="button" className="lp-menu" aria-controls="lp-navegacion" aria-expanded={abierto} aria-label={abierto ? "Cerrar menú" : "Abrir menú"} onClick={() => setAbierto(!abierto)}>
@@ -41,7 +57,7 @@ function Navbar() {
 
 function Hero() {
   return (
-    <section className="lp-hero lp-degradado" aria-labelledby="lp-titulo">
+    <section id="lp-hero" className="lp-hero lp-degradado" aria-labelledby="lp-titulo">
       <img className="lp-hero-foto" src={proyectos[0].foto} alt="" fetchPriority="high" />
       <div className="lp-ancho lp-hero-contenido">
         <p className="lp-etiqueta">Mármol · Granito · Cuarzo</p>

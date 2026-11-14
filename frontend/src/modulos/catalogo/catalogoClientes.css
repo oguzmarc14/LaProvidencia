@@ -23,7 +23,8 @@
 .lp-saltar { position: absolute; z-index: 40; top: .5rem; left: .5rem; transform: translateY(-200%); padding: .7rem 1rem; background: white; color: var(--marca-oscuro); }
 .lp-saltar:focus { transform: none; }
 
-.lp-header { position: sticky; top: 0; z-index: 20; margin-bottom: calc(-1 * var(--lp-altura-navbar)); background: linear-gradient(90deg, #762451a6, #2b2145bf 55%, #151523cc); backdrop-filter: blur(12px); }
+.lp-header { position: sticky; top: 0; z-index: 20; margin-bottom: calc(-1 * var(--lp-altura-navbar)); color: white; background: linear-gradient(90deg, #56284750, #16213b66); backdrop-filter: blur(18px) saturate(145%); box-shadow: inset 0 -1px #ffffff30; }
+.lp-header-solido { background: linear-gradient(105deg, #063987, #563369); backdrop-filter: none; }
 .lp-navbar { display: flex; align-items: center; justify-content: space-between; min-height: var(--lp-altura-navbar); gap: 1.4rem; }
 .lp-marca { display: inline-flex; align-items: center; gap: .75rem; flex-shrink: 0; }
 .lp-marca img { width: 3rem; height: 3rem; object-fit: contain; border-radius: .55rem; }
