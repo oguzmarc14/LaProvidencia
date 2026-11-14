@@ -5,9 +5,9 @@ import { obtenerTareas } from "../tareas/services/tareasService";
 import { obtenerRegistrosVenta } from "../dashboard/services/registroVentasService";
 
 const tipos = {
-  tareas: { nombre: "Tareas", color: "bg-violet-100 text-violet-900", punto: "bg-violet-600", cargar: obtenerTareas },
-  trabajos: { nombre: "Trabajos", color: "bg-blue-100 text-blue-900", punto: "bg-blue-600", cargar: obtenerTrabajos },
-  ventas: { nombre: "Lápidas", color: "bg-emerald-100 text-emerald-900", punto: "bg-emerald-600", cargar: obtenerRegistrosVenta },
+  tareas: { nombre: "Tareas", color: "bg-violet-100 text-violet-900", activo: "bg-violet-800 text-white", punto: "bg-violet-600", cargar: obtenerTareas },
+  trabajos: { nombre: "Trabajos", color: "bg-blue-100 text-blue-900", activo: "bg-blue-800 text-white", punto: "bg-blue-600", cargar: obtenerTrabajos },
+  ventas: { nombre: "Lápidas", color: "bg-emerald-100 text-emerald-900", activo: "bg-emerald-800 text-white", punto: "bg-emerald-600", cargar: obtenerRegistrosVenta },
 };
 const hoy = () => new Intl.DateTimeFormat("en-CA", {
   timeZone: "America/Mexico_City", year: "numeric", month: "2-digit", day: "2-digit",
@@ -87,7 +87,7 @@ export default function CalendarioAdmin({ navegar }) {
       </div>
       <div role="group" aria-label="Tipo de actividad" className="flex flex-wrap justify-center gap-2">
         {["", ...Object.keys(tipos)].map(tipo => <button key={tipo} type="button" aria-pressed={filtro === tipo} onClick={() => setFiltro(tipo)}
-          className={`min-h-11 rounded-full px-3 text-sm font-bold ${filtro === tipo ? "bg-[#123e83] text-white" : tipos[tipo]?.color || "bg-slate-100 text-slate-800"}`}>
+          className={`min-h-11 rounded-full px-3 text-sm font-bold ${filtro === tipo ? (tipos[tipo]?.activo || "bg-[#123e83] text-white") : tipos[tipo]?.color || "bg-slate-100 text-slate-800"}`}>
           {tipos[tipo]?.nombre || "Todas"}
         </button>)}
       </div>
