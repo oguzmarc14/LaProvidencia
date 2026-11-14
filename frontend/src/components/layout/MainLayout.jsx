@@ -13,6 +13,7 @@ import Sidebar from "./Sidebar";
 import { obtenerTareas } from "../../modulos/tareas/services/tareasService";
 
 const nombres = {
+  calendario: "Calendario",
   dashboard: "Panel principal",
   clientes: "Gestión de clientes",
   trabajadores: "Gestión de trabajadores",

@@ -22,6 +22,7 @@ import SeccionVentas from "./modulos/ventas/pages/SeccionVentas";
 import AsistenciasAdmin from "./modulos/asistencias/pages/AsistenciasAdmin";
 import SeccionTareas from "./modulos/tareas/pages/SeccionTareas";
 import PortalTrabajador from "./modulos/trabajadores/pages/PortalTrabajador";
+import CalendarioAdmin from "./modulos/calendario/CalendarioAdmin";
 import CatalogoAdmin from "./modulos/catalogo/CatalogoAdmin";
 import CatalogoClientes from "./modulos/catalogo/CatalogoClientes";
 
@@ -189,6 +190,8 @@ function Sistema() {
       <AsistenciasAdmin />
     ) : seccion === "tareas" ? (
       <SeccionTareas />
+    ) : seccion === "calendario" ? (
+      <CalendarioAdmin navegar={setSeccion} />
     ) : seccion === "catalogo" ? (
       <CatalogoAdmin productoInicial={productoEditado} verProductos={() => { setProductoEditado(null); setSeccion("productos"); }} />
     ) : seccion === "productos" ? (

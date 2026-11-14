@@ -9,6 +9,7 @@ import {
   Clock,
   BookOpen,
   Package,
+  CalendarDays,
   Ellipsis,
 } from "lucide-react";
 
@@ -50,6 +51,7 @@ const opciones = [
     nombre: "Asistencia",
     icono: Clock,
   },
+  { id: "calendario", nombre: "Calendario", icono: CalendarDays },
   { id: "productos", nombre: "Productos", icono: Package },
   { id: "catalogo", nombre: "Catálogo", icono: BookOpen },
 ];
