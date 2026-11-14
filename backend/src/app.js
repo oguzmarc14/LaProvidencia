@@ -30,6 +30,7 @@ app.use(["/api/trabajos", "/api/registro-ventas"], express.json({ limit: "2mb" }
 app.use(json);
 
 //aqui vamos a usar las apis de trabajos
+app.use("/api/calendario", autenticar, soloAdmin, require("./routes/calendarioRoutes"));
 app.use("/api/auth", authRoutes);
 app.use("/api/trabajos", autenticar, soloAdmin, trabajoRoutes);
 

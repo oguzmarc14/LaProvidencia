@@ -1,3 +1,5 @@
+import { solicitarApi } from "../../services/api";
+import { avisar } from "../../services/avisos";
 import { useEffect, useState } from "react";
 import { CalendarDays, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
 import { obtenerTrabajos } from "../trabajos/services/trabajosService";
@@ -79,6 +81,10 @@ function BarrasTareas({ mes, primerDia, totalDias, tareas, navegar }) {
 }
 
 export default function CalendarioAdmin({ navegar }) {
+  const [festivos, setFestivos] = useState([]);
+  const [nombreFestivo, setNombreFestivo] = useState("");
+  const [guardandoFestivo, setGuardandoFestivo] = useState(false);
+  const [errorFestivos, setErrorFestivos] = useState("");
   const [vista, setVista] = useState("calendario");
   const [seleccion, setSeleccion] = useState(hoy);
   const [filtro, setFiltro] = useState("");
@@ -101,6 +107,35 @@ export default function CalendarioAdmin({ navegar }) {
     return () => { activo = false; };
   }, [intento]);
 
+  useEffect(() => {
+    const controller = new AbortController();
+    setErrorFestivos("");
+    solicitarApi("/api/calendario/festivos", { signal: controller.signal })
+      .then(datos => { if (!controller.signal.aborted) setFestivos(datos.festivos); })
+      .catch(error => { if (!controller.signal.aborted) setErrorFestivos(error.message); });
+    return () => controller.abort();
+  }, [intento]);
+
+  async function guardarFestivo(evento) {
+    evento.preventDefault();
+    if (guardandoFestivo || !nombreFestivo.trim()) return;
+    setGuardandoFestivo(true);
+    const fecha = seleccion;
+    try {
+      const { festivo } = await solicitarApi(`/api/calendario/festivos/${fecha}`, {
+        method: "PUT", body: JSON.stringify({ nombre: nombreFestivo.trim() }),
+      });
+      setFestivos(actuales => [...actuales.filter(item => item._id !== fecha), festivo]);
+      setNombreFestivo("");
+      avisar("success", "Festivo guardado", festivo.nombre);
+    } catch (error) {
+      avisar("error", "No se pudo guardar el festivo", error.message);
+    } finally {
+      setGuardandoFestivo(false);
+    }
+  }
+
+  useEffect(() => { setNombreFestivo(""); }, [seleccion]);
   const mes = mesDe(seleccion);
   const primerDia = (mes.getUTCDay() + 6) % 7;
   const totalDias = new Date(Date.UTC(mes.getUTCFullYear(), mes.getUTCMonth() + 1, 0)).getUTCDate();
@@ -157,10 +192,12 @@ export default function CalendarioAdmin({ navegar }) {
         {Array.from({ length: totalDias }, (_, i) => {
           const fecha = iso(new Date(Date.UTC(mes.getUTCFullYear(), mes.getUTCMonth(), i + 1)));
           const eventos = porDia.get(fecha) || [];
+          const festivo = festivos.find(item => item._id === fecha);
           return <button key={fecha} type="button" aria-pressed={fecha === seleccion} aria-current={fecha === hoy() ? "date" : undefined}
-            aria-label={`${formatoDia.format(new Date(fecha))}, ${eventos.length} actividades`} onClick={() => setSeleccion(fecha)}
+            aria-label={`${formatoDia.format(new Date(fecha))}, ${eventos.length} actividades${festivo ? ", festivo: " + festivo.nombre : ""}`} onClick={() => setSeleccion(fecha)}
             className={`grid min-h-12 place-content-center gap-1 rounded-lg border text-sm font-bold sm:min-h-16 ${fecha === seleccion ? "border-[#123e83] bg-blue-100 text-blue-950" : "border-slate-100 bg-slate-50 text-slate-700 hover:bg-blue-50"}`}>
             {i + 1}
+            {festivo && <span className="mx-auto size-2 rounded-full bg-amber-500" aria-hidden="true" />}
             <span className="flex h-2 justify-center gap-0.5" aria-hidden="true">
               {[...new Set(eventos.map(evento => evento.tipo))].map(tipo => <span key={tipo} className={`size-1.5 rounded-full ${tipos[tipo].punto}`} />)}
             </span>
@@ -169,6 +206,21 @@ export default function CalendarioAdmin({ navegar }) {
       </div>
       </>}
     </div>
+    <section className="app-panel p-5 sm:p-6" aria-labelledby="festivos-titulo">
+      <h2 id="festivos-titulo" className="text-lg font-extrabold text-[#203d6b]">Días festivos</h2>
+      <p className="mt-1 text-sm capitalize text-slate-600">{formatoDia.format(new Date(seleccion))}</p>
+      {errorFestivos && <p role="alert" className="mt-2 text-sm text-rose-700">{errorFestivos}</p>}
+      {festivos.find(item => item._id === seleccion) && <p className="mt-3 rounded-xl bg-amber-100 p-3 text-sm font-bold text-amber-900">{festivos.find(item => item._id === seleccion).nombre}</p>}
+      <form key={seleccion} onSubmit={guardarFestivo} className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+        <label className="block text-sm font-bold">Nombre del festivo
+          <input className="app-field mt-1" required maxLength={80} value={nombreFestivo}
+            onChange={evento => setNombreFestivo(evento.target.value)} placeholder="Ej. Día de la Constitución" />
+        </label>
+        <button type="submit" disabled={guardandoFestivo} className="app-primary rounded-xl px-5 py-3 font-bold disabled:opacity-50">
+          {guardandoFestivo ? "Guardando…" : "Guardar festivo"}
+        </button>
+      </form>
+    </section>
     {vista === "calendario" && <section className="app-panel p-5 sm:p-6" aria-labelledby="agenda-dia">
       <h2 id="agenda-dia" className="font-extrabold capitalize text-[#203d6b]">{formatoDia.format(new Date(seleccion))}</h2>
       {!resultado && <p role="status" className="mt-3 text-sm text-slate-600">Cargando actividades…</p>}

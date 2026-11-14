@@ -1,3 +1,4 @@
+import { solicitarApi } from "../../services/api";
 import { useEffect, useState } from "react";
 import {
   LogOut,
@@ -22,6 +23,8 @@ export default function MainLayout({
   const [menuAbierto, setMenuAbierto] = useState(false);
   const [perfilAbierto, setPerfilAbierto] = useState(false);
   const [avisosAbiertos, setAvisosAbiertos] = useState(false);
+  const [asistencia, setAsistencia] = useState([]);
+  const [errorAsistencia, setErrorAsistencia] = useState("");
   const [tareas, setTareas] = useState([]);
   const [errorAvisos, setErrorAvisos] = useState("");
   const [cargandoAvisos, setCargandoAvisos] = useState(false);
@@ -49,6 +52,17 @@ export default function MainLayout({
   const hoy = new Date();
   hoy.setHours(12, 0, 0, 0);
 
+  useEffect(() => {
+    const controller = new AbortController();
+    setErrorAsistencia("");
+    const cargar = () => solicitarApi("/api/calendario/avisos-asistencia", { signal: controller.signal })
+      .then(datos => { if (!controller.signal.aborted) setAsistencia(datos.avisos); })
+      .catch(error => { if (!controller.signal.aborted) setErrorAsistencia(error.message); });
+    cargar();
+    const intervalo = setInterval(cargar, 60000);
+    return () => { controller.abort(); clearInterval(intervalo); };
+  }, [avisosAbiertos]);
+
   const avisos = tareas
     .filter((tarea) => tarea.estado !== "finalizada")
     .map((tarea) => ({
@@ -64,6 +78,7 @@ export default function MainLayout({
     .filter((tarea) => tarea.dias <= 2)
     .sort((a, b) => a.dias - b.dias);
 
+  const totalAvisos = avisos.length + asistencia.length;
   const vencidas = avisos.filter((tarea) => tarea.dias < 0).length;
 
   const irATareas = () => {
@@ -103,15 +118,15 @@ export default function MainLayout({
               <div className="relative">
                 <button
                   onClick={() => { setPerfilAbierto(false); setAvisosAbiertos(!avisosAbiertos); }}
-                  aria-label="Ver avisos de tareas"
+                  aria-label="Ver notificaciones"
                   aria-expanded={avisosAbiertos}
                   className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-[#124B91] transition hover:bg-blue-50"
                 >
                   <Bell size={19} />
 
-                  {avisos.length > 0 && (
+                  {totalAvisos > 0 && (
                     <span className="absolute -right-1 -top-1 rounded-full bg-rose-600 px-1.5 py-0.5 text-[10px] font-bold text-white">
-                      {avisos.length > 9 ? "9+" : avisos.length}
+                      {totalAvisos > 9 ? "9+" : totalAvisos}
                     </span>
                   )}
                 </button>
@@ -209,6 +224,17 @@ export default function MainLayout({
                         )}
                       </div>
 
+                      <section className="border-t border-slate-100 p-3">
+                        <h3 className="text-sm font-extrabold text-[#203d6b]">Checadas por revisar</h3>
+                        {errorAsistencia && <p role="alert" className="mt-2 text-xs text-rose-700">{errorAsistencia}</p>}
+                        <ul className="mt-2 max-h-36 space-y-1 overflow-y-auto">
+                          {asistencia.map(aviso => <li key={aviso.id} className="rounded-lg bg-amber-50 px-2 py-1.5 text-xs text-amber-950">
+                            <strong>{aviso.nombre}</strong> · {aviso.tipo} · {aviso.fecha}
+                          </li>)}
+                        </ul>
+                        <button type="button" className="mt-2 text-xs font-bold text-[#124B91]"
+                          onClick={() => { setAvisosAbiertos(false); navegar("asistencias"); }}>Abrir asistencia</button>
+                      </section>
                       <button
                         onClick={irATareas}
                         className="w-full bg-blue-50 p-3 text-xs font-extrabold text-[#124B91] transition hover:bg-blue-100"
