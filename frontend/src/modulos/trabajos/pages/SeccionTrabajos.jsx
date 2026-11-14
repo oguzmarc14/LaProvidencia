@@ -140,12 +140,11 @@ export default function SeccionTrabajos() {
                   <span className="rounded-xl bg-blue-50 p-3 text-[#124B91]"><BriefcaseBusiness size={22}/></span>
                   <div className="min-w-0"><h3 className="break-words text-lg font-extrabold text-slate-900">{t.nombre}</h3><p className="mt-1 text-sm capitalize text-slate-500">{t.material} · Entrega {mostrarFecha(t.fechaFinal)}</p></div>
                 </div>
-                <div className="relative shrink-0">
-                  <label className="sr-only" htmlFor={`estado-trabajo-${t._id}`}>Cambiar estado de {t.nombre}</label>
-                  <select id={`estado-trabajo-${t._id}`} value={t.estado} disabled={cambiandoEstado !== null} onChange={e => cambiarEstado(t, e.target.value)} title="Cambiar estado del trabajo" className={`max-w-[180px] cursor-pointer appearance-none rounded-full border border-transparent py-2 pl-3 pr-8 text-xs font-extrabold shadow-sm outline-none transition hover:border-slate-300 focus:ring-2 focus:ring-[#124B91] disabled:cursor-wait disabled:opacity-60 sm:max-w-none ${colores[t.estado] || "bg-slate-100 text-slate-700"}`}>
-                    {Object.entries(etapas).map(([id, nombre]) => <option key={id} value={id}>{nombre}</option>)}
-                  </select>
-                  {cambiandoEstado === t._id ? <LoaderCircle size={14} className="pointer-events-none absolute right-2.5 top-2.5 animate-spin"/> : <ChevronDown size={14} className="pointer-events-none absolute right-2.5 top-2.5"/>}
+                <div className="flex shrink-0 gap-1.5">
+                  <button type="button" title="Editar / Asignar" aria-label={`Editar o asignar ${t.nombre}`} onClick={() => abrirEdicion(t)}
+                    className="grid size-11 place-items-center rounded-xl border border-blue-200 text-[#124B91] hover:bg-blue-50"><Pencil size={18} aria-hidden="true" /></button>
+                  <button type="button" title="Eliminar trabajo" aria-label={`Eliminar ${t.nombre}`} onClick={() => borrar(t)}
+                    className="grid size-11 place-items-center rounded-xl border border-red-200 text-red-700 hover:bg-red-50"><Trash2 size={18} aria-hidden="true" /></button>
                 </div>
               </div>
               <div><div className="mb-2 flex items-center justify-between gap-2 text-xs font-semibold text-slate-500"><span>Progreso de producción</span><span>{indice >= 0 ? indice + 1 : 0} de 5 etapas</span></div><div className="flex gap-1.5" aria-label={`Estado: ${etapas[t.estado] || t.estado}`}>{Object.keys(etapas).map((etapa, i) => <span key={etapa} className={`h-2 flex-1 rounded-full ${i <= indice ? "bg-[#124B91]" : "bg-slate-200"}`}/>)}</div></div>
@@ -165,7 +164,13 @@ export default function SeccionTrabajos() {
               {t.fotoMedidas && <a href={t.fotoMedidas} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-2 text-sm font-bold text-[#124B91] hover:bg-blue-50"><img src={t.fotoMedidas} alt="Croquis o medidas" className="h-16 w-20 rounded-lg object-cover"/><ImageIcon size={17}/> Ver fotografía de medidas <ExternalLink size={14}/></a>}
               {(t.direccionInstalacion || maps) && <div className="flex flex-wrap items-center gap-3 rounded-xl bg-slate-50 p-3"><MapPin size={18} className="shrink-0 text-[#124B91]"/><div className="min-w-0 flex-1"><p className="text-xs text-slate-500">Ubicación de instalación</p><p className="break-words text-sm font-semibold text-slate-800">{t.direccionInstalacion || "Ver ubicación en el mapa"}</p></div>{maps && <a href={maps} onClick={() => avisar("info", "Ubicación de instalación", "Google Maps se abrirá en otra pestaña.")} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 w-full items-center justify-center gap-1 rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm font-bold text-[#124B91] hover:bg-blue-50 sm:w-auto">Maps <ExternalLink size={14}/></a>}</div>}
               {t.especificaciones && <p className="line-clamp-2 text-sm text-slate-500">{t.especificaciones}</p>}
-              <div className="grid gap-2 sm:flex sm:flex-wrap border-t border-slate-100 pt-4"><button onClick={() => abrirEdicion(t)} className="accion-ancho-movil inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#124B91] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#0d3770]"><Pencil size={16}/> Editar / Asignar</button><button onClick={() => borrar(t)} className="accion-ancho-movil inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-red-200 px-3 py-2.5 text-sm font-bold text-red-700 hover:bg-red-50"><Trash2 size={16}/> Eliminar</button></div>
+                <div className="relative border-t border-slate-100 pt-4">
+                  <label className="sr-only" htmlFor={`estado-trabajo-${t._id}`}>Cambiar estado de {t.nombre}</label>
+                  <select id={`estado-trabajo-${t._id}`} value={t.estado} disabled={cambiandoEstado !== null} onChange={e => cambiarEstado(t, e.target.value)} title="Cambiar estado del trabajo" className={`min-h-11 w-full text-center cursor-pointer appearance-none rounded-full border border-transparent py-2 pl-3 pr-8 text-xs font-extrabold shadow-sm outline-none transition hover:border-slate-300 focus:ring-2 focus:ring-[#124B91] disabled:cursor-wait disabled:opacity-60 sm:max-w-none ${colores[t.estado] || "bg-slate-100 text-slate-700"}`}>
+                    {Object.entries(etapas).map(([id, nombre]) => <option key={id} value={id}>{nombre}</option>)}
+                  </select>
+                  {cambiandoEstado === t._id ? <LoaderCircle size={14} className="pointer-events-none absolute right-4 top-[calc(50%+.5rem)] -translate-y-1/2 animate-spin"/> : <ChevronDown size={14} className="pointer-events-none absolute right-4 top-[calc(50%+.5rem)] -translate-y-1/2"/>}
+                </div>
             </div>
           </article>;
         })}
