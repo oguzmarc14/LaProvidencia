@@ -13,8 +13,51 @@ function Campo({ titulo, children }) {
   return <label className="block"><span className="app-label">{titulo}</span>{children}</label>;
 }
 
+function SelectorCategoria({ valor, cambiar }) {
+  const [consulta, setConsulta] = useState("");
+  const [abierto, setAbierto] = useState(false);
+  const grupos = apartadosCatalogo.map(grupo => ({
+    ...grupo,
+    categorias: grupo.categorias.filter(categoria =>
+      normalizarCategoria(grupo.nombre + " " + nombreCategoria(categoria)).includes(normalizarCategoria(consulta))),
+  })).filter(grupo => grupo.categorias.length);
+
+  function cerrar() {
+    setAbierto(false);
+    setConsulta("");
+  }
+
+  return <div className="relative" onBlur={evento => {
+    if (!evento.currentTarget.contains(evento.relatedTarget)) cerrar();
+  }} onKeyDown={evento => { if (evento.key === "Escape") cerrar(); }}>
+    <label className="app-label" htmlFor="categoria-producto">Categoría</label>
+    <input id="categoria-producto" className="app-field" autoComplete="off"
+      aria-expanded={abierto} aria-controls="opciones-categoria"
+      placeholder={nombreCategoria(valor) || "Busca una categoría"}
+      value={abierto ? consulta : nombreCategoria(valor)}
+      onFocus={() => setAbierto(true)} onClick={() => setAbierto(true)}
+      onChange={evento => { setAbierto(true); setConsulta(evento.target.value); }}
+      onKeyDown={evento => {
+        if (evento.key !== "Enter") return;
+        evento.preventDefault();
+        const opciones = grupos.flatMap(grupo => grupo.categorias);
+        if (abierto && opciones.length === 1) { cambiar(opciones[0]); cerrar(); }
+      }} />
+    <div id="opciones-categoria" hidden={!abierto} className="absolute z-20 mt-2 max-h-64 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white p-2 shadow-lg">
+      {!grupos.length && <p role="status" className="p-3 text-sm text-slate-600">No hay coincidencias.</p>}
+      {grupos.map(grupo => <div key={grupo.id} role="group" aria-label={grupo.nombre}>
+        <p className="px-3 pt-2 text-xs font-bold text-slate-500">{grupo.nombre}</p>
+        {grupo.categorias.map(categoria => <button key={categoria} type="button"
+          aria-pressed={valor === categoria} onClick={() => { cambiar(categoria); cerrar(); }}
+          className={`block min-h-11 w-full rounded-lg px-3 text-left text-sm hover:bg-blue-50 ${valor === categoria ? "bg-blue-100 font-bold text-blue-900" : "text-slate-800"}`}>
+          {nombreCategoria(categoria)}
+        </button>)}
+      </div>)}
+    </div>
+  </div>;
+}
+
 export default function CatalogoAdmin({ productoInicial, verProductos }) {
-  const [busquedaCategoria, setBusquedaCategoria] = useState("");
   const [form, setForm] = useState(productoInicial ?? nuevo);
   const [confirmacion, setConfirmacion] = useState(null);
   const [ocupado, setOcupado] = useState(false);
@@ -83,7 +126,6 @@ export default function CatalogoAdmin({ productoInicial, verProductos }) {
       const { _id, ...datos } = form;
       const { producto } = await catalogoAdmin(_id ? `/productos/${_id}` : "/productos", _id ? "PUT" : "POST", { ...datos, precio: Number(datos.precio), estado: "publicado", precioDesde: false });
       setForm(nuevo);
-      setBusquedaCategoria("");
       setErrorFoto("");
       const fotos = producto.imagenes.length;
 
@@ -106,22 +148,7 @@ export default function CatalogoAdmin({ productoInicial, verProductos }) {
           <div className="min-w-0 space-y-5">
             <h2 className="text-lg font-bold">Datos del producto</h2>
             <Campo titulo="Nombre"><input {...campo("nombre")} required maxLength={100} placeholder="Ej. Cubierta de granito negro" /></Campo>
-            <div className="space-y-2">
-              <Campo titulo="Buscar categoría">
-                <input className="app-field" type="search" value={busquedaCategoria}
-                  onChange={evento => setBusquedaCategoria(evento.target.value)} placeholder="Ej. Granitos" />
-              </Campo>
-              <Campo titulo="Categoría">
-                <select {...campo("categoria")}>{apartadosCatalogo.map(apartado => {
-                  const consulta = normalizarCategoria(busquedaCategoria);
-                  const opciones = apartado.categorias.filter(valor => valor === form.categoria ||
-                    normalizarCategoria(apartado.nombre + " " + nombreCategoria(valor)).includes(consulta));
-                  return opciones.length ? <optgroup key={apartado.id} label={apartado.nombre}>
-                    {opciones.map(valor => <option key={valor} value={valor}>{nombreCategoria(valor)}</option>)}
-                  </optgroup> : null;
-                })}</select>
-              </Campo>
-            </div>
+            <SelectorCategoria valor={form.categoria} cambiar={categoria => setForm(actual => ({ ...actual, categoria }))} />
             <div className="grid gap-4 sm:grid-cols-2">
               <Campo titulo="Precio (MXN)"><input {...campo("precio")} type="number" min="0" max="10000000" step="0.01" placeholder="0.00" required /></Campo>
               <Campo titulo="Unidad"><select {...campo("unidad")}>{unidades.map(valor => <option key={valor}>{valor}</option>)}</select></Campo>
