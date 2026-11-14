@@ -66,11 +66,11 @@ export default function ProductosAdmin({ editar, nuevo }) {
     {error && <p role="alert" className="text-rose-800">{error}</p>}
     {!error && !productos && <p role="status">Cargando productos…</p>}
     {visibles?.length === 0 && <p className="text-slate-600">No hay productos en esta selección.</p>}
-    <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+    <div className="grid auto-rows-fr gap-5 sm:grid-cols-2 xl:grid-cols-3">
       {visibles?.map(producto => (
         <article key={producto._id} className="brand-card flex min-w-0 flex-col overflow-hidden">
           <button type="button" onClick={() => setFicha(producto)} aria-haspopup="dialog"
-            aria-label={`Ver ficha de ${producto.nombre}`} className="relative block w-full overflow-hidden text-center">
+            aria-label={`Ver ficha de ${producto.nombre}`} className="relative block w-full shrink-0 overflow-hidden text-center">
           {producto.imagenes?.[0] ? (
             <img src={producto.imagenes[0]} alt={producto.nombre} className="aspect-[4/3] w-full bg-slate-50 object-contain" loading="lazy" />
           ) : <div className="grid aspect-[4/3] place-items-center bg-slate-100 text-slate-500"><Image size={36} aria-label="Sin foto" /></div>}
@@ -80,14 +80,14 @@ export default function ProductosAdmin({ editar, nuevo }) {
               <span className="rounded-full bg-sky-100 px-3 py-1 text-sky-900">{nombreCategoria(producto.categoria)}</span>
               <span className="rounded-full bg-slate-100 px-3 py-1 capitalize text-slate-700">{producto.estado}</span>
             </div>
-            <h2 className="font-serif text-2xl font-bold text-[#0b1b53]">{producto.nombre}</h2>
+            <h2 className="line-clamp-3 min-h-[3lh] font-serif text-2xl font-bold text-[#0b1b53]">{producto.nombre}</h2>
             <p className="self-start rounded-xl bg-[#fad8ee] px-3 py-2 font-extrabold text-[#0b1b53]">{producto.precioDesde && "Desde "}{moneda.format(producto.precio)} / {producto.unidad}</p>
-            {producto.caracteristicas && <p className="whitespace-pre-line text-sm text-slate-600">{producto.caracteristicas}</p>}
+            <div className="min-h-[3lh] text-sm text-slate-600"><p className="line-clamp-3 whitespace-pre-line">{producto.caracteristicas}</p></div>
             <button type="button" aria-haspopup="dialog" onClick={() => setFicha(producto)}
               className="mt-auto inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#0b1b53] px-4 py-2 text-sm font-bold text-white hover:bg-[#193776]">
               Ver ficha <ChevronRight size={18} aria-hidden="true" />
             </button>
-            <div className="mt-auto grid grid-cols-1 gap-2 border-t sm:grid-cols-2 border-slate-100 pt-4">
+            <div className="grid grid-cols-1 gap-2 border-t sm:grid-cols-2 border-slate-100 pt-4">
             <button type="button" onClick={() => editar(producto)} className="accion-ancho-movil inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2 font-semibold text-blue-800 hover:bg-blue-50">
               <Pencil size={16} aria-hidden="true" /> Editar
             </button>
