@@ -52,7 +52,7 @@ const precioFicha = new Intl.NumberFormat("es-MX", {
   style: "currency", currency: "MXN", minimumFractionDigits: 0, maximumFractionDigits: 2,
 });
 
-function FichaProducto({ producto, whatsapp, cerrar }) {
+export function FichaProducto({ producto, whatsapp, cerrar }) {
   const dialogo = useRef(null);
   const [foto, setFoto] = useState(0);
   const acabados = (producto.acabados ?? "").split(",").map(acabado => acabado.trim()).filter(Boolean);
@@ -75,7 +75,7 @@ function FichaProducto({ producto, whatsapp, cerrar }) {
         <button type="button" className="lp-ficha-cerrar" aria-label="Cerrar ficha" onClick={cerrar}>Cerrar <X size={21} aria-hidden="true"/></button>
         <div className="lp-ficha-galeria">
           <div className="lp-ficha-foto">
-            <FotoProducto producto={producto} indice={foto}/>
+            {total ? <FotoProducto producto={producto} indice={foto}/> : <p className="grid min-h-40 place-items-center text-slate-600">Sin fotografía</p>}
             {total > 1 && <>
               <button type="button" className="lp-ficha-anterior" aria-label="Foto anterior" onClick={() => mover(-1)}><ChevronLeft/></button>
               <button type="button" className="lp-ficha-siguiente" aria-label="Foto siguiente" onClick={() => mover(1)}><ChevronRight/></button>
@@ -100,7 +100,7 @@ function FichaProducto({ producto, whatsapp, cerrar }) {
             {producto.medidas && <div><Ruler size={23} aria-hidden="true"/><span><dt>Dimensiones</dt><dd>{producto.medidas}</dd></span></div>}
             {acabados.length > 0 && <div className="lp-ficha-acabados"><Palette size={27} aria-hidden="true"/><span><dt>Acabados</dt><dd>{acabados.map((acabado, i) => <span key={i}>{acabado}</span>)}</dd></span></div>}
           </dl>
-          <BotonWhatsApp producto={producto} whatsapp={whatsapp} amplio/>
+          {whatsapp && <BotonWhatsApp producto={producto} whatsapp={whatsapp} amplio/>}
         </div>
       </div>
     </dialog>

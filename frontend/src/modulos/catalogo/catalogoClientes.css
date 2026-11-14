@@ -555,3 +555,5 @@ html:has(.lp-ficha[open]) { overflow: hidden; }
   .lp-ficha-datos { padding: 0; border-left: 0; }
   .lp-ficha-datos h3 { padding-right: 0; }
 }
+
+.lp-vista-admin { min-height: 0; }
