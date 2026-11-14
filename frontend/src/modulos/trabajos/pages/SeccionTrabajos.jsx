@@ -1,6 +1,6 @@
 import { avisar } from "../../../services/avisos";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { BriefcaseBusiness, CalendarDays, Pencil, Plus, Search, Trash2, UserRound, Navigation, ExternalLink, Ruler, Package, Banknote, MessageCircle, MapPin, Image as ImageIcon, ChevronDown, LoaderCircle } from "lucide-react";
+import { useRef, useCallback, useEffect, useMemo, useState } from "react";
+import { BriefcaseBusiness, CalendarDays, Pencil, Plus, Search, Trash2, UserRound, Navigation, ExternalLink, Ruler, Package, Banknote, MessageCircle, MapPin, Image as ImageIcon, ChevronRight, LoaderCircle, Check } from "lucide-react";
 import { obtenerClientes } from "../../clientes/services/clientesService";
 import { obtenerTrabajadores } from "../../trabajadores/services/trabajadoresService";
 import { actualizarTrabajo, crearTrabajo, eliminarTrabajo, obtenerTrabajos } from "../services/trabajosService";
@@ -15,6 +15,47 @@ import { crearTrabajador } from "../../trabajadores/services/trabajadoresService
 
 const etapas = { templado: "Templado", fabricacion: "Fabricación", detallado: "Detallado", instalacion: "Instalación", finalizado: "Finalizado" };
 const colores = { templado: "bg-amber-100 text-amber-800", fabricacion: "bg-violet-100 text-violet-800", detallado: "bg-sky-100 text-sky-800", instalacion: "bg-indigo-100 text-indigo-800", finalizado: "bg-emerald-100 text-emerald-800" };
+
+function SelectorEtapa({ trabajo, ocupado, cambiando, elegir }) {
+  const panel = useRef(null);
+
+  function seleccionar(id) {
+    panel.current.close();
+    elegir(id);
+  }
+
+  return <div className="mt-auto border-t border-slate-100 pt-4">
+    <button type="button" disabled={ocupado} aria-haspopup="dialog"
+      onClick={() => panel.current.showModal()}
+      className={`grid min-h-14 w-full grid-cols-[1fr_auto_1fr] items-center gap-2 rounded-2xl px-4 text-sm font-extrabold transition hover:brightness-95 disabled:opacity-60 ${colores[trabajo.estado] || "bg-slate-100 text-slate-700"}`}>
+      <span className="col-start-2">{cambiando ? "Actualizando…" : etapas[trabajo.estado] || "Elegir etapa"}</span>
+      {cambiando ? <LoaderCircle size={17} className="justify-self-end animate-spin" aria-hidden="true" /> :
+        <ChevronRight size={18} className="justify-self-end" aria-hidden="true" />}
+    </button>
+    <dialog ref={panel} aria-label="Cambiar etapa del trabajo"
+      className="m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-md overflow-y-auto rounded-3xl bg-white p-0 shadow-2xl backdrop:bg-slate-950/55">
+      <header className="bg-gradient-to-r from-[#123e83] via-[#513d79] to-[#a13f65] px-5 py-5 text-white">
+        <h2 className="text-lg font-extrabold">Etapa de producción</h2>
+        <p className="mt-1 break-words text-sm text-white/85">{trabajo.nombre}</p>
+      </header>
+      <div className="space-y-2 p-4">
+        {Object.entries(etapas).map(([id, nombre], indice) => {
+          const actual = trabajo.estado === id;
+          return <button key={id} type="button" aria-current={actual ? "step" : undefined}
+            disabled={actual} onClick={() => seleccionar(id)}
+            className={`flex min-h-12 w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-bold ${colores[id]} ${actual ? "ring-1 ring-inset ring-current" : "hover:brightness-95"}`}>
+            <span className="grid size-7 shrink-0 place-items-center rounded-full bg-white/75" aria-hidden="true">{indice + 1}</span>
+            <span>{nombre}</span>
+            {actual ? <span className="ml-auto inline-flex items-center gap-1 text-xs"><Check size={15} aria-hidden="true" /> Actual</span>
+              : <ChevronRight size={16} className="ml-auto" aria-hidden="true" />}
+          </button>;
+        })}
+        <button type="button" autoFocus onClick={() => panel.current.close()}
+          className="mt-2 min-h-11 w-full rounded-xl border border-slate-200 text-center text-sm font-bold text-slate-700 hover:bg-slate-50">Cancelar</button>
+      </div>
+    </dialog>
+  </div>;
+}
 const mostrarFecha = fecha => fecha ? new Date(fecha).toLocaleDateString("es-MX", { timeZone: "UTC", day: "2-digit", month: "short", year: "numeric" }) : "Sin fecha";
 
 export default function SeccionTrabajos() {
@@ -164,13 +205,8 @@ export default function SeccionTrabajos() {
               {t.fotoMedidas && <a href={t.fotoMedidas} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-2 text-sm font-bold text-[#124B91] hover:bg-blue-50"><img src={t.fotoMedidas} alt="Croquis o medidas" className="h-16 w-20 rounded-lg object-cover"/><ImageIcon size={17}/> Ver fotografía de medidas <ExternalLink size={14}/></a>}
               {(t.direccionInstalacion || maps) && <div className="flex flex-wrap items-center gap-3 rounded-xl bg-slate-50 p-3"><MapPin size={18} className="shrink-0 text-[#124B91]"/><div className="min-w-0 flex-1"><p className="text-xs text-slate-500">Ubicación de instalación</p><p className="break-words text-sm font-semibold text-slate-800">{t.direccionInstalacion || "Ver ubicación en el mapa"}</p></div>{maps && <a href={maps} onClick={() => avisar("info", "Ubicación de instalación", "Google Maps se abrirá en otra pestaña.")} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 w-full items-center justify-center gap-1 rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm font-bold text-[#124B91] hover:bg-blue-50 sm:w-auto">Maps <ExternalLink size={14}/></a>}</div>}
               <div className="min-h-10"><p className="line-clamp-2 break-words text-sm text-slate-500">{t.especificaciones}</p></div>
-                <div className="relative mt-auto border-t border-slate-100 pt-4">
-                  <label className="sr-only" htmlFor={`estado-trabajo-${t._id}`}>Cambiar estado de {t.nombre}</label>
-                  <select id={`estado-trabajo-${t._id}`} value={t.estado} disabled={cambiandoEstado !== null} onChange={e => cambiarEstado(t, e.target.value)} title="Cambiar estado del trabajo" className={`min-h-11 w-full text-center cursor-pointer appearance-none rounded-full border border-transparent py-2 pl-3 pr-8 text-xs font-extrabold shadow-sm outline-none transition hover:border-slate-300 focus:ring-2 focus:ring-[#124B91] disabled:cursor-wait disabled:opacity-60 sm:max-w-none ${colores[t.estado] || "bg-slate-100 text-slate-700"}`}>
-                    {Object.entries(etapas).map(([id, nombre]) => <option key={id} value={id}>{nombre}</option>)}
-                  </select>
-                  {cambiandoEstado === t._id ? <LoaderCircle size={14} className="pointer-events-none absolute right-4 top-[calc(50%+.5rem)] -translate-y-1/2 animate-spin"/> : <ChevronDown size={14} className="pointer-events-none absolute right-4 top-[calc(50%+.5rem)] -translate-y-1/2"/>}
-                </div>
+              <SelectorEtapa trabajo={t} ocupado={cambiandoEstado !== null}
+                cambiando={cambiandoEstado === t._id} elegir={estado => cambiarEstado(t, estado)} />
             </div>
           </article>;
         })}
