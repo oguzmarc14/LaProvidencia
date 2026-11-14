@@ -7,6 +7,10 @@ const crear=async(req,res)=>{
   const d=req.body || {};
   const requeridos=["fechaVenta","fechaEntrega","vendedor","nombreCliente","modeloLapida","materialLapida","nombreDifunto"];
   if(requeridos.some(k=>!String(d[k]||"").trim())) return res.status(400).json({mensaje:"Completa los campos obligatorios."});
+  if (d.imagen !== undefined && d.imagen !== "" && (typeof d.imagen !== "string" ||
+      d.imagen.length > 546160 || !/^data:image\/webp;base64,[A-Za-z0-9+/]+={0,2}$/.test(d.imagen))) {
+    return res.status(400).json({ mensaje: "La fotografía del grabado debe estar en formato WebP y pesar hasta 400 KB." });
+  }
   const precio=Number(d.precioTotal),anticipo=Number(d.anticipo);
   if(!Number.isFinite(precio)||!Number.isFinite(anticipo)||precio<0||anticipo<0||anticipo>precio)return res.status(400).json({mensaje:"Verifica el precio y anticipo. El anticipo no puede superar el precio."});
   if(!mongoose.isValidObjectId(d.trabajador))return res.status(400).json({mensaje:"Selecciona un trabajador responsable."});

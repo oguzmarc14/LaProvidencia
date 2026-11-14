@@ -26,6 +26,7 @@ app.use(
 );
 
 app.use("/api/catalogo", catalogoRoutes);
+app.use(["/api/trabajos", "/api/registro-ventas"], express.json({ limit: "2mb" }));
 app.use(json);
 
 //aqui vamos a usar las apis de trabajos

@@ -1,3 +1,4 @@
+import { prepararFoto } from "../../../services/prepararFoto";
 import { useEffect, useMemo, useState } from "react";
 import { X, CalendarDays, UserRound, MapPin, Layers3, Heart, Banknote, ClipboardList, ImagePlus, Save, ChevronRight } from "lucide-react";
 import { obtenerClientes } from "../../clientes/services/clientesService";
@@ -17,6 +18,24 @@ export default function RegistroVentaModal({onClose,onGuardado}){
  const [errorTrabajadores,setErrorTrabajadores]=useState("");
  const [paso,setPaso]=useState(0);
  const [alerta,setAlerta]=useState(null);
+ const [procesandoFoto, setProcesandoFoto] = useState(false);
+ const [errorFoto, setErrorFoto] = useState("");
+
+ async function subirFoto(evento) {
+  const archivo = evento.target.files?.[0];
+  evento.target.value = "";
+  if (!archivo) return;
+  setProcesandoFoto(true);
+  setErrorFoto("");
+  try {
+   const imagen = await prepararFoto(archivo);
+   setForm(actual => ({ ...actual, imagen }));
+  } catch (error) {
+   setErrorFoto(error.message);
+  } finally {
+   setProcesandoFoto(false);
+  }
+ }
  const [guardando,setGuardando]=useState(false);
  useEffect(()=>{let vivo=true;obtenerClientes().then(r=>{if(vivo)setClientes(r.clientes||[]);}).catch(()=>{});obtenerTrabajadores().then(r=>{if(vivo)setTrabajadores((r.trabajadores||[]).filter(t=>t.activo));}).catch(e=>{if(vivo)setErrorTrabajadores(e.message);});return()=>{vivo=false;};},[]);
  const cambiar=(nombre,valor)=>setForm(a=>({...a,[nombre]:valor}));
@@ -24,7 +43,7 @@ export default function RegistroVentaModal({onClose,onGuardado}){
   0:[["fechaVenta","Fecha de venta","date",true],["fechaEntrega","Fecha aproximada de entrega","date",true],["vendedor","Nombre del vendedor","text",true],["trabajador","Trabajador responsable","select",true]],
   1:[["nombreCliente","Nombre del cliente","text",true],["telefonoCliente","Teléfono del cliente","tel"],["localidad","Localidad","text"],["pasillo","Nombre del pasillo","text"],["gaveta","Número de gaveta","text"]],
   2:[["modeloLapida","Número de modelo de la lápida","text",true],["materialLapida","Material de la lápida","text",true]],
-  3:[["nombreDifunto","Nombre del difunto(a)","text",true],["fechaNacimiento","Fecha de nacimiento","date"],["fechaDefuncion","Fecha de defunción","date"],["epitafio","Oración / epitafio","textarea"],["imagen","Imagen / fotografía (URL)","url"]],
+  3:[["nombreDifunto","Nombre del difunto(a)","text",true],["fechaNacimiento","Fecha de nacimiento","date"],["fechaDefuncion","Fecha de defunción","date"],["epitafio","Oración / epitafio","textarea"]],
   4:[["precioTotal","Precio total del producto","number",true],["anticipo","Anticipo (pago inicial)","number",true]],
   5:[["observaciones","Observaciones y notas adicionales","textarea"]]
  };
@@ -62,11 +81,19 @@ export default function RegistroVentaModal({onClose,onGuardado}){
       {paso===1&&<div className="mb-5"><label className={label}>Seleccionar cliente existente (opcional)</label><select value={form.cliente} onChange={e=>{const c=clientes.find(x=>x._id===e.target.value);setForm(a=>({...a,cliente:e.target.value,nombreCliente:c?.nombre||a.nombreCliente,telefonoCliente:c?.whatsapp||a.telefonoCliente}));}} className={campo}><option value="">Capturar cliente manualmente</option>{clientes.map(c=><option key={c._id} value={c._id}>{c.nombre}</option>)}</select><p className="mt-2 text-xs text-slate-500">Puedes elegir un cliente registrado o escribir los datos sin vincularlo.</p></div>}
       <div className="grid gap-5 sm:grid-cols-2">{campos[paso].map(([nombre,titulo,tipo,obligatorio])=><div key={nombre} className={tipo==="textarea"?"sm:col-span-2":""}><label htmlFor={`venta-${nombre}`} className={label}>{titulo}{obligatorio&&<span className="ml-1 text-rose-600">*</span>}</label>{tipo==="select"?<><select id={`venta-${nombre}`} value={form[nombre]} onChange={e=>cambiar(nombre,e.target.value)} className={campo}><option value="">Selecciona un trabajador activo</option>{trabajadores.map(t=><option key={t._id} value={t._id}>{t.nombre}</option>)}</select>{errorTrabajadores&&<p role="alert" className="mt-2 text-xs text-rose-700">No se pudo cargar el personal: {errorTrabajadores}</p>}</>:tipo==="textarea"?<textarea id={`venta-${nombre}`} rows={4} value={form[nombre]} onChange={e=>cambiar(nombre,e.target.value)} className={campo} placeholder="Escribe aquí los detalles..."/>:<input id={`venta-${nombre}`} type={tipo} step={tipo==="number"?"0.01":undefined} min={tipo==="number"?"0":undefined} value={form[nombre]} onChange={e=>cambiar(nombre,e.target.value)} className={campo} placeholder={tipo==="text"?"Escribe aquí...":undefined}/>}</div>)}</div>
       {paso===4&&<div className="mt-6 rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50 to-purple-50 p-5"><p className="text-sm font-semibold text-slate-600">Restante · Saldo pendiente</p><p className={`mt-2 text-3xl font-black ${saldo<0?"text-rose-700":"text-[#124B91]"}`}>{saldo.toLocaleString("es-MX",{style:"currency",currency:"MXN"})}</p><p className="mt-2 text-xs text-slate-500">Calculado automáticamente: precio total menos anticipo.</p></div>}
-      {paso===3&&<p className="mt-4 flex items-center gap-2 text-xs text-slate-500"><ImagePlus size={16}/> La imagen se registra mediante enlace URL; la subida de archivos podrá añadirse después.</p>}
+      {paso === 3 && <div className="mt-4 space-y-3 rounded-xl border border-blue-100 bg-blue-50 p-4">
+        <label htmlFor="foto-grabado" className="flex items-center gap-2 text-sm font-bold"><ImagePlus size={18} aria-hidden="true" /> Fotografía para el grabado</label>
+        {form.imagen && <img src={form.imagen} alt="Vista previa para el grabado" className="max-h-56 w-full rounded-lg bg-white object-contain" />}
+        <input id="foto-grabado" type="file" accept="image/jpeg,image/png,image/webp" disabled={procesandoFoto || guardando}
+          onChange={subirFoto} className="block w-full text-sm file:mr-2 file:rounded-lg file:border-0 file:bg-white file:px-3 file:py-2 file:font-bold" />
+        {form.imagen && <button type="button" disabled={procesandoFoto} onClick={() => setForm(actual => ({ ...actual, imagen: "" }))} className="text-sm font-bold text-rose-700">Quitar fotografía</button>}
+        {procesandoFoto && <p role="status" className="text-sm">Preparando fotografía…</p>}
+        {errorFoto && <p role="alert" className="text-sm text-rose-700">{errorFoto}</p>}
+      </div>}
      </div>
     </div>
    </div>
-   <footer className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-white px-4 py-4 sm:px-8"><p className="text-xs font-semibold text-slate-500">Los campos con * son obligatorios.</p><div className="grid w-full gap-2 sm:flex sm:w-auto">{paso>0&&<button type="button" onClick={()=>setPaso(p=>p-1)} className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-700">Anterior</button>}{paso<5?<button type="button" onClick={siguiente} className="inline-flex items-center gap-2 rounded-xl bg-[#124B91] px-5 py-3 text-sm font-bold text-white">Siguiente <ChevronRight size={17}/></button>:<button type="button" onClick={guardar} disabled={guardando} className="accion-ancho-movil inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white disabled:opacity-60"><Save size={17}/> Registrar lápida</button>}</div></footer>
+   <footer className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-white px-4 py-4 sm:px-8"><p className="text-xs font-semibold text-slate-500">Los campos con * son obligatorios.</p><div className="grid w-full gap-2 sm:flex sm:w-auto">{paso>0&&<button type="button" onClick={()=>setPaso(p=>p-1)} className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-700">Anterior</button>}{paso<5?<button type="button" onClick={siguiente} disabled={procesandoFoto} className="inline-flex items-center gap-2 rounded-xl bg-[#124B91] px-5 py-3 text-sm font-bold text-white">Siguiente <ChevronRight size={17}/></button>:<button type="button" onClick={guardar} disabled={guardando || procesandoFoto} className="accion-ancho-movil inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white disabled:opacity-60"><Save size={17}/> Registrar lápida</button>}</div></footer>
   </section>
   <AlertaModal alerta={alerta} onCerrar={cerrarAlerta} onConfirmar={ejecutar} procesando={guardando}/>
  </div>;

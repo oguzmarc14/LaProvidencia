@@ -1,3 +1,4 @@
+import { prepararFoto } from "../../../services/prepararFoto";
 import { useEffect, useState } from "react";
 import { enlaceMaps } from "../../clientes/utils/enlacesCliente";
 import { X, Plus, BriefcaseBusiness, CalendarDays, UsersRound, ClipboardList, ArrowRight, Check, Layers3, MapPin, Navigation, ExternalLink, Ruler, Package, Banknote, ImagePlus, Trash2 } from "lucide-react";
@@ -20,28 +21,22 @@ export default function ModalTrabajo({ trabajo, clienteInicial, clientes, trabaj
       responsableTemple: trabajo.responsableTemple?._id || trabajo.responsableTemple || ""
     } : { ...inicial, cliente: clienteInicial?._id || "" });
   }, [trabajo, clienteInicial]);
+  const [procesandoFoto, setProcesandoFoto] = useState(false);
   const [errorFoto, setErrorFoto] = useState("");
   const subirFoto = async (event) => {
     const archivo = event.target.files?.[0];
     event.target.value = "";
     if (!archivo) return;
-    if (!["image/jpeg", "image/png", "image/webp"].includes(archivo.type)) { setErrorFoto("Solo se permiten JPG, PNG o WebP."); return; }
-    if (archivo.size > 10 * 1024 * 1024) { setErrorFoto("La imagen debe pesar menos de 10 MB."); return; }
-    const url = URL.createObjectURL(archivo);
+    setProcesandoFoto(true);
+    setErrorFoto("");
     try {
-      const imagen = new Image();
-      await new Promise((resolve, reject) => { imagen.onload = resolve; imagen.onerror = reject; imagen.src = url; });
-      const escala = Math.min(1, 1400 / Math.max(imagen.width, imagen.height));
-      const canvas = document.createElement("canvas");
-      canvas.width = Math.max(1, Math.round(imagen.width * escala));
-      canvas.height = Math.max(1, Math.round(imagen.height * escala));
-      canvas.getContext("2d").drawImage(imagen, 0, 0, canvas.width, canvas.height);
-      const foto = canvas.toDataURL("image/jpeg", 0.78);
-      if (foto.length > 1400000) throw new Error("La foto sigue siendo muy grande. Prueba una imagen más pequeña.");
+      const foto = await prepararFoto(archivo);
       setDatos(actual => ({ ...actual, fotoMedidas: foto }));
-      setErrorFoto("");
-    } catch (error) { setErrorFoto(error.message || "No se pudo procesar la fotografía."); }
-    finally { URL.revokeObjectURL(url); }
+    } catch (error) {
+      setErrorFoto(error.message);
+    } finally {
+      setProcesandoFoto(false);
+    }
   };
   const maps = enlaceMaps(datos.ubicacionMaps);
   const enlaceInvalido = !!datos.ubicacionMaps.trim() && !maps;
@@ -86,7 +81,7 @@ export default function ModalTrabajo({ trabajo, clienteInicial, clientes, trabaj
                       <label className={claseEtiqueta} htmlFor="foto-medidas"><ImagePlus size={16} className="mr-1 inline"/> Foto del croquis o medidas (opcional)</label>
                       <p className="mb-3 text-sm text-slate-500">El administrador puede adjuntar una foto de referencia. Se optimiza antes de guardarla.</p>
                       {datos.fotoMedidas && <div className="mb-3 rounded-xl border border-slate-200 bg-white p-3"><img src={datos.fotoMedidas} alt="Foto de medidas" className="max-h-60 w-full object-contain"/><button type="button" onClick={() => setDatos(actual => ({ ...actual, fotoMedidas: "" }))} className="mt-2 inline-flex items-center gap-2 text-sm font-bold text-red-700"><Trash2 size={16}/> Quitar foto</button></div>}
-                      <input id="foto-medidas" type="file" accept="image/jpeg,image/png,image/webp" onChange={subirFoto} className="block w-full rounded-xl border border-dashed border-blue-300 bg-white p-3 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-blue-100 file:px-3 file:py-2 file:font-bold file:text-[#124B91]"/>
+                      <input id="foto-medidas" type="file" accept="image/jpeg,image/png,image/webp" onChange={subirFoto} disabled={procesandoFoto || saving} className="block w-full rounded-xl border border-dashed border-blue-300 bg-white p-3 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-blue-100 file:px-3 file:py-2 file:font-bold file:text-[#124B91]"/>
                       {errorFoto && <p role="alert" className="mt-2 text-sm font-semibold text-red-600">{errorFoto}</p>}
                     </div>
                     <div><label className={claseEtiqueta} htmlFor="piezas-trabajo"><Package size={16} className="mr-1 inline"/> Piezas totales <span className="font-medium text-slate-400">(opcional)</span></label><input id="piezas-trabajo" name="piezasTotales" type="number" min="1" step="1" className={claseCampo} value={datos.piezasTotales} onChange={cambiar} placeholder="Ej. 3"/></div>
@@ -121,7 +116,7 @@ export default function ModalTrabajo({ trabajo, clienteInicial, clientes, trabaj
           </div>
           <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-slate-200 bg-white px-4 py-4 shadow-[0_-10px_25px_rgba(15,23,42,.06)] sm:px-8">
             <p className="hidden items-center gap-2 text-sm font-medium text-slate-500 sm:flex"><Check size={18} className="text-emerald-600"/> Los campos con * son obligatorios</p>
-            <div className="flex w-full justify-end gap-3 sm:w-auto"><button type="button" onClick={onClose} className="accion-ancho-movil rounded-xl border-2 border-slate-200 px-4 py-3 font-bold text-slate-700 hover:bg-slate-50">Cancelar</button><button type="submit" disabled={saving || enlaceInvalido} className="accion-ancho-movil flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#124B91] to-[#64417c] px-5 py-3 font-extrabold text-white shadow-lg shadow-blue-900/20 transition hover:brightness-110 disabled:opacity-50">{saving ? "Guardando..." : trabajo ? "Guardar cambios" : "Crear trabajo"}<ArrowRight size={18}/></button></div>
+            <div className="flex w-full justify-end gap-3 sm:w-auto"><button type="button" onClick={onClose} className="accion-ancho-movil rounded-xl border-2 border-slate-200 px-4 py-3 font-bold text-slate-700 hover:bg-slate-50">Cancelar</button><button type="submit" disabled={saving || procesandoFoto || enlaceInvalido} className="accion-ancho-movil flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#124B91] to-[#64417c] px-5 py-3 font-extrabold text-white shadow-lg shadow-blue-900/20 transition hover:brightness-110 disabled:opacity-50">{saving ? "Guardando..." : trabajo ? "Guardar cambios" : "Crear trabajo"}<ArrowRight size={18}/></button></div>
           </footer>
         </form>
       </div>
