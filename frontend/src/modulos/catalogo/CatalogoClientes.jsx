@@ -1,4 +1,4 @@
-import EtiquetasCategoria from "./EtiquetasCategoria";
+import EtiquetasCategoria, { colorCategoria } from "./EtiquetasCategoria";
 import { useEffect, useRef, useState } from "react";
 import { ArrowDownRight, ChevronLeft, ChevronRight, Layers3, Maximize2, MessageCircle, Palette, Phone, Ruler, Tag, X } from "lucide-react";
 import { catalogoClientes, categorias, apartadosCatalogo, nombreCategoria } from "./catalogoService";
@@ -26,13 +26,16 @@ function FotoProducto({ producto, indice = 0 }) {
   return imagen ? <img className="lp-foto-producto" src={imagen} alt={`${producto.nombre}, foto ${indice + 1}`} loading="lazy"/> : null;
 }
 
-function Tarjeta({ producto, whatsapp, abrir }) {
+function Tarjeta({ producto, whatsapp, abrir, categoriasApartado }) {
+  const categoria = categoriasApartado.includes(producto.categoria) ? producto.categoria : "Otros";
+  const color = colorCategoria(categoriasApartado.indexOf(categoria) + 1);
   return (
     <article className="lp-producto">
       <button className="lp-producto-abrir" type="button" onClick={() => abrir(producto)}
         aria-label={`Ver detalles de ${producto.nombre}`} aria-haspopup="dialog">
         <FotoProducto producto={producto}/>
         <div className="lp-producto-texto">
+          <span className={`mb-2 inline-block self-start rounded-full px-3 py-1 text-xs font-bold ${color}`}>{nombreCategoria(categoria)}</span>
           <h4>{producto.nombre}</h4>
           {producto.precio != null && <p className="lp-precio">{producto.precioDesde && "Desde "}{precioFicha.format(producto.precio)} MXN/{producto.unidad}</p>}
           <p className="lp-producto-resumen">{producto.caracteristicas}</p>
@@ -188,7 +191,7 @@ export default function CatalogoClientes({ abrirCatalogo = false }) {
                     const productos = subsecciones.filter(s => !filtros[id] || filtros[id] === s.nombre).flatMap(s => s.productos);
                     return productos.length ? (
                       <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                        {productos.map(producto => <Tarjeta key={producto._id} producto={producto} whatsapp={whatsapp} abrir={setProductoAbierto}/>)}
+                        {productos.map(producto => <Tarjeta key={producto._id} producto={producto} whatsapp={whatsapp} abrir={setProductoAbierto} categoriasApartado={subsecciones.map(s => s.nombre)}/>)}
                       </div>
                     ) : <p className="mt-5 text-sm text-slate-600">Aún no hay productos publicados aquí.</p>;
                   })()}
