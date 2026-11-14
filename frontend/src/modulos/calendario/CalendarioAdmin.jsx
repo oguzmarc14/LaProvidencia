@@ -30,7 +30,56 @@ function actividades(tipo, registros) {
   });
 }
 
+function BarrasTareas({ mes, primerDia, totalDias, tareas, navegar }) {
+  const primero = mes.getTime();
+  const diaMs = 86400000;
+  const finMes = primero + (totalDias - 1) * diaMs;
+  const periodos = tareas.flatMap(tarea => {
+    const inicio = Date.parse(tarea.fechaInicio?.slice(0, 10));
+    const fin = Date.parse(tarea.fechaLimite?.slice(0, 10));
+    return inicio <= finMes && fin >= primero && inicio <= fin ? [{ tarea, inicio, fin }] : [];
+  });
+
+  if (!periodos.length) return <p className="py-6 text-center text-sm text-slate-600">No hay tareas programadas para este mes.</p>;
+
+  return <div className="overflow-x-auto pb-2" role="region" aria-label="Cronograma de tareas" tabIndex={0}>
+    <div className="min-w-[560px] space-y-2">
+      <div className="grid grid-cols-7 text-center text-xs font-bold text-slate-500">
+        {semana.map(dia => <span key={dia} className="py-2">{dia}</span>)}
+      </div>
+      {Array.from({ length: Math.ceil((primerDia + totalDias) / 7) }, (_, fila) => {
+        const inicioSemana = primero + (fila * 7 - primerDia) * diaMs;
+        const finSemana = inicioSemana + 6 * diaMs;
+        return <div key={inicioSemana} className="space-y-1 rounded-xl border border-slate-200 bg-slate-50 p-1">
+          <div className="grid grid-cols-7 text-center text-sm font-bold text-slate-600">
+            {Array.from({ length: 7 }, (_, columna) => {
+              const dia = inicioSemana + columna * diaMs;
+              return <span key={dia} className="py-2">{dia >= primero && dia <= finMes ? new Date(dia).getUTCDate() : ""}</span>;
+            })}
+          </div>
+          {periodos.map(({ tarea, inicio, fin }) => {
+            const desde = Math.max(inicio, inicioSemana, primero);
+            const hasta = Math.min(fin, finSemana, finMes);
+            if (desde > hasta) return null;
+            const columna = (desde - inicioSemana) / diaMs + 1;
+            const ancho = (hasta - desde) / diaMs + 1;
+            const etiqueta = `${tarea.titulo} · ${formatoDia.format(inicio)} al ${formatoDia.format(fin)}`;
+            return <div key={tarea._id} className="grid grid-cols-7">
+              <button type="button" style={{ gridColumn: `${columna} / span ${ancho}` }}
+                aria-label={etiqueta} title={etiqueta} onClick={() => navegar("tareas")}
+                className="min-h-11 min-w-0 truncate rounded-lg bg-violet-100 px-2 text-left text-xs font-bold text-violet-900 hover:bg-violet-200">
+                {inicio < desde && "← "}{tarea.titulo}{fin > hasta && " →"}
+              </button>
+            </div>;
+          })}
+        </div>;
+      })}
+    </div>
+  </div>;
+}
+
 export default function CalendarioAdmin({ navegar }) {
+  const [vista, setVista] = useState("calendario");
   const [seleccion, setSeleccion] = useState(hoy);
   const [filtro, setFiltro] = useState("");
   const [intento, setIntento] = useState(0);
@@ -47,7 +96,7 @@ export default function CalendarioAdmin({ navegar }) {
         if (respuesta.status === "fulfilled") eventos.push(...actividades(tipo, respuesta.value[tipo] || []));
         else errores.push(tipos[tipo].nombre);
       });
-      setResultado({ eventos, errores });
+      setResultado({ eventos, errores, tareas: respuestas[0].value?.tareas || [] });
     });
     return () => { activo = false; };
   }, [intento]);
@@ -85,6 +134,17 @@ export default function CalendarioAdmin({ navegar }) {
         <button type="button" disabled={!resultado} onClick={() => { setResultado(null); setIntento(i => i + 1); }}
           className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-blue-200 px-4 text-sm font-bold text-blue-900 disabled:opacity-50"><RefreshCw size={16} aria-hidden="true" /> Actualizar</button>
       </div>
+      <div role="group" aria-label="Vista del calendario" className="mx-auto grid w-full max-w-sm grid-cols-2 gap-1 rounded-2xl bg-slate-100 p-1">
+        {[["calendario", "Ver calendario"], ["trabajos", "Ver trabajos"]].map(([id, texto]) => (
+          <button key={id} type="button" aria-pressed={vista === id} onClick={() => setVista(id)}
+            className={`min-h-11 rounded-xl px-2 text-sm font-bold ${vista === id ? "app-primary" : "text-slate-700 hover:bg-white"}`}>{texto}</button>
+        ))}
+      </div>
+      {vista === "trabajos" ? (
+        !resultado ? <p role="status">Cargando tareas…</p> :
+          resultado.errores.includes("Tareas") ? <p role="alert">No se pudieron cargar las tareas. Pulsa Actualizar para reintentar.</p> :
+            <BarrasTareas mes={mes} primerDia={primerDia} totalDias={totalDias} tareas={resultado.tareas} navegar={navegar} />
+      ) : <>
       <div role="group" aria-label="Tipo de actividad" className="flex flex-wrap justify-center gap-2">
         {["", ...Object.keys(tipos)].map(tipo => <button key={tipo} type="button" aria-pressed={filtro === tipo} onClick={() => setFiltro(tipo)}
           className={`min-h-11 rounded-full px-3 text-sm font-bold ${filtro === tipo ? (tipos[tipo]?.activo || "bg-[#123e83] text-white") : tipos[tipo]?.color || "bg-slate-100 text-slate-800"}`}>
@@ -107,8 +167,9 @@ export default function CalendarioAdmin({ navegar }) {
           </button>;
         })}
       </div>
+      </>}
     </div>
-    <section className="app-panel p-5 sm:p-6" aria-labelledby="agenda-dia">
+    {vista === "calendario" && <section className="app-panel p-5 sm:p-6" aria-labelledby="agenda-dia">
       <h2 id="agenda-dia" className="font-extrabold capitalize text-[#203d6b]">{formatoDia.format(new Date(seleccion))}</h2>
       {!resultado && <p role="status" className="mt-3 text-sm text-slate-600">Cargando actividades…</p>}
       {resultado?.errores.length > 0 && <p role="alert" className="mt-3 text-sm text-rose-700">Faltan datos de {resultado.errores.join(", ")}. Pulsa Actualizar para reintentar.</p>}
@@ -121,6 +182,6 @@ export default function CalendarioAdmin({ navegar }) {
           </button>
         </li>)}
       </ul>
-    </section>
+    </section>}
   </section>;
 }
