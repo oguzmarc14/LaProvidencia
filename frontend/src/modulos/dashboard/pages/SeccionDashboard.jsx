@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { ArrowRight, BriefcaseBusiness, CheckCircle2, RefreshCw, Users, UserRoundCheck, LayoutDashboard, Plus, Activity } from "lucide-react";
+import { ArrowRight, BriefcaseBusiness, CheckCircle2, RefreshCw, Users, UserRoundCheck, Plus, Activity } from "lucide-react";
 import { obtenerResumenDashboard } from "../services/dashboardService";
 import TarjetaResumen from "../components/TarjetaResumen";
 import EstadosTrabajos from "../components/EstadosTrabajos";
 
 const nombres = {templado:"Templado",fabricacion:"Fabricación",detallado:"Detallado",instalacion:"Instalación",finalizado:"Finalizado"};
-export default function SeccionDashboard({ navegar }) {
+export default function SeccionDashboard({ navegar, nombre }) {
   const [datos,setDatos] = useState(null);
   const [cargando,setCargando] = useState(true);
   const [error,setError] = useState("");
@@ -20,10 +20,10 @@ export default function SeccionDashboard({ navegar }) {
   return <section className="mx-auto w-full min-w-0 max-w-7xl p-4 pb-12 sm:p-6 lg:p-10">
     <div className="mb-7 overflow-hidden rounded-[28px] bg-gradient-to-r from-[#123e83] via-[#513d79] to-[#a13f65] p-6 text-white shadow-[0_18px_40px_rgba(43,46,101,.2)] sm:p-9">
       <div className="text-center">
-        <div><p className="flex items-center justify-center gap-2 text-xs font-extrabold uppercase tracking-[.18em] text-white/75"><LayoutDashboard size={16}/> Centro de operaciones</p><h1 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">La Providencia</h1><p className="mx-auto mt-3 max-w-xl text-base text-white/85">Controla la producción, los clientes y el equipo de La Providencia desde un solo lugar.</p></div>
+        <div><h1 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">La Providencia</h1><p className="mx-auto mt-3 max-w-xl text-base text-white/85">{nombre ? `Hola, ${nombre}. Revisa tus pendientes y organiza tu día.` : "Bienvenido. Revisa tus pendientes y organiza tu día."}</p></div>
 
       </div>
-      <div className="mt-7 grid gap-3 sm:flex sm:flex-wrap sm:justify-center"><button onClick={() => navegar("trabajos")} className="accion-ancho-movil inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 font-extrabold text-[#123e83] shadow-sm hover:bg-blue-50"><Plus size={18}/> Gestionar trabajos <ArrowRight size={16}/></button><button onClick={() => navegar("clientes")} className="accion-ancho-movil inline-flex items-center justify-center gap-2 rounded-xl border border-white/40 px-5 py-3 font-bold hover:bg-white/15"><Users size={18}/> Ver clientes</button><button onClick={cargar} disabled={cargando} className="accion-ancho-movil inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/35 sm:w-auto bg-white/15 px-4 py-3 text-sm font-bold text-white hover:bg-white/25 disabled:opacity-50"><RefreshCw size={17} className={cargando ? "animate-spin" : ""}/> Actualizar datos</button></div>
+      <div className="mt-7 grid gap-3 sm:flex sm:flex-wrap sm:justify-center"><button onClick={() => navegar("trabajos")} className="accion-ancho-movil inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 font-extrabold text-[#123e83] shadow-sm hover:bg-blue-50"><Plus size={18}/> Gestionar trabajos <ArrowRight size={16}/></button><button onClick={() => navegar("clientes")} className="accion-ancho-movil inline-flex items-center justify-center gap-2 rounded-xl border border-white/40 px-5 py-3 font-bold hover:bg-white/15"><Users size={18}/> Ver clientes</button></div>
     </div>
     {error && <div role="alert" className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 font-medium text-red-700">{error}. Comprueba que Express y MongoDB estén funcionando.</div>}
     {cargando ? <div className="rounded-2xl border border-[#cbd4e6] bg-white p-16 text-center font-semibold text-slate-500">Cargando información del sistema...</div> : resumen && <>

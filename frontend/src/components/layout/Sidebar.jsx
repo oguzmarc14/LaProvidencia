@@ -115,9 +115,6 @@ export default function Sidebar({
           className="flex-1 space-y-1 overflow-y-auto p-4"
           aria-label="Navegación principal"
         >
-          <p className="px-3 pb-2 pt-3 text-[11px] font-bold uppercase tracking-widest text-white/60">
-            Administración
-          </p>
 
           {opciones.map(
             ({ id, nombre, icono: Icono }) => (

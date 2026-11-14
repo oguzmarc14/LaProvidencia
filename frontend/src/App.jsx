@@ -1,3 +1,4 @@
+import Configuracion from "./components/auth/Configuracion";
 import ProductosAdmin from "./modulos/catalogo/ProductosAdmin";
 import { useEffect, useState } from "react";
 
@@ -177,9 +178,13 @@ function Sistema() {
     />;
   }
 
+  const claveNombre = `laprovidencia:nombre:${usuario.id || usuario.email}`;
+  const nombre = localStorage.getItem(claveNombre) || usuario.nombre || "";
   const contenido =
     seccion === "dashboard" ? (
-      <SeccionDashboard navegar={setSeccion} />
+      <SeccionDashboard navegar={setSeccion} nombre={nombre} />
+    ) : seccion === "configuracion" ? (
+      <Configuracion nombre={nombre} guardar={valor => { localStorage.setItem(claveNombre, valor); setSeccion("dashboard"); }} />
     ) : seccion === "clientes" ? (
       <SeccionClientes />
     ) : seccion === "trabajos" ? (
@@ -204,7 +209,7 @@ function Sistema() {
     <MainLayout
       actual={seccion}
       navegar={destino => { setProductoEditado(null); setSeccion(destino); }}
-      usuario={usuario}
+      usuario={{ ...usuario, nombre }}
       cerrarSesion={salir}
     >
       {contenido}

@@ -12,19 +12,6 @@ import {
 import Sidebar from "./Sidebar";
 import { obtenerTareas } from "../../modulos/tareas/services/tareasService";
 
-const nombres = {
-  calendario: "Calendario",
-  dashboard: "Panel principal",
-  clientes: "Gestión de clientes",
-  trabajadores: "Gestión de trabajadores",
-  trabajos: "Gestión de trabajos",
-  ventas: "Registro de lápidas",
-  tareas: "Planificación de tareas",
-  asistencias: "Asistencia",
-  productos: "Productos",
-  catalogo: "Catálogo para clientes",
-};
-
 export default function MainLayout({
   actual,
   navegar,
@@ -97,28 +84,6 @@ export default function MainLayout({
       <div className="w-full min-w-0 flex-1 md:w-auto">
         <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/95 shadow-sm backdrop-blur-xl">
           <div className="flex h-[72px] items-center gap-3 px-4 sm:px-6 lg:px-10">
-
-            {/* Sección actual */}
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 text-sm">
-                <span className="hidden font-semibold text-slate-400 sm:inline">
-                  Administración
-                </span>
-
-                <ChevronRight
-                  size={14}
-                  className="hidden text-slate-300 sm:inline"
-                />
-
-                <span className="truncate font-extrabold text-[#203d6b]">
-                  {nombres[actual] || "La Providencia"}
-                </span>
-              </div>
-
-              <p className="hidden text-[11px] text-slate-500 sm:block">
-                La Providencia · Control de operaciones
-              </p>
-            </div>
 
             {/* Acciones del encabezado */}
             <div className="ml-auto flex items-center gap-2 sm:gap-3">
@@ -268,8 +233,8 @@ export default function MainLayout({
                       <p className="break-words font-bold text-[#203d6b]">{usuario?.nombre || usuario?.usuario || usuario?.email || "Administrador"}</p>
                       <p className="text-xs text-slate-500">Administrador</p>
                     </div>
-                    <button type="button" disabled className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-sm text-slate-500">
-                      <Settings size={16} aria-hidden="true" /> Configuración <span className="ml-auto text-xs">Próximamente</span>
+                    <button type="button" onClick={() => { setPerfilAbierto(false); navegar("configuracion"); }} className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-sm text-slate-700 hover:bg-blue-50">
+                      <Settings size={16} aria-hidden="true" /> Configuración
                     </button>
                     <button type="button" onClick={cerrarSesion} className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-sm font-semibold text-rose-700 hover:bg-rose-50">
                       <LogOut size={16} aria-hidden="true" /> Salir
